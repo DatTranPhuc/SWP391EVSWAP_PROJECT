@@ -1,15 +1,16 @@
 package evswap.swp391to4.service;
 
-import evswap.swp391to4.entity.Driver;
-import evswap.swp391to4.repository.DriverRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
+import java.util.Random;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Random;
+import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.repository.DriverRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,10 @@ public class    DriverService {
     // Register + gửi OTP
     public void register(Driver driver) {
         if (driverRepo.findByEmail(driver.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new RuntimeException("Email đã được đăng ký");
+        }
+        if (driver.getPhone() != null && !driver.getPhone().isBlank() && driverRepo.existsByPhone(driver.getPhone())) {
+            throw new RuntimeException("Số điện thoại đã được sử dụng");
         }
 
         driver.setPasswordHash(passwordEncoder.encode(driver.getPasswordHash()));

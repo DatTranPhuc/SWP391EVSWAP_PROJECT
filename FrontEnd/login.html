@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV SWAP - Đăng nhập</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <div class="brand"><div class="brand__logo">EV</div> EV SWAP</div>
+        <nav class="nav">
+          <a class="btn" href="landing.html">Trang chủ</a>
+          <a class="btn btn--accent" href="register.html">Đăng ký</a>
+        </nav>
+      </div>
+    </header>
+    <main class="auth">
+      <div class="auth__card">
+      <header class="auth__header">
+        <div class="flex justify-center mb-4">
+          <div class="brand__logo">EV</div>
+        </div>
+        <h1 class="auth__title">Đăng nhập</h1>
+        <p class="auth__desc">Đăng nhập vào hệ thống EV SWAP</p>
+      </header>
+      <section class="auth__body">
+        <div data-error class="error"></div>
+        <form action="#" method="post" data-login>
+          <div class="field">
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" placeholder="example@email.com" required />
+          </div>
+          <div class="field">
+            <label class="label" for="password">Mật khẩu</label>
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn btn--primary" style="width:100%">Đăng nhập</button>
+        </form>
+        <div style="margin-top:14px; text-align:center">
+          <p class="muted">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+        </div>
+      </section>
+      </div>
+    </main>
+    <script src="app.js"></script>
+  </body>
+  </html>
+
+

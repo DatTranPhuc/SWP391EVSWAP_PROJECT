@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV SWAP - Đăng ký</title>
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <div class="brand"><div class="brand__logo">EV</div> EV SWAP</div>
+        <nav class="nav">
+          <a class="btn" href="./landing.html">Trang chủ</a>
+          <a class="btn" href="./login.html">Đăng nhập</a>
+        </nav>
+      </div>
+    </header>
+    <main class="auth">
+      <div class="auth__card">
+      <header class="auth__header">
+        <div class="flex justify-center mb-4"><div class="brand__logo">EV</div></div>
+        <h1 class="auth__title">Đăng ký tài khoản</h1>
+        <p class="auth__desc">Tạo tài khoản Driver để sử dụng dịch vụ đổi pin</p>
+      </header>
+      <section class="auth__body">
+        <div data-error class="error"></div>
+        <form action="#" method="post" data-register>
+          <div class="field">
+            <label class="label" for="fullName">Họ và tên</label>
+            <input class="input" id="fullName" name="fullName" type="text" placeholder="Nguyễn Văn A" required />
+          </div>
+          <div class="field">
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" placeholder="example@email.com" required />
+          </div>
+          <div class="field">
+            <label class="label" for="phone">Số điện thoại</label>
+            <input class="input" id="phone" name="phone" type="tel" placeholder="0123456789" required />
+          </div>
+          <div class="field">
+            <label class="label" for="password">Mật khẩu</label>
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" minlength="6" required />
+            <p class="muted">Mật khẩu phải có ít nhất 6 ký tự</p>
+          </div>
+          <button type="submit" class="btn btn--primary" style="width:100%">Đăng ký</button>
+        </form>
+        <div style="margin-top:14px; text-align:center">
+          <p class="muted">Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
+        </div>
+      </section>
+      </div>
+    </main>
+    <script src="app.js"></script>
+  </body>
+  </html>
+
+

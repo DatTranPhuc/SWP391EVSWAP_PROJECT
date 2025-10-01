@@ -1,28 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
-    <title>Login</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        form { max-width: 400px; margin: auto; }
-        input { width: 100%; padding: 8px; margin: 5px 0; }
-        button { width: 100%; padding: 10px; }
-        .message { text-align: center; margin: 10px 0; color: red; }
-        .success { color: green; }
-        a { display:block; text-align:center; margin-top:10px; color:blue; text-decoration:none; }
-    </style>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0;url=http://127.0.0.1:5173/login.html" />
+    <title>Redirecting...</title>
+    <script>
+      window.location.replace('http://127.0.0.1:5173/login.html');
+    </script>
 </head>
 <body>
-<h2 style="text-align:center;">Login</h2>
-<form th:action="@{/login}" method="post">
-    Email: <input type="email" name="email" required /><br/>
-    Password: <input type="password" name="password" required /><br/>
-    <button type="submit">Login</button>
-</form>
-
-<div class="message" th:if="${loginError}" th:text="${loginError}"></div>
-<div class="message success" th:if="${loginSuccess}" th:text="${loginSuccess}"></div>
-
-<a th:href="@{/register}">Don't have an account? Register</a>
+    <p>Redirecting to login...</p>
 </body>
 </html>
+

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV SWAP - Đăng ký xe</title>
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <div class="brand"><div class="brand__logo">EV</div> EV SWAP</div>
+        <nav class="nav">
+          <a class="btn" href="./dashboard.html">Bảng điều khiển</a>
+          <button data-logout class="btn btn--primary">Đăng xuất</button>
+        </nav>
+      </div>
+    </header>
+    <main class="auth">
+      <div class="auth__card">
+      <header class="auth__header">
+        <h1 class="auth__title">Đăng ký thông tin xe</h1>
+        <p class="auth__desc">Bổ sung thông tin xe để tiếp tục</p>
+      </header>
+      <section class="auth__body">
+        <div data-error class="error"></div>
+        <form action="#" method="post" data-vehicle>
+          <div class="field">
+            <label class="label" for="email">Email tài khoản</label>
+            <input class="input" id="email" name="email" type="email" placeholder="example@email.com" required />
+          </div>
+          <div class="field">
+            <label class="label" for="model">Mẫu xe</label>
+            <input class="input" id="model" name="model" type="text" placeholder="VinFast Evo..." required />
+          </div>
+          <div class="field">
+            <label class="label" for="vin">VIN</label>
+            <input class="input" id="vin" name="vin" type="text" placeholder="XXXXXX" required />
+          </div>
+          <div class="field">
+            <label class="label" for="licensePlate">Biển số</label>
+            <input class="input" id="licensePlate" name="licensePlate" type="text" placeholder="XX-XXXXX" required />
+          </div>
+          <button type="submit" class="btn btn--primary" style="width:100%">Lưu thông tin xe</button>
+        </form>
+      </section>
+      </div>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+
