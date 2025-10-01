@@ -1,52 +1,46 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.dto.StaffCreateRequest;
+import evswap.swp391to4.dto.StaffResponse;
+import evswap.swp391to4.dto.StationCreateRequest;
+import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StaffService;
+import evswap.swp391to4.service.StationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
     private final StaffService staffService;
+    private final StationService stationService;
 
-    /**
-     * API tạo Staff
-     * POST http://localhost:8080/api/admin/add-staff
-     * Body: JSON
-     * {
-     *   "fullName": "John Doe",
-     *   "email": "john@example.com",
-     *   "password": "123456",
-     *   "stationId": 1
-     * }
-     */
     @PostMapping("/add-staff")
-    public Map<String, String> addStaff(@RequestBody Map<String, Object> body) {
-        Map<String, String> res = new HashMap<>();
+    public ResponseEntity<?> addStaff(@RequestBody StaffCreateRequest req) {
         try {
-            String fullName = (String) body.get("fullName");
-            String email = (String) body.get("email");
-            String password = (String) body.get("password");
-            Integer stationId = (Integer) body.get("stationId");
-
-            // tạo Station dummy, chỉ cần id để liên kết
-            Station station = new Station();
-            station.setStationId(stationId);
-
-            staffService.createStaff(station, fullName, email, password);
-
-            res.put("status", "success");
-            res.put("message", "Staff account created!");
+            StaffResponse resp = staffService.createStaff(req);
+            return ResponseEntity.status(201).body(resp);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
         } catch (Exception e) {
-            res.put("status", "error");
-            res.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
-        return res;
+    }
+
+    @PostMapping("/add-station")
+    public ResponseEntity<?> addStation(@RequestBody StationCreateRequest req) {
+        try {
+            StationResponse resp = stationService.createStation(req);
+            return ResponseEntity.status(201).body(resp);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+        }
     }
 }

@@ -1,26 +1,26 @@
-package evswap.swp391to4.entity;
+    package evswap.swp391to4.entity;
 
 
 
-import jakarta.persistence.*;
-import lombok.*;
+    import jakarta.persistence.*;
+    import lombok.*;
 
-import java.math.BigDecimal;
+    import java.math.BigDecimal;
 
-@Entity @Table(name = "station")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
-public class Station {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "station_id")
-    private Integer stationId;
+    @Entity @Table(name = "station")
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public class Station {
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "station_id")
+        private Integer stationId;
 
-    @Column(nullable = false)
-    private String name;
+        @Column(nullable = false)
+        private String name;
 
-    private String address;
+        private String address;
 
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+        private BigDecimal latitude;
+        private BigDecimal longitude;
 
-    private String status; // e.g., active/closed
-}
+        private String status; // e.g., active/closed
+    }
