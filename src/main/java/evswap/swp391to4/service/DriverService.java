@@ -13,7 +13,7 @@ import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
-public class DriverService {
+public class    DriverService {
 
     private final DriverRepository driverRepo;
     private final JavaMailSender mailSender;
