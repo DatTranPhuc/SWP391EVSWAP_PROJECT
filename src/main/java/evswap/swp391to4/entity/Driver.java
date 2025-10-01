@@ -29,6 +29,14 @@ public class Driver {
     @Column(name = "email_verified")
     private Boolean emailVerified;
 
+    // Mã OTP gửi qua Gmail
+    @Column(name = "email_otp")
+    private String emailOtp;
+
+    // Thời gian hết hạn OTP
+    @Column(name = "otp_expiry")
+    private Instant otpExpiry;
+
     @Column(name = "created_at")
     private Instant createdAt;
 }
