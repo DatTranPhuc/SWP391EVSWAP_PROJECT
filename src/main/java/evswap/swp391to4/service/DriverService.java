@@ -7,22 +7,23 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
-public class    DriverService {
+public class DriverService {
 
     private final DriverRepository driverRepo;
-    private final JavaMailSender mailSender;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
 
-    // Register + gửi OTP
-    public void register(Driver driver) {
+    @Transactional
+    public Driver register(Driver driver) {
         if (driverRepo.findByEmail(driver.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new IllegalStateException("Email đã được đăng ký");
         }
 
         driver.setPasswordHash(passwordEncoder.encode(driver.getPasswordHash()));
@@ -40,19 +41,25 @@ public class    DriverService {
         message.setSubject("Email Verification Code");
         message.setText("Your verification code is: " + otp);
         mailSender.send(message);
+
+        return driver;
     }
 
-    // Verify OTP
+    @Transactional
     public void verifyOtp(String email, String otp) {
         Driver driver = driverRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalStateException("User không tồn tại"));
+
+        if (driver.getEmailVerified()) {
+            throw new IllegalStateException("Email đã được xác minh");
+        }
 
         if (driver.getOtpExpiry() == null || driver.getOtpExpiry().isBefore(Instant.now())) {
-            throw new RuntimeException("OTP expired");
+            throw new IllegalStateException("OTP hết hạn");
         }
 
         if (!otp.equals(driver.getEmailOtp())) {
-            throw new RuntimeException("Invalid OTP");
+            throw new IllegalArgumentException("OTP không hợp lệ");
         }
 
         driver.setEmailVerified(true);
@@ -61,17 +68,19 @@ public class    DriverService {
         driverRepo.save(driver);
     }
 
-    // Login
-    public void login(String email, String password) {
+    @Transactional
+    public Driver login(String email, String password) {
         Driver driver = driverRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalStateException("Email không tồn tại"));
 
         if (!driver.getEmailVerified()) {
-            throw new RuntimeException("Please verify your email first!");
+            throw new IllegalStateException("Vui lòng xác minh email trước khi đăng nhập");
         }
 
         if (!passwordEncoder.matches(password, driver.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new IllegalArgumentException("Mật khẩu không đúng");
         }
+
+        return driver;
     }
 }
