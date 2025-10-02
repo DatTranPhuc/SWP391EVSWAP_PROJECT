@@ -6,9 +6,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity @Table(name = "driver")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
+@ToString(exclude = "vehicles")
+@EqualsAndHashCode(exclude = "vehicles")
 public class Driver {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "driver_id")
@@ -39,4 +43,8 @@ public class Driver {
 
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vehicle> vehicles = new ArrayList<>();
 }
