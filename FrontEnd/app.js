@@ -110,8 +110,8 @@
         body: JSON.stringify({ email, password, fullName: full_name, phone })
       });
       if (r.ok && r.data?.success) {
-        // chuyển đến trang verify của backend, prefill email qua query string
-        window.location.href = `${backendBase}/verify?email=${encodeURIComponent(email)}`;
+        // chuyển đến trang verify của FE, prefill email qua query string
+        window.location.href = `verify.html?email=${encodeURIComponent(email)}`;
       } else {
         const errMsg = r.data?.error || "Đăng ký thất bại";
         setError(errMsg);
@@ -120,6 +120,38 @@
             window.location.href = `login.html?email=${encodeURIComponent(email)}`;
           }, 1200);
         }
+      }
+    });
+  }
+
+  // Verify page
+  const verifyForm = qs("form[data-verify]");
+  if (verifyForm) {
+    // Prefill email from query string if present
+    try {
+      const url = new URL(window.location.href);
+      const preEmail = url.searchParams.get("email");
+      if (preEmail) {
+        const emailInput = qs("#email");
+        if (emailInput) emailInput.value = preEmail;
+      }
+    } catch {}
+    verifyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setError("");
+      const email = qs("#email")?.value?.trim();
+      const otp = qs("#otp")?.value?.trim();
+      if (!email || !otp) { setError("Vui lòng nhập đầy đủ thông tin"); return; }
+      const r = await fetchJSON(`${backendBase}/api/auth/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+      });
+      if (r.ok && r.data?.success) {
+        // Xác minh thành công, chuyển đến trang login với email đã điền sẵn
+        window.location.href = `login.html?email=${encodeURIComponent(email)}`;
+      } else {
+        setError(r.data?.error || "Xác minh thất bại");
       }
     });
   }
@@ -162,7 +194,7 @@
       const user = getUser();
       const token = getToken();
       if (user) {
-        meBox.textContent = `${user.full_name || user.email} (${user.role || "user"})`;
+        meBox.textContent = `${user.fullName || user.email} (${user.role || "user"})`;
         return;
       }
       if (!token) { window.location.href = "login.html"; return; }
@@ -170,7 +202,7 @@
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (r.ok && r.data?.user) {
-        meBox.textContent = `${r.data.user.full_name || r.data.user.email} (${r.data.user.role || "user"})`;
+        meBox.textContent = `${r.data.user.name || r.data.user.email} (${r.data.user.role || "user"})`;
       } else {
         clearSession();
         window.location.href = "login.html";

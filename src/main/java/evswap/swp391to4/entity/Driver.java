@@ -20,7 +20,7 @@ public class Driver {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name", columnDefinition = "nvarchar(50)", nullable = false)
     private String fullName;
 
     @Column(unique = true)

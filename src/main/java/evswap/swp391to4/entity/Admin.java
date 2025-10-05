@@ -20,7 +20,7 @@ public class Admin {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "full_name")
+    @Column(name = "full_name", columnDefinition = "nvarchar(50)", nullable = false)
     private String fullName;
 
     @Column(name = "created_at")
