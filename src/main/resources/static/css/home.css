@@ -1,0 +1,218 @@
+:root {
+    --home-bg: #f7fbf8;
+    --home-surface: #ffffff;
+    --home-text: #1b1b1f;
+    --home-muted: #4f5b5f;
+    --home-primary: #1c7c54;
+    --home-primary-light: #3aa876;
+    --home-shadow: 0 20px 40px rgba(28, 124, 84, 0.12);
+    --home-radius: 16px;
+    --home-transition: 0.3s ease;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: var(--home-text);
+    background: var(--home-bg);
+    line-height: 1.5;
+}
+
+.home-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem clamp(1.5rem, 3vw, 3rem);
+    background-color: rgba(247, 251, 248, 0.9);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(27, 27, 31, 0.06);
+}
+
+.home-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.home-header__logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--home-radius);
+    background: linear-gradient(135deg, var(--home-primary), var(--home-primary-light));
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.home-header__title {
+    letter-spacing: 0.08em;
+}
+
+.home-header__actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.home-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 1.4rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: var(--home-transition);
+    border: 2px solid transparent;
+}
+
+.home-button--primary {
+    background: var(--home-primary);
+    color: #fff;
+    border-color: var(--home-primary);
+}
+
+.home-button--primary:hover,
+.home-button--primary:focus {
+    background: var(--home-primary-light);
+    border-color: var(--home-primary-light);
+}
+
+.home-button--outline {
+    background: transparent;
+    color: var(--home-primary);
+    border-color: rgba(28, 124, 84, 0.5);
+}
+
+.home-button--outline:hover,
+.home-button--outline:focus {
+    border-color: var(--home-primary);
+    color: var(--home-primary);
+    background: rgba(58, 168, 118, 0.12);
+}
+
+.home-hero {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 4vw, 4rem);
+    padding: clamp(2rem, 5vw, 5rem) clamp(1.5rem, 6vw, 6rem);
+    align-items: center;
+}
+
+.home-hero__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.home-hero__title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.home-hero__description {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--home-muted);
+    max-width: 32rem;
+}
+
+.home-hero__highlights {
+    display: grid;
+    gap: 1rem;
+}
+
+.home-highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--home-surface);
+    border-radius: var(--home-radius);
+    box-shadow: var(--home-shadow);
+    font-weight: 600;
+}
+
+.home-highlight__dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--home-primary);
+    box-shadow: 0 0 0 4px rgba(58, 168, 118, 0.15);
+}
+
+.home-hero__visual {
+    display: flex;
+    justify-content: center;
+}
+
+.home-visual-card {
+    background: var(--home-surface);
+    border-radius: var(--home-radius);
+    box-shadow: var(--home-shadow);
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    max-width: 28rem;
+    width: 100%;
+}
+
+.home-visual-card__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: calc(var(--home-radius) - 4px);
+}
+
+@media (max-width: 992px) {
+    .home-header {
+        padding: 0.85rem 1.25rem;
+    }
+
+    .home-hero {
+        grid-template-columns: 1fr;
+        padding: 2.5rem 1.5rem 3.5rem;
+    }
+
+    .home-hero__visual {
+        order: -1;
+    }
+
+    .home-header__actions {
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .home-header__title {
+        font-size: 1rem;
+    }
+
+    .home-button {
+        padding: 0.45rem 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    .home-hero__title {
+        font-size: 2rem;
+    }
+
+    .home-hero__description {
+        font-size: 1rem;
+    }
+}

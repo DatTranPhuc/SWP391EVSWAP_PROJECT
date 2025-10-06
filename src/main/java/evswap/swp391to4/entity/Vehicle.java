@@ -9,6 +9,7 @@ import java.time.Instant;
 
 @Entity @Table(name = "vehicle")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
+@ToString(exclude = "driver")
 public class Vehicle {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "vehicle_id")
