@@ -2,6 +2,7 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.DriverService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +23,24 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
+                        HttpSession session,
                         RedirectAttributes redirect) {
         try {
             Driver driver = driverService.login(email, password);
+            session.setAttribute("loggedInDriver", driver);
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
             return "redirect:/dashboard"; // Thay bằng trang sau login
         } catch (Exception e) {
             redirect.addFlashAttribute("loginError", e.getMessage());
             return "redirect:/login";
         }
+    }
+
+    @PostMapping("/logout")
+    public String logout(HttpSession session, RedirectAttributes redirect) {
+        session.invalidate();
+        redirect.addFlashAttribute("logoutMessage", "Bạn đã đăng xuất thành công.");
+        return "redirect:/login";
     }
 
     // ===== REGISTER =====
@@ -74,9 +84,9 @@ public class AuthController {
                             @RequestParam String otp,
                             RedirectAttributes redirect) {
         try {
-            driverService.verifyOtp(email, otp);
-            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
+            Driver driver = driverService.verifyOtp(email, otp);
+            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng ký phương tiện.");
+            return "redirect:/vehicles/register?driverId=" + driver.getDriverId();
         } catch (Exception e) {
             redirect.addFlashAttribute("verifyError", e.getMessage());
             redirect.addFlashAttribute("email", email); // giữ lại email để hiển thị form

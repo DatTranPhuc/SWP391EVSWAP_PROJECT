@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Đăng ký phương tiện</title>
+</head>
+<body>
+<h1>Đăng ký phương tiện</h1>
+
+<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
+<p th:if="${vehicleError}" th:text="${vehicleError}"></p>
+
+<p th:text="'Xin chào ' + ${driverName}">Xin chào Người dùng</p>
+<p>Vui lòng cung cấp thông tin xe máy điện của bạn để hoàn tất hồ sơ.</p>
+
+<form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+    <input type="hidden" name="driverId" th:value="${driverId}" />
+
+    <p>Model xe: <input id="model" type="text" th:field="*{model}" required /></p>
+    <p>Số VIN: <input id="vin" type="text" th:field="*{vin}" required /></p>
+    <p>Biển số: <input id="plateNumber" type="text" th:field="*{plateNumber}" /></p>
+
+    <p>Thông tin xe sẽ được sử dụng để xác nhận khi đổi pin tại trạm.</p>
+
+    <p><button type="submit">Hoàn tất đăng ký</button></p>
+</form>
+</body>
+</html>

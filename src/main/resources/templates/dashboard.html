@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>EV SWAP Dashboard</title>
+</head>
+<body>
+<p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
+<header>
+    <h1>EV SWAP</h1>
+    <div th:if="${loggedIn}">
+        <p>Xin chào <span th:text="${driverName}">người dùng</span>!</p>
+        <p>Bạn đã sẵn sàng sử dụng các tiện ích đổi pin.</p>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Đăng xuất</button>
+        </form>
+    </div>
+    <div th:if="${!loggedIn}">
+        <p>Chào mừng bạn đến với hệ thống đổi pin xe máy điện thông minh.</p>
+        <p>
+            <a th:href="@{/login}">Đăng nhập</a>
+            |
+            <a th:href="@{/register}">Đăng ký</a>
+        </p>
+    </div>
+</header>
+
+<section>
+    <h2>Hệ thống đổi pin xe máy điện</h2>
+    <p>Giải pháp đổi pin nhanh chóng, tiện lợi. Chỉ mất vài phút để tiếp tục di chuyển.</p>
+    <p>Các trạm đổi pin đã sẵn sàng phục vụ trên toàn quốc.</p>
+    <p>Đảm bảo an toàn và đáng tin cậy cho mọi chuyến đi.</p>
+</section>
+
+<section>
+    <h2>Tính năng nổi bật</h2>
+    <p th:if="${dashboardMessage}" th:text="${dashboardMessage}"></p>
+    <form th:action="@{/dashboard/action}" method="post">
+        <p>
+            <button type="submit" name="feature" value="Đổi pin nhanh chóng">Đổi pin nhanh chóng</button>
+        </p>
+        <p>
+            <button type="submit" name="feature" value="Mạng lưới trạm rộng khắp">Mạng lưới trạm rộng khắp</button>
+        </p>
+        <p>
+            <button type="submit" name="feature" value="An toàn và đáng tin cậy">An toàn và đáng tin cậy</button>
+        </p>
+        <p>
+            <button type="submit" name="feature" value="Hoạt động 24/7">Hoạt động 24/7</button>
+        </p>
+        <p>
+            <button type="submit" name="feature" value="Thân thiện môi trường">Thân thiện môi trường</button>
+        </p>
+        <p>
+            <button type="submit" name="feature" value="Tiết kiệm chi phí">Tiết kiệm chi phí</button>
+        </p>
+    </form>
+</section>
+
+<section>
+    <h2>Cách thức hoạt động</h2>
+    <ol>
+        <li>Đăng ký tài khoản để bắt đầu trải nghiệm.</li>
+        <li>Tìm trạm đổi pin gần nhất thông qua ứng dụng.</li>
+        <li>Đổi pin và tiếp tục hành trình của bạn.</li>
+    </ol>
+</section>
+
+<section>
+    <h2>Thông tin đăng nhập demo</h2>
+    <p>Admin: admin@evswap.com / Admin123456</p>
+    <p>Staff: Được cấp bởi Admin khi tham gia hệ thống.</p>
+    <p>Driver: Đăng ký nhanh bằng nút "Đăng ký" ở trên.</p>
+</section>
+
+<section>
+    <h2>Khám phá thêm</h2>
+    <p>
+        <button type="submit" form="contactForm" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
+        <button type="submit" form="contactForm" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
+    </p>
+</section>
+
+<form id="contactForm" th:action="@{/dashboard/action}" method="post"></form>
+
+</body>
+</html>
