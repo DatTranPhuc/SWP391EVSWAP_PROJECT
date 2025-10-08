@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm trạm đổi pin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-VzL6jCsFh3Z0i26wXZQ1d+oqjUib6h3sUFb4oHBa0+0=" crossorigin=""/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header, main {
+            padding: 16px;
+        }
+
+        #map {
+            height: 70vh;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .station-list {
+            margin-top: 16px;
+        }
+
+        .station-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .actions {
+            margin-top: 16px;
+        }
+
+        .actions a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .actions a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Xin chào <span th:text="${driverName}">người dùng</span></h1>
+    <p>Tìm trạm đổi pin gần bạn trên bản đồ bên dưới.</p>
+</header>
+<main>
+    <div id="map" role="img" aria-label="Bản đồ hiển thị các trạm đổi pin"></div>
+    <section class="station-list">
+        <h2>Danh sách trạm</h2>
+        <div id="stationList"></div>
+    </section>
+    <div class="actions">
+        <a th:href="@{/dashboard}">← Quay lại bảng điều khiển</a>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-o9N1j7kGStb9JNRtD9JbIByWuwC2w3Qv0v+3GmZh0Gk=" crossorigin=""></script>
+<script>
+    const map = L.map('map').setView([16.047079, 108.206230], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const listContainer = document.getElementById('stationList');
+
+    fetch('/api/stations')
+        .then(response => response.json())
+        .then(stations => {
+            if (!stations.length) {
+                listContainer.innerHTML = '<p>Hiện chưa có trạm nào trong hệ thống.</p>';
+                return;
+            }
+
+            const bounds = [];
+
+            stations.forEach(station => {
+                if (station.latitude && station.longitude) {
+                    const lat = parseFloat(station.latitude);
+                    const lng = parseFloat(station.longitude);
+                    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+                        const marker = L.marker([lat, lng]).addTo(map);
+                        marker.bindPopup(`<strong>${station.name}</strong><br/>${station.address ?? 'Chưa cập nhật địa chỉ'}`);
+                        bounds.push([lat, lng]);
+                    }
+                }
+
+                const item = document.createElement('div');
+                item.className = 'station-item';
+                item.innerHTML = `<strong>${station.name}</strong><br/>${station.address ?? 'Chưa cập nhật địa chỉ'}`;
+                listContainer.appendChild(item);
+            });
+
+            if (bounds.length) {
+                map.fitBounds(bounds, {padding: [32, 32]});
+            }
+        })
+        .catch(() => {
+            listContainer.innerHTML = '<p>Không thể tải danh sách trạm. Vui lòng thử lại sau.</p>';
+        });
+</script>
+</body>
+</html>

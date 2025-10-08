@@ -40,4 +40,18 @@ public class StationService {
                 .status(saved.getStatus())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public java.util.List<StationResponse> getAllStations() {
+        return stationRepo.findAll().stream()
+                .map(station -> StationResponse.builder()
+                        .stationId(station.getStationId())
+                        .name(station.getName())
+                        .address(station.getAddress())
+                        .latitude(station.getLatitude())
+                        .longitude(station.getLongitude())
+                        .status(station.getStatus())
+                        .build())
+                .toList();
+    }
 }
