@@ -34,6 +34,10 @@ public class DashboardController {
             return "redirect:/login";
         }
 
+        if ("Tìm trạm".equalsIgnoreCase(feature)) {
+            return "redirect:/stations";
+        }
+
         redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + feature);
         return "redirect:/dashboard";
     }
