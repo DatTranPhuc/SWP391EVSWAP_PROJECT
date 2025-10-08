@@ -78,14 +78,13 @@
             </div>
             <div class="hero-actions locked" th:if="${!loggedIn}">
                 <div class="action-buttons">
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Tổng quan</button>
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Phương tiện</button>
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Tìm trạm</button>
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Báo cáo</button>
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Tài khoản</button>
-                    <button type="button" class="nav-button locked" th:onclick="|window.location.href='@{/register}'|">Hỗ trợ</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tổng quan</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Phương tiện</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tìm trạm</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Báo cáo</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tài khoản</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Hỗ trợ</button>
                 </div>
-                <p class="locked-hint">Vui lòng đăng ký tài khoản để sử dụng đầy đủ chức năng.</p>
             </div>
         </div>
         <div class="hero-card">
@@ -219,41 +218,14 @@
             <a th:href="@{/login}" class="btn ghost full">Đăng nhập</a>
         </div>
         <div class="preview-card dark">
-            <h3>Đăng nhập</h3>
-            <p>Đăng nhập vào hệ thống EV SWAP</p>
-            <form class="preview-form">
-                <label for="preview-email">Email</label>
-                <input id="preview-email" type="email" placeholder="example@email.com" disabled>
-                <label for="preview-password">Mật khẩu</label>
-                <input id="preview-password" type="password" placeholder="********" disabled>
-                <button type="button" class="btn primary full" th:onclick="|window.location.href='@{/login}'|">Đăng nhập</button>
-            </form>
-        </div>
-    </section>
-
-    <section id="support" class="preview-section container reverse">
-        <div class="preview-card">
-            <h3>Bắt đầu ngay!</h3>
-            <p>Tham gia cộng đồng xe máy điện thông minh.</p>
+            <h3>Hỗ trợ ưu tiên</h3>
+            <p>Kích hoạt tài khoản để nhận tư vấn riêng và đặc quyền chăm sóc khách hàng.</p>
             <ul class="preview-list">
-                <li>Đăng ký miễn phí</li>
-                <li>Ưu đãi hấp dẫn</li>
-                <li>Hỗ trợ 24/7</li>
+                <li>Đội ngũ trực 24/7</li>
+                <li>Hướng dẫn sử dụng chi tiết</li>
+                <li>Ưu đãi dành riêng hội viên</li>
             </ul>
-            <a th:href="@{/register}" class="btn primary full">Đăng ký ngay</a>
-        </div>
-        <div class="preview-card dark">
-            <h3>Đăng ký tài khoản</h3>
-            <p>Tạo tài khoản Driver để sử dụng dịch vụ.</p>
-            <form class="preview-form">
-                <label for="preview-name">Họ và tên</label>
-                <input id="preview-name" type="text" placeholder="Nguyễn Văn A" disabled>
-                <label for="preview-phone">Số điện thoại</label>
-                <input id="preview-phone" type="tel" placeholder="0123456789" disabled>
-                <label for="preview-pass">Mật khẩu</label>
-                <input id="preview-pass" type="password" placeholder="********" disabled>
-                <button type="button" class="btn primary full" th:onclick="|window.location.href='@{/register}'|">Đăng ký</button>
-            </form>
+            <a th:href="@{/register}" class="btn primary full">Tham gia ngay</a>
         </div>
     </section>
 
@@ -262,5 +234,64 @@
         <p class="footer-note">© 2024 EV SWAP. Mạng lưới đổi pin xe máy điện thông minh đầu tiên tại Việt Nam.</p>
     </section>
 </main>
+
+<div class="login-modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title" hidden>
+    <div class="login-modal__overlay" onclick="closeLoginModal()"></div>
+    <div class="login-modal__dialog">
+        <button type="button" class="login-modal__close" aria-label="Đóng" onclick="closeLoginModal()">×</button>
+        <div class="login-modal__content">
+            <div class="login-showcase">
+                <span class="brand-icon">📺</span>
+                <h3 id="login-modal-title">EV SWAP</h3>
+                <p>Đăng nhập để truy cập đầy đủ các chức năng đổi pin thông minh.</p>
+                <ul>
+                    <li>Quản lý phương tiện và đổi pin</li>
+                    <li>Theo dõi lịch sử hoá đơn</li>
+                    <li>Nhận hỗ trợ ưu tiên 24/7</li>
+                </ul>
+            </div>
+            <div class="login-form-card">
+                <h4>Đăng nhập tài khoản</h4>
+                <p>Nhập thông tin để tiếp tục sử dụng dashboard.</p>
+                <form th:action="@{/login}" method="get">
+                    <div class="input-group">
+                        <label for="modal-email">Email</label>
+                        <input id="modal-email" name="email" type="email" placeholder="example@email.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="modal-password">Mật khẩu</label>
+                        <input id="modal-password" name="password" type="password" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="btn primary full">Đăng nhập</button>
+                </form>
+                <p class="register-hint">Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const loginModal = document.getElementById('login-modal');
+
+    function openLoginModal() {
+        if (loginModal) {
+            loginModal.removeAttribute('hidden');
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function closeLoginModal() {
+        if (loginModal) {
+            loginModal.setAttribute('hidden', '');
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
+            closeLoginModal();
+        }
+    });
+</script>
 </body>
 </html>
