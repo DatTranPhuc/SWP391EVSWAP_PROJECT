@@ -1,112 +1,297 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV SWAP Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
 </head>
-<body>
-    <p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
-    <header>
-        <h1>EV SWAP</h1>
-        <div th:if="${loggedIn}">
-            <p>Xin chào <span th:text="${driverName}">người dùng</span>!</p>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">📺</span>
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a href="#overview">Tổng quan</a>
+            <a href="#benefits">Phương tiện</a>
+            <a href="#stations">Tìm trạm</a>
+            <a href="#reports">Báo cáo</a>
+            <a href="#account">Tài khoản</a>
+            <a href="#support">Hỗ trợ</a>
+        </nav>
+        <div class="auth-area" th:if="${loggedIn}">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
             <form th:action="@{/logout}" method="post">
-                <button type="submit">Đăng xuất</button>
+                <button class="btn ghost" type="submit">Đăng xuất</button>
             </form>
         </div>
-        <div th:if="${!loggedIn}">
-            <p>Chào mừng bạn đến với hệ thống đổi pin xe máy điện thông minh.</p>
-            <p>
-                <a th:href="@{/login}">Đăng nhập</a>
-                |
-                <a th:href="@{/register}">Đăng ký</a>
-            </p>
+        <div class="auth-area" th:if="${!loggedIn}">
+            <a class="btn ghost" th:href="@{/login}">Đăng nhập</a>
+            <a class="btn primary" th:href="@{/register}">Đăng ký</a>
         </div>
-    </header>
+    </div>
+</header>
 
-    <section>
-        <h2>Các chức năng chính</h2>
-        <div>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tổng quan">Tổng quan</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Phương tiện">Phương tiện</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Báo cáo">Báo cáo</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tài khoản">Tài khoản</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
-            </form>
+<main>
+    <div class="container">
+        <p class="alert" th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
+    </div>
+
+    <section id="overview" class="hero-section container">
+        <div class="hero-content">
+            <p class="hero-subtitle">Tương lai xanh cho Việt Nam</p>
+            <h1 class="hero-title">Đổi pin xe điện <span>chỉ trong 3 phút</span></h1>
+            <p class="hero-description">Hệ thống đổi pin thông minh với công nghệ tiên tiến, trạm rộng khắp và đội ngũ hỗ trợ nhanh chóng. Trải nghiệm tương lai di chuyển xanh ngay hôm nay.</p>
+            <div class="hero-cta">
+                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
+                <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
+            </div>
+            <div class="hero-actions" th:if="${loggedIn}">
+                <div class="action-buttons">
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Tổng quan">Tổng quan</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Phương tiện">Phương tiện</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Báo cáo">Báo cáo</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Tài khoản">Tài khoản</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button" type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
+                    </form>
+                </div>
+            </div>
+            <div class="hero-actions locked" th:if="${!loggedIn}">
+                <div class="action-buttons">
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tổng quan</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Phương tiện</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tìm trạm</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Báo cáo</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tài khoản</button>
+                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Hỗ trợ</button>
+                </div>
+            </div>
+        </div>
+        <div class="hero-card">
+            <div class="card-icon">📺</div>
+            <div class="card-metric">
+                <span class="metric-label">Số điểm đổi pin</span>
+                <span class="metric-value">156 trạm</span>
+            </div>
+            <div class="card-metric">
+                <span class="metric-label">Khoảng cách gần nhất</span>
+                <span class="metric-value">2.3 km</span>
+            </div>
+            <div class="card-rating">
+                <span class="metric-label">Đánh giá</span>
+                <div class="rating-value">⭐ 4.9/5.0</div>
+            </div>
         </div>
     </section>
 
-    <section>
-        <h2>Hệ thống đổi pin xe máy điện</h2>
-        <p>Giải pháp đổi pin nhanh chóng, tiện lợi. Chỉ mất vài phút để tiếp tục di chuyển.</p>
-        <p>Các trạm đổi pin đã sẵn sàng phục vụ trên toàn quốc.</p>
-        <p>Đảm bảo an toàn và đáng tin cậy cho mọi chuyến đi.</p>
-    </section>
-
-    <section>
-        <h2>Tính năng nổi bật</h2>
-        <p th:if="${dashboardMessage}" th:text="${dashboardMessage}"></p>
-        <div>
-            <h3>Đổi pin nhanh chóng</h3>
-            <p>Chỉ mất khoảng 3 phút để thay pin tại trạm gần nhất, không cần chờ sạc.</p>
+    <section class="stats-section container">
+        <div class="stat-card">
+            <div class="stat-value">50+</div>
+            <div class="stat-label">Trạm đổi pin</div>
         </div>
-        <div>
-            <h3>Mạng lưới trạm rộng khắp</h3>
-            <p>Hệ thống trạm phủ khắp toàn quốc, luôn sẵn sàng phục vụ mọi hành trình.</p>
+        <div class="stat-card">
+            <div class="stat-value">3 phút</div>
+            <div class="stat-label">Thời gian đổi</div>
         </div>
-        <div>
-            <h3>An toàn &amp; Đáng tin cậy</h3>
-            <p>Pin được kiểm định định kỳ, đảm bảo an toàn và độ bền trong suốt quá trình sử dụng.</p>
-        </div>
-        <div>
-            <h3>Hoạt động 24/7</h3>
-            <p>Các trạm hoạt động liên tục ngày đêm, hỗ trợ người dùng bất cứ lúc nào.</p>
-        </div>
-        <div>
-            <h3>Thân thiện môi trường</h3>
-            <p>Góp phần giảm phát thải, hướng tới tương lai giao thông xanh và bền vững.</p>
-        </div>
-        <div>
-            <h3>Tiết kiệm chi phí</h3>
-            <p>Tối ưu chi phí vận hành so với xe xăng và phương thức tự sạc truyền thống.</p>
+        <div class="stat-card">
+            <div class="stat-value">24/7</div>
+            <div class="stat-label">Dịch vụ</div>
         </div>
     </section>
 
-    <section>
-        <h2>Cách thức hoạt động</h2>
-        <ol>
-            <li>Đăng ký tài khoản để bắt đầu trải nghiệm.</li>
-            <li>Tìm trạm đổi pin gần nhất thông qua ứng dụng.</li>
-            <li>Đổi pin và tiếp tục hành trình của bạn.</li>
-        </ol>
+    <section id="benefits" class="feature-section container">
+        <div class="section-header">
+            <span class="section-badge">Tính năng</span>
+            <h2 class="section-title">Tại sao chọn EV SWAP?</h2>
+            <p class="section-description">Giải pháp đổi pin thông minh với công nghệ tiên tiến và dịch vụ tối nhất dành cho người dùng xe máy điện.</p>
+        </div>
+        <div class="feature-grid">
+            <article class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Siêu nhanh 3 phút</h3>
+                <p>Chỉ mất 3 phút để thay pin, sẵn sàng tiếp tục hành trình mà không cần chờ sạc.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Mạng lưới rộng khắp</h3>
+                <p>Hơn 50 trạm phủ khắp cả nước, luôn trong bán kính dưới 5km.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>An toàn tuyệt đối</h3>
+                <p>Pin được kiểm định nghiêm ngặt, đảm bảo an toàn cho người dùng và phương tiện.</p>
+            </article>
+        </div>
     </section>
 
-    <section>
-        <h2>Thông tin đăng nhập demo</h2>
-        <p>Admin: admin@evswap.com / Admin123456</p>
-        <p>Staff: Được cấp bởi Admin khi tham gia hệ thống.</p>
-        <p>Driver: Đăng ký nhanh bằng nút "Đăng ký" ở trên.</p>
+    <section class="feature-section container">
+        <div class="feature-grid">
+            <article class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Tiết kiệm chi phí</h3>
+                <p>Chỉ 25.000đ mỗi lần đổi. Tiết kiệm 60% so với xăng truyền thống.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🕒</div>
+                <h3>Hoạt động 24/7</h3>
+                <p>Trạm đổi pin phục vụ không ngừng nghỉ, hỗ trợ mọi nhu cầu di chuyển.</p>
+            </article>
+            <article class="feature-card">
+                <div class="feature-icon">🌱</div>
+                <h3>Thân thiện môi trường</h3>
+                <p>Giảm phát thải CO<sub>2</sub>, góp phần xây dựng tương lai giao thông xanh.</p>
+            </article>
+        </div>
     </section>
 
-    <section>
-        <h2>Khám phá thêm</h2>
-        <form th:action="@{/dashboard/action}" method="post">
-            <button type="submit" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
-        </form>
-        <form th:action="@{/dashboard/action}" method="post">
-            <button type="submit" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
-        </form>
+    <section id="reports" class="demo-section container">
+        <h2 class="section-title">Trải nghiệm ngay</h2>
+        <p class="section-description">Đăng nhập với tài khoản demo để khám phá đầy đủ tính năng hệ thống.</p>
+        <div class="demo-grid">
+            <div class="demo-card">
+                <div class="demo-icon">🛡️</div>
+                <h3>Admin</h3>
+                <p>Email: admin@evswap.com</p>
+                <p>Mật khẩu: Admin123456</p>
+                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Admin</a>
+            </div>
+            <div class="demo-card">
+                <div class="demo-icon">👥</div>
+                <h3>Staff</h3>
+                <p>Nhân viên trạm được Admin cấp quyền truy cập dashboard.</p>
+                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Staff</a>
+            </div>
+            <div class="demo-card">
+                <div class="demo-icon">🛵</div>
+                <h3>Driver</h3>
+                <p>Đăng ký tài khoản Driver để sử dụng dịch vụ đổi pin tiện lợi.</p>
+                <a th:href="@{/register}" class="btn primary small">Đăng ký Driver</a>
+            </div>
+        </div>
     </section>
+
+    <section id="account" class="cta-section">
+        <div class="container cta-inner">
+            <div class="cta-content">
+                <h2>Sẵn sàng chuyển đổi sang tương lai xanh?</h2>
+                <p>Gia nhập cộng đồng hơn 10,000 tài xế sử dụng EV SWAP. Trải nghiệm công nghệ đổi pin thông minh ngay hôm nay.</p>
+            </div>
+            <div class="cta-actions">
+                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
+                <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="stations" class="preview-section container">
+        <div class="preview-card">
+            <div class="preview-header">
+                <span class="brand-icon">📺</span>
+                <h3>EV SWAP</h3>
+                <p>Hệ thống đổi pin xe máy điện thông minh nhất Việt Nam.</p>
+            </div>
+            <ul class="preview-list">
+                <li>Đổi pin siêu nhanh</li>
+                <li>Mạng lưới rộng khắp</li>
+                <li>An toàn tuyệt đối</li>
+            </ul>
+            <a th:href="@{/login}" class="btn ghost full">Đăng nhập</a>
+        </div>
+        <div class="preview-card dark">
+            <h3>Hỗ trợ ưu tiên</h3>
+            <p>Kích hoạt tài khoản để nhận tư vấn riêng và đặc quyền chăm sóc khách hàng.</p>
+            <ul class="preview-list">
+                <li>Đội ngũ trực 24/7</li>
+                <li>Hướng dẫn sử dụng chi tiết</li>
+                <li>Ưu đãi dành riêng hội viên</li>
+            </ul>
+            <a th:href="@{/register}" class="btn primary full">Tham gia ngay</a>
+        </div>
+    </section>
+
+    <section class="footer container">
+        <p th:if="${dashboardMessage}" th:text="${dashboardMessage}" class="footer-message"></p>
+        <p class="footer-note">© 2024 EV SWAP. Mạng lưới đổi pin xe máy điện thông minh đầu tiên tại Việt Nam.</p>
+    </section>
+</main>
+
+<div class="login-modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title" hidden>
+    <div class="login-modal__overlay" onclick="closeLoginModal()"></div>
+    <div class="login-modal__dialog">
+        <button type="button" class="login-modal__close" aria-label="Đóng" onclick="closeLoginModal()">×</button>
+        <div class="login-modal__content">
+            <div class="login-showcase">
+                <span class="brand-icon">📺</span>
+                <h3 id="login-modal-title">EV SWAP</h3>
+                <p>Đăng nhập để truy cập đầy đủ các chức năng đổi pin thông minh.</p>
+                <ul>
+                    <li>Quản lý phương tiện và đổi pin</li>
+                    <li>Theo dõi lịch sử hoá đơn</li>
+                    <li>Nhận hỗ trợ ưu tiên 24/7</li>
+                </ul>
+            </div>
+            <div class="login-form-card">
+                <h4>Đăng nhập tài khoản</h4>
+                <p>Nhập thông tin để tiếp tục sử dụng dashboard.</p>
+                <form th:action="@{/login}" method="get">
+                    <div class="input-group">
+                        <label for="modal-email">Email</label>
+                        <input id="modal-email" name="email" type="email" placeholder="example@email.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="modal-password">Mật khẩu</label>
+                        <input id="modal-password" name="password" type="password" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="btn primary full">Đăng nhập</button>
+                </form>
+                <p class="register-hint">Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const loginModal = document.getElementById('login-modal');
+
+    function openLoginModal() {
+        if (loginModal) {
+            loginModal.removeAttribute('hidden');
+            document.body.classList.add('modal-open');
+        }
+    }
+
+    function closeLoginModal() {
+        if (loginModal) {
+            loginModal.setAttribute('hidden', '');
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
+            closeLoginModal();
+        }
+    });
+</script>
 </body>
 </html>

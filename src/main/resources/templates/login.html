@@ -1,21 +1,95 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
 </head>
 <body>
-<h1>Login</h1>
-<form th:action="@{/login}" method="post">
-    <p>Email: <input type="email" name="email" required /></p>
-    <p>Password: <input type="password" name="password" required /></p>
-    <p><button type="submit">Login</button></p>
-</form>
+<header class="auth-nav">
+    <div class="auth-brand">
+        <span class="icon">📺</span>
+        <span>EV SWAP</span>
+    </div>
+    <div class="auth-nav-actions">
+        <a class="btn btn-ghost" th:href="@{/login}">Đăng nhập</a>
+        <a class="btn btn-primary" th:href="@{/register}">Đăng ký</a>
+    </div>
+</header>
 
-<p th:if="${loginError}" th:text="${loginError}"></p>
-<p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
-<p th:if="${loginRequired}" th:text="${loginRequired}"></p>
-<p th:if="${logoutMessage}" th:text="${logoutMessage}"></p>
+<main class="auth-wrapper">
+    <section class="auth-showcase">
+        <div class="showcase-header">
+            <p class="section-badge">Hệ sinh thái pin thông minh</p>
+            <h1>EV SWAP - <span>Hệ thống đổi pin xe máy điện</span> thông minh nhất Việt Nam</h1>
+            <p>Trạm đổi pin phủ khắp, quy trình nhanh chóng và quản lý phương tiện tiện lợi. Sẵn sàng đồng hành trên mọi hành trình xanh của bạn.</p>
+        </div>
+        <div class="showcase-highlights">
+            <article class="highlight-card">
+                <div class="highlight-icon">⚡</div>
+                <div class="highlight-content">
+                    <h3>Đổi pin siêu tốc</h3>
+                    <p>Hoàn tất đổi pin chỉ trong 3 phút với hệ thống tự động hóa và hỗ trợ 24/7.</p>
+                </div>
+            </article>
+            <article class="highlight-card">
+                <div class="highlight-icon">📍</div>
+                <div class="highlight-content">
+                    <h3>Mạng lưới toàn quốc</h3>
+                    <p>Hơn 150 trạm phủ rộng, luôn tìm được địa điểm gần nhất ngay trên ứng dụng.</p>
+                </div>
+            </article>
+            <article class="highlight-card">
+                <div class="highlight-icon">🔒</div>
+                <div class="highlight-content">
+                    <h3>An tâm tuyệt đối</h3>
+                    <p>Quản lý tài khoản và phương tiện bảo mật cao, thông báo theo thời gian thực.</p>
+                </div>
+            </article>
+        </div>
+        <div class="auth-meta">
+            <span class="status-dot"></span>
+            <span>Hỗ trợ khách hàng 24/7 · Hotline 1900 636 900</span>
+        </div>
+    </section>
 
-<p><a th:href="@{/register}">Don't have an account? Register</a></p>
+    <section class="auth-card" aria-labelledby="login-title">
+        <div class="auth-card-header">
+            <a th:href="@{/dashboard}">← Quay lại</a>
+            <a class="btn btn-ghost" th:href="@{/register}">Tạo tài khoản</a>
+        </div>
+        <div>
+            <h2 id="login-title">Đăng nhập</h2>
+            <p>Đăng nhập vào hệ thống EV SWAP để bắt đầu hành trình của bạn.</p>
+        </div>
+
+        <div th:if="${loginError}" class="alert-message alert-error" th:text="${loginError}"></div>
+        <div th:if="${loginSuccess}" class="alert-message alert-success" th:text="${loginSuccess}"></div>
+        <div th:if="${loginRequired}" class="alert-message alert-error" th:text="${loginRequired}"></div>
+        <div th:if="${logoutMessage}" class="alert-message alert-success" th:text="${logoutMessage}"></div>
+
+        <form class="auth-form" th:action="@{/login}" method="post">
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="example@email.com" required>
+            </div>
+            <div class="auth-field">
+                <label for="password">Mật khẩu</label>
+                <input id="password" name="password" type="password" placeholder="••••••••" required>
+            </div>
+            <div class="auth-submit">
+                <button class="btn btn-primary" type="submit">Đăng nhập</button>
+            </div>
+        </form>
+
+        <div class="form-footer">
+            Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
+        </div>
+    </section>
+</main>
 </body>
 </html>
