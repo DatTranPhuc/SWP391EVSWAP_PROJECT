@@ -1,21 +1,41 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSWAP | Đăng nhập</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<h1>Login</h1>
-<form th:action="@{/login}" method="post">
-    <p>Email: <input type="email" name="email" required /></p>
-    <p>Password: <input type="password" name="password" required /></p>
-    <p><button type="submit">Login</button></p>
-</form>
+<main>
+    <section class="auth-card">
+        <div class="brand-header">
+            <h1>Chào mừng trở lại</h1>
+            <span>EV SWAP</span>
+        </div>
+        <p>Truy cập hệ thống đổi pin xe máy điện thông minh của bạn.</p>
 
-<p th:if="${loginError}" th:text="${loginError}"></p>
-<p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
-<p th:if="${loginRequired}" th:text="${loginRequired}"></p>
-<p th:if="${logoutMessage}" th:text="${logoutMessage}"></p>
+        <div th:if="${loginError}" class="alert alert-error" th:text="${loginError}"></div>
+        <div th:if="${loginSuccess}" class="alert alert-success" th:text="${loginSuccess}"></div>
+        <div th:if="${loginRequired}" class="alert alert-info" th:text="${loginRequired}"></div>
+        <div th:if="${logoutMessage}" class="alert alert-success" th:text="${logoutMessage}"></div>
 
-<p><a th:href="@{/register}">Don't have an account? Register</a></p>
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" placeholder="name@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input id="password" type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button class="btn-primary" type="submit">Đăng nhập</button>
+        </form>
+
+        <p class="redirect">Chưa có tài khoản?
+            <a th:href="@{/register}">Đăng ký ngay</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>

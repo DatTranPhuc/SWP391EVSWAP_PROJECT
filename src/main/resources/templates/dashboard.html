@@ -1,112 +1,128 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>EV SWAP Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV SWAP | Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
-    <header>
-        <h1>EV SWAP</h1>
-        <div th:if="${loggedIn}">
-            <p>Xin chào <span th:text="${driverName}">người dùng</span>!</p>
-            <form th:action="@{/logout}" method="post">
-                <button type="submit">Đăng xuất</button>
-            </form>
-        </div>
-        <div th:if="${!loggedIn}">
-            <p>Chào mừng bạn đến với hệ thống đổi pin xe máy điện thông minh.</p>
-            <p>
-                <a th:href="@{/login}">Đăng nhập</a>
-                |
-                <a th:href="@{/register}">Đăng ký</a>
-            </p>
-        </div>
-    </header>
+<main>
+    <div class="dashboard">
+        <section class="surface-card" style="grid-column: 1 / -1;">
+            <div class="brand-header">
+                <h1>EV SWAP</h1>
+                <span>Dashboard</span>
+            </div>
+            <div th:if="${loginSuccess}" class="alert alert-success" th:text="${loginSuccess}"></div>
 
-    <section>
-        <h2>Các chức năng chính</h2>
-        <div>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tổng quan">Tổng quan</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Phương tiện">Phương tiện</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Báo cáo">Báo cáo</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Tài khoản">Tài khoản</button>
-            </form>
-            <form th:action="@{/dashboard/action}" method="post">
-                <button type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
-            </form>
-        </div>
-    </section>
+            <div th:if="${loggedIn}">
+                <h3>Xin chào, <span th:text="${driverName}">người dùng</span> 👋</h3>
+                <p>Bạn đã sẵn sàng đổi pin và tiếp tục hành trình.</p>
+                <form th:action="@{/logout}" method="post">
+                    <button class="btn-secondary" type="submit">Đăng xuất</button>
+                </form>
+            </div>
+            <div th:if="${!loggedIn}">
+                <p>Chào mừng bạn đến với hệ thống đổi pin xe máy điện thông minh.</p>
+                <p>
+                    <a th:href="@{/login}">Đăng nhập</a>
+                    <span class="badge">hoặc</span>
+                    <a th:href="@{/register}">Đăng ký</a>
+                </p>
+            </div>
+        </section>
 
-    <section>
-        <h2>Hệ thống đổi pin xe máy điện</h2>
-        <p>Giải pháp đổi pin nhanh chóng, tiện lợi. Chỉ mất vài phút để tiếp tục di chuyển.</p>
-        <p>Các trạm đổi pin đã sẵn sàng phục vụ trên toàn quốc.</p>
-        <p>Đảm bảo an toàn và đáng tin cậy cho mọi chuyến đi.</p>
-    </section>
+        <section class="surface-card">
+            <h2>Các chức năng chính</h2>
+            <div class="dashboard-actions">
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-primary" type="submit" name="feature" value="Tổng quan">Tổng quan</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Phương tiện">Phương tiện</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Báo cáo">Báo cáo</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Tài khoản">Tài khoản</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
+                </form>
+            </div>
+        </section>
 
-    <section>
-        <h2>Tính năng nổi bật</h2>
-        <p th:if="${dashboardMessage}" th:text="${dashboardMessage}"></p>
-        <div>
-            <h3>Đổi pin nhanh chóng</h3>
-            <p>Chỉ mất khoảng 3 phút để thay pin tại trạm gần nhất, không cần chờ sạc.</p>
-        </div>
-        <div>
-            <h3>Mạng lưới trạm rộng khắp</h3>
-            <p>Hệ thống trạm phủ khắp toàn quốc, luôn sẵn sàng phục vụ mọi hành trình.</p>
-        </div>
-        <div>
-            <h3>An toàn &amp; Đáng tin cậy</h3>
-            <p>Pin được kiểm định định kỳ, đảm bảo an toàn và độ bền trong suốt quá trình sử dụng.</p>
-        </div>
-        <div>
-            <h3>Hoạt động 24/7</h3>
-            <p>Các trạm hoạt động liên tục ngày đêm, hỗ trợ người dùng bất cứ lúc nào.</p>
-        </div>
-        <div>
-            <h3>Thân thiện môi trường</h3>
-            <p>Góp phần giảm phát thải, hướng tới tương lai giao thông xanh và bền vững.</p>
-        </div>
-        <div>
-            <h3>Tiết kiệm chi phí</h3>
-            <p>Tối ưu chi phí vận hành so với xe xăng và phương thức tự sạc truyền thống.</p>
-        </div>
-    </section>
+        <section class="surface-card">
+            <h2>Hệ thống đổi pin xe máy điện</h2>
+            <p>Giải pháp đổi pin nhanh chóng, tiện lợi. Chỉ mất vài phút để tiếp tục di chuyển.</p>
+            <p>Các trạm đổi pin đã sẵn sàng phục vụ trên toàn quốc.</p>
+            <p>Đảm bảo an toàn và đáng tin cậy cho mọi chuyến đi.</p>
+        </section>
 
-    <section>
-        <h2>Cách thức hoạt động</h2>
-        <ol>
-            <li>Đăng ký tài khoản để bắt đầu trải nghiệm.</li>
-            <li>Tìm trạm đổi pin gần nhất thông qua ứng dụng.</li>
-            <li>Đổi pin và tiếp tục hành trình của bạn.</li>
-        </ol>
-    </section>
+        <section class="surface-card">
+            <h2>Tính năng nổi bật</h2>
+            <div th:if="${dashboardMessage}" class="alert alert-info" th:text="${dashboardMessage}"></div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Đổi pin nhanh chóng</h3>
+                    <p>Chỉ mất khoảng 3 phút để thay pin tại trạm gần nhất, không cần chờ sạc.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Mạng lưới trạm rộng khắp</h3>
+                    <p>Hệ thống trạm phủ khắp toàn quốc, luôn sẵn sàng phục vụ mọi hành trình.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>An toàn &amp; Đáng tin cậy</h3>
+                    <p>Pin được kiểm định định kỳ, đảm bảo an toàn và độ bền trong suốt quá trình sử dụng.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Hoạt động 24/7</h3>
+                    <p>Các trạm hoạt động liên tục ngày đêm, hỗ trợ người dùng bất cứ lúc nào.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Thân thiện môi trường</h3>
+                    <p>Góp phần giảm phát thải, hướng tới tương lai giao thông xanh và bền vững.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Tiết kiệm chi phí</h3>
+                    <p>Tối ưu chi phí vận hành so với xe xăng và phương thức tự sạc truyền thống.</p>
+                </div>
+            </div>
+        </section>
 
-    <section>
-        <h2>Thông tin đăng nhập demo</h2>
-        <p>Admin: admin@evswap.com / Admin123456</p>
-        <p>Staff: Được cấp bởi Admin khi tham gia hệ thống.</p>
-        <p>Driver: Đăng ký nhanh bằng nút "Đăng ký" ở trên.</p>
-    </section>
+        <section class="surface-card">
+            <h2>Cách thức hoạt động</h2>
+            <ol>
+                <li>Đăng ký tài khoản để bắt đầu trải nghiệm.</li>
+                <li>Tìm trạm đổi pin gần nhất thông qua ứng dụng.</li>
+                <li>Đổi pin và tiếp tục hành trình của bạn.</li>
+            </ol>
+        </section>
 
-    <section>
-        <h2>Khám phá thêm</h2>
-        <form th:action="@{/dashboard/action}" method="post">
-            <button type="submit" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
-        </form>
-        <form th:action="@{/dashboard/action}" method="post">
-            <button type="submit" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
-        </form>
-    </section>
+        <section class="surface-card">
+            <h2>Thông tin đăng nhập demo</h2>
+            <p>Admin: admin@evswap.com / Admin123456</p>
+            <p>Staff: Được cấp bởi Admin khi tham gia hệ thống.</p>
+            <p>Driver: Đăng ký nhanh bằng nút "Đăng ký" ở trên.</p>
+        </section>
+
+        <section class="surface-card">
+            <h2>Khám phá thêm</h2>
+            <div class="dashboard-actions">
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
+                </form>
+                <form th:action="@{/dashboard/action}" method="post">
+                    <button class="btn-secondary" type="submit" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</main>
 </body>
 </html>

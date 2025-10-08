@@ -1,21 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSWAP | Đăng ký</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<h1>Register</h1>
-<form th:action="@{/register}" method="post">
-    <p>Email: <input type="email" name="email" required /></p>
-    <p>Password: <input type="password" name="password" required /></p>
-    <p>Full Name: <input type="text" name="fullName" required /></p>
-    <p>Phone: <input type="text" name="phone" /></p>
-    <p><button type="submit">Register</button></p>
-</form>
+<main>
+    <section class="auth-card">
+        <div class="brand-header">
+            <h1>Tạo tài khoản mới</h1>
+            <span>Bắt đầu</span>
+        </div>
+        <p>Mở khóa trải nghiệm đổi pin thông minh với EV SWAP.</p>
 
-<p th:if="${registerError}" th:text="${registerError}"></p>
-<p th:if="${registerSuccess}" th:text="${registerSuccess}"></p>
+        <div th:if="${registerError}" class="alert alert-error" th:text="${registerError}"></div>
+        <div th:if="${registerSuccess}" class="alert alert-success" th:text="${registerSuccess}"></div>
 
-<p><a th:href="@{/login}">Already have an account? Login</a></p>
+        <form th:action="@{/register}" method="post">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" placeholder="name@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input id="password" type="password" name="password" placeholder="Tối thiểu 8 ký tự" required>
+            </div>
+            <div class="form-group">
+                <label for="fullName">Họ và tên</label>
+                <input id="fullName" type="text" name="fullName" placeholder="Nguyễn Văn A" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Số điện thoại</label>
+                <input id="phone" type="text" name="phone" placeholder="0123 456 789">
+            </div>
+            <button class="btn-primary" type="submit">Đăng ký</button>
+        </form>
+
+        <p class="redirect">Đã có tài khoản?
+            <a th:href="@{/login}">Đăng nhập ngay</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>

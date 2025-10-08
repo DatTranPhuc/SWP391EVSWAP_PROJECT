@@ -1,27 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Đăng ký phương tiện</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSWAP | Đăng ký phương tiện</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<h1>Đăng ký phương tiện</h1>
+<main>
+    <section class="surface-card">
+        <div class="brand-header">
+            <h1>Hoàn thiện hồ sơ xe</h1>
+            <span>EV Driver</span>
+        </div>
+        <p th:text="'Xin chào ' + ${driverName} + '!'">Xin chào Người dùng!</p>
+        <p>Vui lòng cung cấp thông tin xe máy điện của bạn để đảm bảo trải nghiệm đổi pin liền mạch.</p>
 
-<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
-<p th:if="${vehicleError}" th:text="${vehicleError}"></p>
+        <div th:if="${verifySuccess}" class="alert alert-success" th:text="${verifySuccess}"></div>
+        <div th:if="${vehicleError}" class="alert alert-error" th:text="${vehicleError}"></div>
 
-<p th:text="'Xin chào ' + ${driverName}">Xin chào Người dùng</p>
-<p>Vui lòng cung cấp thông tin xe máy điện của bạn để hoàn tất hồ sơ.</p>
+        <form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+            <input type="hidden" name="driverId" th:value="${driverId}">
 
-<form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
-    <input type="hidden" name="driverId" th:value="${driverId}" />
+            <div class="form-group">
+                <label for="model">Model xe</label>
+                <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
+            </div>
+            <div class="form-group">
+                <label for="vin">Số VIN</label>
+                <input id="vin" type="text" th:field="*{vin}" placeholder="VD: VF123456789" required>
+            </div>
+            <div class="form-group">
+                <label for="plateNumber">Biển số</label>
+                <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="51A-123.45">
+            </div>
 
-    <p>Model xe: <input id="model" type="text" th:field="*{model}" required /></p>
-    <p>Số VIN: <input id="vin" type="text" th:field="*{vin}" required /></p>
-    <p>Biển số: <input id="plateNumber" type="text" th:field="*{plateNumber}" /></p>
+            <div class="alert alert-info">
+                Thông tin xe giúp hệ thống xác nhận danh tính khi bạn đổi pin tại trạm.
+            </div>
 
-    <p>Thông tin xe sẽ được sử dụng để xác nhận khi đổi pin tại trạm.</p>
-
-    <p><button type="submit">Hoàn tất đăng ký</button></p>
-</form>
+            <button class="btn-primary" type="submit">Hoàn tất đăng ký</button>
+        </form>
+    </section>
+</main>
 </body>
 </html>

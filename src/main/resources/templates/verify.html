@@ -1,19 +1,39 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Verify Email</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSWAP | Xác thực Email</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<h1>Verify Email</h1>
-<form th:action="@{/verify-otp}" method="post">
-    <p>Email: <input type="email" name="email" th:value="${email}" required /></p>
-    <p>OTP: <input type="text" name="otp" required /></p>
-    <p><button type="submit">Verify</button></p>
-</form>
+<main>
+    <section class="auth-card">
+        <div class="brand-header">
+            <h1>Xác thực tài khoản</h1>
+            <span>Bảo mật</span>
+        </div>
+        <p>Nhập mã OTP được gửi tới hộp thư của bạn để hoàn tất đăng ký.</p>
 
-<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
-<p th:if="${verifyError}" th:text="${verifyError}"></p>
+        <div th:if="${verifySuccess}" class="alert alert-success" th:text="${verifySuccess}"></div>
+        <div th:if="${verifyError}" class="alert alert-error" th:text="${verifyError}"></div>
 
-<p><a th:href="@{/login}">Back to Login</a></p>
+        <form th:action="@{/verify-otp}" method="post">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" th:value="${email}" required>
+            </div>
+            <div class="form-group">
+                <label for="otp">Mã OTP</label>
+                <input id="otp" type="text" name="otp" placeholder="Nhập mã gồm 6 chữ số" required>
+            </div>
+            <button class="btn-primary" type="submit">Xác nhận</button>
+        </form>
+
+        <p class="redirect">
+            <a th:href="@{/login}">Quay lại trang đăng nhập</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>
