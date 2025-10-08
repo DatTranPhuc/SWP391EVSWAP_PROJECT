@@ -22,5 +22,5 @@
         private BigDecimal latitude;
         private BigDecimal longitude;
 
-        private String status; // e.g., active/closed
+        private String status;
     }
