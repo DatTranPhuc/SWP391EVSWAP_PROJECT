@@ -24,6 +24,30 @@
     </header>
 
     <section>
+        <h2>Các chức năng chính</h2>
+        <div>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Tải ứng dụng">Tải ứng dụng</button>
+            </form>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Phân tích hiệu suất">Phân tích hiệu suất</button>
+            </form>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
+            </form>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Đặt lịch">Đặt lịch</button>
+            </form>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Thanh toán">Thanh toán</button>
+            </form>
+            <form th:action="@{/dashboard/action}" method="post">
+                <button type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
+            </form>
+        </div>
+    </section>
+
+    <section>
         <h2>Hệ thống đổi pin xe máy điện</h2>
         <p>Giải pháp đổi pin nhanh chóng, tiện lợi. Chỉ mất vài phút để tiếp tục di chuyển.</p>
         <p>Các trạm đổi pin đã sẵn sàng phục vụ trên toàn quốc.</p>
@@ -77,12 +101,12 @@
 
     <section>
         <h2>Khám phá thêm</h2>
-        <p>
-            <button type="submit" form="contactForm" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
-            <button type="submit" form="contactForm" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
-        </p>
+        <form th:action="@{/dashboard/action}" method="post">
+            <button type="submit" name="feature" value="Liên hệ tư vấn">Liên hệ tư vấn</button>
+        </form>
+        <form th:action="@{/dashboard/action}" method="post">
+            <button type="submit" name="feature" value="Đặt lịch trải nghiệm">Đặt lịch trải nghiệm</button>
+        </form>
     </section>
-
-    <form id="contactForm" th:action="@{/dashboard/action}" method="post"></form>
 </body>
 </html>
