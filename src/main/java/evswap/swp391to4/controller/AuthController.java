@@ -74,9 +74,9 @@ public class AuthController {
                             @RequestParam String otp,
                             RedirectAttributes redirect) {
         try {
-            driverService.verifyOtp(email, otp);
-            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
+            Driver driver = driverService.verifyOtp(email, otp);
+            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng ký phương tiện.");
+            return "redirect:/vehicles/register?driverId=" + driver.getDriverId();
         } catch (Exception e) {
             redirect.addFlashAttribute("verifyError", e.getMessage());
             redirect.addFlashAttribute("email", email); // giữ lại email để hiển thị form

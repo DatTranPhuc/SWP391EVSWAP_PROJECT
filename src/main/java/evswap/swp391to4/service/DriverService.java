@@ -46,7 +46,7 @@ public class DriverService {
     }
 
     @Transactional
-    public void verifyOtp(String email, String otp) {
+    public Driver verifyOtp(String email, String otp) {
         Driver driver = driverRepo.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User không tồn tại"));
 
@@ -66,6 +66,8 @@ public class DriverService {
         driver.setEmailOtp(null);
         driver.setOtpExpiry(null);
         driverRepo.save(driver);
+
+        return driver;
     }
 
     @Transactional
@@ -82,5 +84,11 @@ public class DriverService {
         }
 
         return driver;
+    }
+
+    @Transactional(readOnly = true)
+    public Driver getDriverById(Integer driverId) {
+        return driverRepo.findById(driverId)
+                .orElseThrow(() -> new IllegalStateException("Tài khoản tài xế không tồn tại"));
     }
 }
