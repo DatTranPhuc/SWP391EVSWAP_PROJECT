@@ -2,64 +2,18 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Verify Email</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            background-color: white;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            width: 400px;
-        }
-        h2 { text-align: center; margin-bottom: 20px; }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover { background-color: #45a049; }
-        .message { text-align: center; margin: 10px 0; }
-        .success { color: green; }
-        .error { color: red; }
-        .link { text-align: center; margin-top: 15px; }
-        .link a { color: #2196F3; text-decoration: none; }
-        .link a:hover { text-decoration: underline; }
-    </style>
 </head>
 <body>
-<div class="container">
-    <h2>Verify Email</h2>
-    <form th:action="@{/verify-otp}" method="post">
-        <input type="email" name="email" placeholder="Email" th:value="${email}" required /><br/>
-        <input type="text" name="otp" placeholder="Enter OTP" required /><br/>
-        <button type="submit">Verify</button>
-    </form>
+<h1>Verify Email</h1>
+<form th:action="@{/verify-otp}" method="post">
+    <p>Email: <input type="email" name="email" th:value="${email}" required /></p>
+    <p>OTP: <input type="text" name="otp" required /></p>
+    <p><button type="submit">Verify</button></p>
+</form>
 
-    <div class="message success" th:if="${verifySuccess}" th:text="${verifySuccess}"></div>
-    <div class="message error" th:if="${verifyError}" th:text="${verifyError}"></div>
+<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
+<p th:if="${verifyError}" th:text="${verifyError}"></p>
 
-    <div class="link">
-        <a th:href="@{/login}">Back to Login</a>
-    </div>
-</div>
+<p><a th:href="@{/login}">Back to Login</a></p>
 </body>
 </html>

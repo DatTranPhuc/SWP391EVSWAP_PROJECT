@@ -2,6 +2,7 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.DriverService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,11 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
+                        HttpSession session,
                         RedirectAttributes redirect) {
         try {
             Driver driver = driverService.login(email, password);
+            session.setAttribute("loggedInDriver", driver);
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
             return "redirect:/dashboard"; // Thay bằng trang sau login
         } catch (Exception e) {

@@ -2,185 +2,26 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Đăng ký phương tiện</title>
-    <style>
-        :root {
-            --primary: #1a73e8;
-            --success: #0f9d58;
-            --background: #f7f9fc;
-            --text-primary: #202124;
-            --text-secondary: #5f6368;
-            --border-radius: 12px;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: var(--background);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .card {
-            background: #fff;
-            width: 480px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 24px 48px rgba(23, 43, 77, 0.12);
-            padding: 32px;
-        }
-
-        .profile {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #e8f0fe;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-        .profile h2 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--text-primary);
-        }
-
-        .profile span {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .card h3 {
-            margin: 0 0 24px 0;
-            color: var(--text-secondary);
-            font-weight: 500;
-            line-height: 1.4;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        label {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #dadce0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
-        }
-
-        .info-box {
-            background: #f1f8ff;
-            border-radius: 10px;
-            padding: 14px 16px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-
-        .info-icon {
-            font-size: 18px;
-        }
-
-        .submit-btn {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 24px rgba(15, 157, 88, 0.18);
-        }
-
-        .message {
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .message.success {
-            color: #0f9d58;
-        }
-
-        .message.error {
-            color: #d93025;
-        }
-    </style>
 </head>
 <body>
-<div class="card">
-    <div class="message success" th:if="${verifySuccess}" th:text="${verifySuccess}"></div>
-    <div class="message error" th:if="${vehicleError}" th:text="${vehicleError}"></div>
+<h1>Đăng ký phương tiện</h1>
 
-    <div class="profile">
-        <div class="avatar" th:text="${driverInitial}">D</div>
-        <div>
-            <h2 th:text="'Xin chào ' + ${driverName}">Xin chào Người dùng</h2>
-            <span>Vui lòng đăng ký thông tin xe máy điện của bạn để sử dụng dịch vụ</span>
-        </div>
-    </div>
+<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
+<p th:if="${vehicleError}" th:text="${vehicleError}"></p>
 
-    <form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
-        <input type="hidden" name="driverId" th:value="${driverId}" />
+<p th:text="'Xin chào ' + ${driverName}">Xin chào Người dùng</p>
+<p>Vui lòng cung cấp thông tin xe máy điện của bạn để hoàn tất hồ sơ.</p>
 
-        <div>
-            <label for="model">Model xe</label>
-            <input id="model" type="text" th:field="*{model}" placeholder="VinFast Klara, Yadea..." required />
-        </div>
+<form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+    <input type="hidden" name="driverId" th:value="${driverId}" />
 
-        <div>
-            <label for="vin">Số VIN (Số khung)</label>
-            <input id="vin" type="text" th:field="*{vin}" placeholder="VF1XXXXXXXXXXXXXX" required />
-        </div>
+    <p>Model xe: <input id="model" type="text" th:field="*{model}" required /></p>
+    <p>Số VIN: <input id="vin" type="text" th:field="*{vin}" required /></p>
+    <p>Biển số: <input id="plateNumber" type="text" th:field="*{plateNumber}" /></p>
 
-        <div>
-            <label for="plateNumber">Biển số</label>
-            <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-12345" />
-        </div>
+    <p>Thông tin xe sẽ được sử dụng để xác nhận khi đổi pin tại trạm.</p>
 
-        <div class="info-box">
-            <div class="info-icon">💡</div>
-            <div>Thông tin xe của bạn sẽ được sử dụng để xác nhận khi đổi pin tại trạm</div>
-        </div>
-
-        <button class="submit-btn" type="submit">Hoàn tất đăng ký</button>
-    </form>
-</div>
+    <p><button type="submit">Hoàn tất đăng ký</button></p>
+</form>
 </body>
 </html>
