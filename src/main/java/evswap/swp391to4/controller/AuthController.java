@@ -36,6 +36,13 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public String logout(HttpSession session, RedirectAttributes redirect) {
+        session.invalidate();
+        redirect.addFlashAttribute("logoutMessage", "Bạn đã đăng xuất thành công.");
+        return "redirect:/login";
+    }
+
     // ===== REGISTER =====
     @GetMapping("/register")
     public String registerPage() {

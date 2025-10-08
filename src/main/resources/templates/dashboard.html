@@ -4,11 +4,15 @@
     <title>EV SWAP Dashboard</title>
 </head>
 <body>
+<p th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
 <header>
     <h1>EV SWAP</h1>
     <div th:if="${loggedIn}">
         <p>Xin chào <span th:text="${driverName}">người dùng</span>!</p>
         <p>Bạn đã sẵn sàng sử dụng các tiện ích đổi pin.</p>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Đăng xuất</button>
+        </form>
     </div>
     <div th:if="${!loggedIn}">
         <p>Chào mừng bạn đến với hệ thống đổi pin xe máy điện thông minh.</p>
