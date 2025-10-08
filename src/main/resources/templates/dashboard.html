@@ -33,26 +33,30 @@
     <section>
         <h2>Tính năng nổi bật</h2>
         <p th:if="${dashboardMessage}" th:text="${dashboardMessage}"></p>
-        <form th:action="@{/dashboard/action}" method="post">
-            <p>
-                <button type="submit" name="feature" value="Đổi pin nhanh chóng">Đổi pin nhanh chóng</button>
-            </p>
-            <p>
-                <button type="submit" name="feature" value="Mạng lưới trạm rộng khắp">Mạng lưới trạm rộng khắp</button>
-            </p>
-            <p>
-                <button type="submit" name="feature" value="An toàn và đáng tin cậy">An toàn và đáng tin cậy</button>
-            </p>
-            <p>
-                <button type="submit" name="feature" value="Hoạt động 24/7">Hoạt động 24/7</button>
-            </p>
-            <p>
-                <button type="submit" name="feature" value="Thân thiện môi trường">Thân thiện môi trường</button>
-            </p>
-            <p>
-                <button type="submit" name="feature" value="Tiết kiệm chi phí">Tiết kiệm chi phí</button>
-            </p>
-        </form>
+        <div>
+            <h3>Đổi pin nhanh chóng</h3>
+            <p>Chỉ mất khoảng 3 phút để thay pin tại trạm gần nhất, không cần chờ sạc.</p>
+        </div>
+        <div>
+            <h3>Mạng lưới trạm rộng khắp</h3>
+            <p>Hệ thống trạm phủ khắp toàn quốc, luôn sẵn sàng phục vụ mọi hành trình.</p>
+        </div>
+        <div>
+            <h3>An toàn &amp; Đáng tin cậy</h3>
+            <p>Pin được kiểm định định kỳ, đảm bảo an toàn và độ bền trong suốt quá trình sử dụng.</p>
+        </div>
+        <div>
+            <h3>Hoạt động 24/7</h3>
+            <p>Các trạm hoạt động liên tục ngày đêm, hỗ trợ người dùng bất cứ lúc nào.</p>
+        </div>
+        <div>
+            <h3>Thân thiện môi trường</h3>
+            <p>Góp phần giảm phát thải, hướng tới tương lai giao thông xanh và bền vững.</p>
+        </div>
+        <div>
+            <h3>Tiết kiệm chi phí</h3>
+            <p>Tối ưu chi phí vận hành so với xe xăng và phương thức tự sạc truyền thống.</p>
+        </div>
     </section>
 
     <section>
