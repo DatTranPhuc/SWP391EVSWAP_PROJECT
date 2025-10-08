@@ -18,12 +18,11 @@ public class StationService {
     private final StationRepository stationRepo;
 
     /**
-     * 👑 Chỉ admin được phép tạo station
+     * 👑 Admin tạo trạm mới
      */
     @Transactional
     public StationResponse createStation(StationCreateRequest req) {
-        if (stationRepo.findAll().stream()
-                .anyMatch(s -> s.getName().equalsIgnoreCase(req.getName()))) {
+        if (stationRepo.findByNameIgnoreCase(req.getName()).isPresent()) {
             throw new IllegalStateException("Station đã tồn tại");
         }
 
@@ -40,7 +39,7 @@ public class StationService {
     }
 
     /**
-     * 📋 Lấy danh sách tất cả trạm
+     * 📋 Lấy tất cả trạm
      */
     public List<StationResponse> getAllStations() {
         return stationRepo.findAll().stream()
@@ -49,31 +48,37 @@ public class StationService {
     }
 
     /**
-     * 🔎 Tìm trạm theo tên
+     * 🔎 Tìm trạm theo tên (nếu không nhập → trả tất cả)
      */
     public List<StationResponse> searchByName(String name) {
-        return stationRepo.findAll().stream()
-                .filter(s -> s.getName() != null && s.getName().toLowerCase().contains(name.toLowerCase()))
+        if (name == null || name.trim().isEmpty()) {
+            return getAllStations();
+        }
+
+        return stationRepo.findByNameContainingIgnoreCase(name).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     /**
-     * 📍 Tìm trạm gần vị trí (bán kính km)
+     * 📍 Tìm trạm gần vị trí (theo bán kính km)
      */
     public List<StationResponse> findNearby(BigDecimal lat, BigDecimal lng, double radiusKm) {
         return stationRepo.findAll().stream()
-                .filter(s -> s.getLatitude() != null && s.getLongitude() != null)
-                .filter(s -> distanceInKm(
-                        lat.doubleValue(), lng.doubleValue(),
-                        s.getLatitude().doubleValue(), s.getLongitude().doubleValue()
-                ) <= radiusKm)
+                .filter(s -> {
+                    if (s.getLatitude() == null || s.getLongitude() == null) return false;
+                    double distance = distanceInKm(
+                            lat.doubleValue(), lng.doubleValue(),
+                            s.getLatitude().doubleValue(), s.getLongitude().doubleValue()
+                    );
+                    return distance <= radiusKm;
+                })
                 .map(this::toResponse)
                 .toList();
     }
 
     /**
-     * 🧭 Tính khoảng cách giữa 2 toạ độ theo công thức Haversine
+     * 📏 Công thức Haversine tính khoảng cách giữa 2 tọa độ
      */
     private double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
         double R = 6371; // Bán kính Trái đất (km)

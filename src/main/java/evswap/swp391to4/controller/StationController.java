@@ -18,7 +18,7 @@ public class StationController {
     private final StationService stationService;
 
     /**
-     * 📋 Ai cũng có thể xem danh sách tất cả trạm
+     * 📋 Xem tất cả trạm
      */
     @GetMapping
     public ResponseEntity<List<StationResponse>> getAllStations() {
@@ -26,17 +26,17 @@ public class StationController {
     }
 
     /**
-     * 🔎 Tìm trạm theo tên
-     * Ví dụ: /api/stations/search?name=Station C
+     * 🔎 Tìm trạm theo tên (rỗng → hiện tất cả)
+     * /api/stations/search?name=Station A
      */
     @GetMapping("/search")
-    public ResponseEntity<List<StationResponse>> searchStationsByName(@RequestParam String name) {
+    public ResponseEntity<List<StationResponse>> searchStationsByName(@RequestParam(required = false) String name) {
         return ResponseEntity.ok(stationService.searchByName(name));
     }
 
     /**
      * 📍 Tìm trạm gần vị trí hiện tại
-     * Ví dụ: /api/stations/nearby?lat=10.7626&lng=106.6822&radiusKm=5
+     * /api/stations/nearby?lat=10.7626&lng=106.6822&radiusKm=5
      */
     @GetMapping("/nearby")
     public ResponseEntity<List<StationResponse>> findNearbyStations(
