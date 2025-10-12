@@ -1,6 +1,5 @@
 package evswap.swp391to4.service;
 
-import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.VehicleRepository;
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class VehicleService {
 
     @Transactional
     public Vehicle addVehicleToDriver(Integer driverId, Vehicle vehicle) {
-        Driver driver = driverRepository.findById(driverId)
+        var driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new IllegalStateException("Tài khoản tài xế không tồn tại"));
 
         if (vehicle.getVin() == null || vehicle.getVin().isBlank()) {
@@ -53,5 +53,18 @@ public class VehicleService {
         vehicle.setCreatedAt(Instant.now());
 
         return vehicleRepository.save(vehicle);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Vehicle> getVehiclesForDriver(Integer driverId) {
+        if (driverId == null) {
+            throw new IllegalArgumentException("Thiếu thông tin tài khoản tài xế");
+        }
+
+        if (!driverRepository.existsById(driverId)) {
+            throw new IllegalStateException("Tài khoản tài xế không tồn tại");
+        }
+
+        return vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driverId);
     }
 }

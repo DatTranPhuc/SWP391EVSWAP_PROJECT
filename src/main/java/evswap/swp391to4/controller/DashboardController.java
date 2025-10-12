@@ -34,7 +34,38 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + feature);
+        String normalizedFeature = feature == null ? "" : feature.trim();
+
+        if ("Tổng quan".equalsIgnoreCase(normalizedFeature)) {
+            redirect.addFlashAttribute("dashboardMessage", "Bạn đang ở trang tổng quan EV SWAP.");
+            return "redirect:/dashboard";
+        }
+
+        if ("Phương tiện".equalsIgnoreCase(normalizedFeature)) {
+            return "redirect:/vehicles/manage";
+        }
+
+        if ("Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
+            redirect.addFlashAttribute("dashboardMessage", "Chức năng Tìm trạm đang được phát triển.");
+            return "redirect:/dashboard";
+        }
+
+        if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
+            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
+            return "redirect:/dashboard";
+        }
+
+        if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {
+            redirect.addFlashAttribute("dashboardMessage", "Truy cập trang tài khoản trong phiên bản sắp tới.");
+            return "redirect:/dashboard";
+        }
+
+        if ("Hỗ trợ".equalsIgnoreCase(normalizedFeature)) {
+            redirect.addFlashAttribute("dashboardMessage", "Đội ngũ hỗ trợ sẽ sẵn sàng sau khi bạn đăng nhập.");
+            return "redirect:/dashboard";
+        }
+
+        redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + normalizedFeature);
         return "redirect:/dashboard";
     }
 }

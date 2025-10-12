@@ -1,19 +1,97 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-    <title>Verify Email</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác minh email - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
 </head>
 <body>
-<h1>Verify Email</h1>
-<form th:action="@{/verify-otp}" method="post">
-    <p>Email: <input type="email" name="email" th:value="${email}" required /></p>
-    <p>OTP: <input type="text" name="otp" required /></p>
-    <p><button type="submit">Verify</button></p>
-</form>
+<header class="auth-nav">
+    <div class="auth-brand">
+        <span class="icon">🚗</span>
+        <span>EV SWAP</span>
+    </div>
+    <div class="auth-nav-actions">
+        <a class="btn btn-ghost" th:href="@{/register}">Đăng ký</a>
+        <a class="btn btn-primary" th:href="@{/login}">Đăng nhập</a>
+    </div>
+</header>
 
-<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
-<p th:if="${verifyError}" th:text="${verifyError}"></p>
+<main class="auth-wrapper verification-wrapper">
+    <section class="auth-showcase verification-showcase">
+        <div class="showcase-header">
+            <p class="section-badge">Bước kế tiếp</p>
+            <h1>Xác minh email để bảo vệ tài khoản của bạn</h1>
+            <p>Chúng tôi vừa gửi một mã bảo mật gồm 6 chữ số đến địa chỉ email của bạn. Nhập mã này để hoàn tất kích hoạt tài khoản EV SWAP.</p>
+        </div>
 
-<p><a th:href="@{/login}">Back to Login</a></p>
+        <ul class="verification-steps">
+            <li>
+                <div class="step-icon">📬</div>
+                <div>
+                    <h3>Kiểm tra hộp thư</h3>
+                    <p>Mã OTP sẽ xuất hiện trong vài phút. Đừng quên kiểm tra mục Spam/Quảng cáo nếu chưa thấy email.</p>
+                </div>
+            </li>
+            <li>
+                <div class="step-icon">🔒</div>
+                <div>
+                    <h3>Giữ bí mật mã OTP</h3>
+                    <p>EV SWAP sẽ không bao giờ yêu cầu bạn cung cấp mã xác thực ở nơi khác. Chỉ nhập tại trang chính thức.</p>
+                </div>
+            </li>
+            <li>
+                <div class="step-icon">⚡</div>
+                <div>
+                    <h3>Hoàn tất và trải nghiệm</h3>
+                    <p>Sau khi xác minh thành công, bạn có thể truy cập bảng điều khiển và đăng ký phương tiện ngay lập tức.</p>
+                </div>
+            </li>
+        </ul>
+
+        <div class="verification-meta">
+            <span class="status-dot"></span>
+            <span>Liên hệ tổng đài 1900-0000 nếu bạn cần hỗ trợ thêm.</span>
+        </div>
+    </section>
+
+    <section class="auth-card verification-card" aria-labelledby="verify-title">
+        <div class="auth-card-header">
+            <a th:href="@{/register}">← Quay lại đăng ký</a>
+            <a class="btn btn-ghost" th:href="@{/login}">Đăng nhập</a>
+        </div>
+
+        <div class="verification-info">
+            <h2 id="verify-title">Nhập mã xác minh</h2>
+            <p>Điền địa chỉ email đã đăng ký và mã OTP gồm 6 chữ số để hoàn tất kích hoạt.</p>
+        </div>
+
+        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
+        <div th:if="${verifyError}" class="alert-message alert-error" th:text="${verifyError}"></div>
+
+        <form class="auth-form verification-form" th:action="@{/verify-otp}" method="post">
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="example@email.com" th:value="${email}" required readonly>
+            </div>
+            <div class="auth-field">
+                <label for="otp">Mã OTP</label>
+                <input id="otp" name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="Nhập mã 6 chữ số" required>
+            </div>
+            <div class="auth-submit">
+                <button class="btn btn-primary" type="submit">Xác minh ngay</button>
+            </div>
+        </form>
+
+        <div class="verification-help">
+            <h3>Không nhận được email?</h3>
+            <p>Hãy kiểm tra lại địa chỉ email hoặc chờ thêm 1-2 phút. Nếu vấn đề vẫn còn, vui lòng liên hệ bộ phận hỗ trợ để được cấp lại mã.</p>
+        </div>
+    </section>
+</main>
 </body>
 </html>

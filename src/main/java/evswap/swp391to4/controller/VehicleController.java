@@ -5,12 +5,19 @@ import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.VehicleService;
+import jakarta.servlet.http.HttpSession;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -75,6 +82,65 @@ public class VehicleController {
         }
     }
 
+    @GetMapping("/vehicles/manage")
+    public String manageVehicles(HttpSession session,
+                                 Model model,
+                                 RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
+            return "redirect:/login";
+        }
+
+        var vehicleCards = buildVehicleCards(driver.getDriverId());
+        model.addAttribute("driverName", driver.getFullName());
+        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+        model.addAttribute("vehicleCards", vehicleCards);
+        model.addAttribute("totalVehicles", vehicleCards.size());
+        model.addAttribute("lastUpdatedAt", vehicleCards.stream()
+                .map(VehicleCardView::createdAt)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse(null));
+
+        if (!model.containsAttribute("vehicleForm")) {
+            model.addAttribute("vehicleForm", new VehicleRegistrationForm());
+        }
+
+        return "vehicle-manage";
+    }
+
+    @PostMapping("/vehicles/manage")
+    public String addVehicleFromManager(@ModelAttribute("vehicleForm") VehicleRegistrationForm form,
+                                        HttpSession session,
+                                        RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
+            return "redirect:/login";
+        }
+
+        try {
+            Vehicle vehicle = Vehicle.builder()
+                    .model(form.getModel())
+                    .vin(form.getVin())
+                    .plateNumber(form.getPlateNumber())
+                    .build();
+
+            vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
+
+            Driver refreshed = driverService.getDriverById(driver.getDriverId());
+            session.setAttribute("loggedInDriver", refreshed);
+
+            redirect.addFlashAttribute("vehicleSuccess", "Thêm phương tiện mới thành công!");
+            return "redirect:/vehicles/manage";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("vehicleError", e.getMessage());
+            redirect.addFlashAttribute("vehicleForm", form);
+            return "redirect:/vehicles/manage";
+        }
+    }
+
     private String extractInitial(String fullName) {
         if (fullName == null) {
             return "U";
@@ -87,5 +153,136 @@ public class VehicleController {
     }
 
     public record VehicleRequest(String vin, String plateNumber, String model) {
+    }
+
+    @Builder
+    private static class VehicleCardView {
+        private final Integer vehicleId;
+        private final String vehicleName;
+        private final String plateNumber;
+        private final String vin;
+        private final String model;
+        private final Instant createdAt;
+        private final String statusLabel;
+        private final String statusBadge;
+        private final String batteryModel;
+        private final String batteryStatus;
+        private final int batteryPercent;
+        private final String healthLabel;
+        private final String healthDescription;
+
+        public Integer vehicleId() {
+            return vehicleId;
+        }
+
+        public String vehicleName() {
+            return vehicleName;
+        }
+
+        public String plateNumber() {
+            return plateNumber;
+        }
+
+        public String vin() {
+            return vin;
+        }
+
+        public String model() {
+            return model;
+        }
+
+        public Instant createdAt() {
+            return createdAt;
+        }
+
+        public String statusLabel() {
+            return statusLabel;
+        }
+
+        public String statusBadge() {
+            return statusBadge;
+        }
+
+        public String batteryModel() {
+            return batteryModel;
+        }
+
+        public String batteryStatus() {
+            return batteryStatus;
+        }
+
+        public int batteryPercent() {
+            return batteryPercent;
+        }
+
+        public String healthLabel() {
+            return healthLabel;
+        }
+
+        public String healthDescription() {
+            return healthDescription;
+        }
+    }
+
+    private List<VehicleCardView> buildVehicleCards(Integer driverId) {
+        List<Vehicle> vehicles = vehicleService.getVehiclesForDriver(driverId);
+        List<VehicleCardView> cards = new ArrayList<>();
+
+        for (int index = 0; index < vehicles.size(); index++) {
+            Vehicle vehicle = vehicles.get(index);
+            int batteryPercent = Math.max(68, 98 - (index * 6));
+
+            String healthLabel;
+            String healthDescription;
+            if (batteryPercent >= 92) {
+                healthLabel = "Tình trạng tuyệt vời";
+                healthDescription = "Pin hoạt động tối ưu";
+            } else if (batteryPercent >= 82) {
+                healthLabel = "Hiệu suất ổn định";
+                healthDescription = "Sẵn sàng cho hành trình dài";
+            } else {
+                healthLabel = "Cần theo dõi";
+                healthDescription = "Nên kiểm tra pin sớm";
+            }
+
+            String statusBadge = batteryPercent >= 75 ? "status-online" : "status-warning";
+
+            cards.add(VehicleCardView.builder()
+                    .vehicleId(vehicle.getVehicleId())
+                    .vehicleName(Optional.ofNullable(vehicle.getModel())
+                            .filter(name -> !name.isBlank())
+                            .orElse("Phương tiện " + (index + 1)))
+                    .plateNumber(Optional.ofNullable(vehicle.getPlateNumber())
+                            .filter(plate -> !plate.isBlank())
+                            .orElse("Chưa cập nhật"))
+                    .vin(vehicle.getVin())
+                    .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
+                    .createdAt(vehicle.getCreatedAt())
+                    .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
+                    .statusBadge(statusBadge)
+                    .batteryModel(guessBatteryModel(vehicle.getModel()))
+                    .batteryStatus(batteryPercent >= 75 ? "Đang sử dụng" : "Cần bảo dưỡng")
+                    .batteryPercent(batteryPercent)
+                    .healthLabel(healthLabel)
+                    .healthDescription(healthDescription)
+                    .build());
+        }
+
+        return cards;
+    }
+
+    private String guessBatteryModel(String vehicleModel) {
+        if (vehicleModel == null) {
+            return "EVS Pack 48V";
+        }
+
+        String normalized = vehicleModel.toLowerCase();
+        if (normalized.contains("vinfast")) {
+            return "VinFast 48V - 20Ah";
+        }
+        if (normalized.contains("dat")) {
+            return "Dat Bike Hypercore";
+        }
+        return "EVS Pack 48V";
     }
 }

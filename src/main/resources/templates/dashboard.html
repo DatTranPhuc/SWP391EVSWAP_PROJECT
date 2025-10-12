@@ -16,16 +16,81 @@
 <header class="top-nav">
     <div class="container nav-inner">
         <div class="brand">
-            <span class="brand-icon">📺</span>
+            <span class="brand-icon">🚗</span>
             <span class="brand-name">EV SWAP</span>
         </div>
         <nav class="nav-links" aria-label="Điều hướng chính">
-            <a href="#overview">Tổng quan</a>
-            <a href="#benefits">Phương tiện</a>
-            <a href="#stations">Tìm trạm</a>
-            <a href="#reports">Báo cáo</a>
-            <a href="#account">Tài khoản</a>
-            <a href="#support">Hỗ trợ</a>
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Tổng quan">
+                <button type="submit" class="nav-link-button">Tổng quan</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Tổng quan"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Tổng quan - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Tổng quan</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Phương tiện">
+                <button type="submit" class="nav-link-button">Phương tiện</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Phương tiện"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Phương tiện - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Phương tiện</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Tìm trạm">
+                <button type="submit" class="nav-link-button">Tìm trạm</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Tìm trạm"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Tìm trạm - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Tìm trạm</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Báo cáo">
+                <button type="submit" class="nav-link-button">Báo cáo</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Báo cáo"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Báo cáo - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Báo cáo</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Tài khoản">
+                <button type="submit" class="nav-link-button">Tài khoản</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Tài khoản"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Tài khoản - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Tài khoản</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Hỗ trợ">
+                <button type="submit" class="nav-link-button">Hỗ trợ</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Hỗ trợ"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Hỗ trợ - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Hỗ trợ</button>
         </nav>
         <div class="auth-area" th:if="${loggedIn}">
             <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
@@ -54,41 +119,9 @@
                 <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
                 <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
             </div>
-            <div class="hero-actions" th:if="${loggedIn}">
-                <div class="action-buttons">
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tổng quan">Tổng quan</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Phương tiện">Phương tiện</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Báo cáo">Báo cáo</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tài khoản">Tài khoản</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
-                    </form>
-                </div>
-            </div>
-            <div class="hero-actions locked" th:if="${!loggedIn}">
-                <div class="action-buttons">
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tổng quan</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Phương tiện</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tìm trạm</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Báo cáo</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tài khoản</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Hỗ trợ</button>
-                </div>
-            </div>
         </div>
         <div class="hero-card">
-            <div class="card-icon">📺</div>
+            <div class="card-icon">🚗</div>
             <div class="card-metric">
                 <span class="metric-label">Số điểm đổi pin</span>
                 <span class="metric-value">156 trạm</span>
@@ -164,32 +197,6 @@
         </div>
     </section>
 
-    <section id="reports" class="demo-section container">
-        <h2 class="section-title">Trải nghiệm ngay</h2>
-        <p class="section-description">Đăng nhập với tài khoản demo để khám phá đầy đủ tính năng hệ thống.</p>
-        <div class="demo-grid">
-            <div class="demo-card">
-                <div class="demo-icon">🛡️</div>
-                <h3>Admin</h3>
-                <p>Email: admin@evswap.com</p>
-                <p>Mật khẩu: Admin123456</p>
-                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Admin</a>
-            </div>
-            <div class="demo-card">
-                <div class="demo-icon">👥</div>
-                <h3>Staff</h3>
-                <p>Nhân viên trạm được Admin cấp quyền truy cập dashboard.</p>
-                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Staff</a>
-            </div>
-            <div class="demo-card">
-                <div class="demo-icon">🛵</div>
-                <h3>Driver</h3>
-                <p>Đăng ký tài khoản Driver để sử dụng dịch vụ đổi pin tiện lợi.</p>
-                <a th:href="@{/register}" class="btn primary small">Đăng ký Driver</a>
-            </div>
-        </div>
-    </section>
-
     <section id="account" class="cta-section">
         <div class="container cta-inner">
             <div class="cta-content">
@@ -206,7 +213,7 @@
     <section id="stations" class="preview-section container">
         <div class="preview-card">
             <div class="preview-header">
-                <span class="brand-icon">📺</span>
+                <span class="brand-icon">🚗</span>
                 <h3>EV SWAP</h3>
                 <p>Hệ thống đổi pin xe máy điện thông minh nhất Việt Nam.</p>
             </div>
@@ -241,7 +248,7 @@
         <button type="button" class="login-modal__close" aria-label="Đóng" onclick="closeLoginModal()">×</button>
         <div class="login-modal__content">
             <div class="login-showcase">
-                <span class="brand-icon">📺</span>
+                <span class="brand-icon">🚗</span>
                 <h3 id="login-modal-title">EV SWAP</h3>
                 <p>Đăng nhập để truy cập đầy đủ các chức năng đổi pin thông minh.</p>
                 <ul>
@@ -252,8 +259,8 @@
             </div>
             <div class="login-form-card">
                 <h4>Đăng nhập tài khoản</h4>
-                <p>Nhập thông tin để tiếp tục sử dụng dashboard.</p>
-                <form th:action="@{/login}" method="get">
+                <p class="login-alert">Vui lòng đăng nhập hoặc đăng kí để tiếp tục sử dụng.</p>
+                <form th:action="@{/login}" method="post">
                     <div class="input-group">
                         <label for="modal-email">Email</label>
                         <input id="modal-email" name="email" type="email" placeholder="example@email.com" required>
@@ -272,11 +279,15 @@
 
 <script>
     const loginModal = document.getElementById('login-modal');
+    const modalEmailInput = document.getElementById('modal-email');
 
     function openLoginModal() {
         if (loginModal) {
             loginModal.removeAttribute('hidden');
             document.body.classList.add('modal-open');
+            if (modalEmailInput) {
+                modalEmailInput.focus();
+            }
         }
     }
 
@@ -286,6 +297,13 @@
             document.body.classList.remove('modal-open');
         }
     }
+
+    document.querySelectorAll('.nav-link-button--locked').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            openLoginModal();
+        });
+    });
 
     window.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
