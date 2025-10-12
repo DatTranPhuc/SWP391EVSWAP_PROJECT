@@ -110,20 +110,28 @@ body.dashboard-body {
 
 .nav-links {
     display: flex;
+    align-items: center;
     gap: 22px;
     font-size: 0.95rem;
     font-weight: 600;
 }
 
-.nav-links a {
-    color: var(--text-secondary);
-    text-decoration: none;
-    position: relative;
-    transition: color 0.2s ease;
-    padding-bottom: 6px;
+.nav-links__form {
+    margin: 0;
 }
 
-.nav-links a::after {
+.nav-link-button {
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font: inherit;
+    position: relative;
+    padding: 0 0 6px;
+    transition: color 0.2s ease;
+}
+
+.nav-link-button::after {
     content: '';
     position: absolute;
     left: 0;
@@ -133,15 +141,28 @@ body.dashboard-body {
     background: var(--accent-gradient);
     border-radius: 999px;
     transition: width 0.25s ease;
-}
-
-.nav-links a:hover {
+.nav-link-button:hover,
+.nav-link-button:focus-visible {
     color: var(--text-primary);
 }
 
-.nav-links a:hover::after,
-.nav-links a.active::after {
+.nav-link-button:hover::after,
+.nav-link-button:focus-visible::after,
+.nav-link-button.active::after {
     width: 100%;
+}
+
+.nav-link-button:focus-visible {
+    outline: none;
+}
+
+.nav-link-button--locked {
+    color: var(--text-secondary);
+}
+
+.nav-link-button--locked:hover,
+.nav-link-button--locked:focus-visible {
+    color: var(--accent-secondary);
 }
 
 .auth-area {
