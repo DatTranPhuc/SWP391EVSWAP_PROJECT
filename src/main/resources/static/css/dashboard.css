@@ -272,6 +272,18 @@ body.dashboard-body {
     margin-top: 10px;
 }
 
+.hero-actions.locked {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hero-actions.locked .locked-hint {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
 .action-buttons {
     display: flex;
     flex-wrap: wrap;

@@ -77,13 +77,26 @@
                 </div>
             </div>
             <div class="hero-actions locked" th:if="${!loggedIn}">
+                <p class="locked-hint">Vui lòng đăng nhập để truy cập các chức năng nâng cao.</p>
                 <div class="action-buttons">
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tổng quan</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Phương tiện</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tìm trạm</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Báo cáo</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tài khoản</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Hỗ trợ</button>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Tổng quan">Tổng quan</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Phương tiện">Phương tiện</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Báo cáo">Báo cáo</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Tài khoản">Tài khoản</button>
+                    </form>
+                    <form th:action="@{/dashboard/action}" method="post">
+                        <button class="nav-button locked" type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
+                    </form>
                 </div>
             </div>
         </div>
