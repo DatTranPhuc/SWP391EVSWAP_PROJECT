@@ -268,71 +268,6 @@ body.dashboard-body {
     flex-wrap: wrap;
 }
 
-.hero-actions {
-    margin-top: 10px;
-}
-
-.hero-actions.locked {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.hero-actions.locked .locked-hint {
-    margin: 0;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-}
-
-.action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-
-.nav-button {
-    padding: 14px 20px;
-    min-width: 150px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    background: rgba(255, 255, 255, 0.74);
-    color: var(--text-primary);
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
-}
-
-.nav-button:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(0, 133, 255, 0.35);
-}
-
-.nav-button.locked {
-    cursor: pointer;
-    position: relative;
-    background: rgba(255, 255, 255, 0.6);
-    border-style: dashed;
-    border-color: rgba(10, 31, 51, 0.18);
-}
-
-.nav-button.locked::after {
-    content: '\1F512';
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 1.1rem;
-    background: var(--accent-gradient);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 8px 18px rgba(0, 133, 255, 0.35);
-    color: #ffffff;
-}
-
 .hero-card {
     background: var(--surface-strong);
     border: 1px solid rgba(255, 255, 255, 0.6);
@@ -864,13 +799,6 @@ body.modal-open {
         font-size: 2.4rem;
     }
 
-    .action-buttons {
-        gap: 10px;
-    }
-
-    .nav-button {
-        flex: 1 1 45%;
-    }
 
     .cta-inner {
         flex-direction: column;

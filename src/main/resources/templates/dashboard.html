@@ -54,39 +54,6 @@
                 <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
                 <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
             </div>
-            <div class="hero-actions" th:if="${loggedIn}">
-                <div class="action-buttons">
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tổng quan">Tổng quan</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Phương tiện">Phương tiện</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tìm trạm">Tìm trạm</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Báo cáo">Báo cáo</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Tài khoản">Tài khoản</button>
-                    </form>
-                    <form th:action="@{/dashboard/action}" method="post">
-                        <button class="nav-button" type="submit" name="feature" value="Hỗ trợ">Hỗ trợ</button>
-                    </form>
-                </div>
-            </div>
-            <div class="hero-actions locked" th:if="${!loggedIn}">
-                <p class="locked-hint">Vui lòng đăng nhập để truy cập các chức năng nâng cao.</p>
-                <div class="action-buttons">
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Tổng quan</button>
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Phương tiện</button>
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Tìm trạm</button>
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Báo cáo</button>
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Tài khoản</button>
-                    <button class="nav-button locked" type="button" onclick="openLoginModal()">Hỗ trợ</button>
-                </div>
-            </div>
         </div>
         <div class="hero-card">
             <div class="card-icon">🚗</div>
