@@ -18,4 +18,7 @@ public interface StationRepository extends JpaRepository<Station, Integer> {
 
     // 🔍 Tìm theo trạng thái (active / closed)
     List<Station> findByStatus(String status);
+
+    // 📊 Đếm số trạm theo trạng thái (bỏ qua hoa thường)
+    long countByStatusIgnoreCase(String status);
 }
