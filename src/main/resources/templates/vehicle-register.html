@@ -1,27 +1,105 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-    <title>Đăng ký phương tiện</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký phương tiện - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
 </head>
 <body>
-<h1>Đăng ký phương tiện</h1>
+<header class="auth-nav">
+    <div class="auth-brand">
+        <span class="icon">📺</span>
+        <span>EV SWAP</span>
+    </div>
+    <div class="auth-nav-actions">
+        <a class="btn btn-ghost" th:href="@{/dashboard}">Bảng điều khiển</a>
+        <a class="btn btn-primary" th:href="@{/logout}">Đăng xuất</a>
+    </div>
+</header>
 
-<p th:if="${verifySuccess}" th:text="${verifySuccess}"></p>
-<p th:if="${vehicleError}" th:text="${vehicleError}"></p>
+<main class="auth-wrapper vehicle-wrapper">
+    <section class="auth-showcase vehicle-showcase">
+        <div class="showcase-header">
+            <p class="section-badge">Bước cuối cùng</p>
+            <h1>Hoàn thiện hồ sơ phương tiện của bạn</h1>
+            <p th:text="'Xin chào ' + ${driverName} + ', hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.'">
+                Xin chào Người dùng, hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.
+            </p>
+        </div>
 
-<p th:text="'Xin chào ' + ${driverName}">Xin chào Người dùng</p>
-<p>Vui lòng cung cấp thông tin xe máy điện của bạn để hoàn tất hồ sơ.</p>
+        <div class="vehicle-highlights">
+            <article class="highlight-card">
+                <div class="highlight-icon">🪫</div>
+                <div class="highlight-content">
+                    <h3>Quản lý pin nhanh chóng</h3>
+                    <p>Thông tin xe được xác thực giúp bạn đổi pin tức thì tại hơn 200 trạm trên toàn quốc.</p>
+                </div>
+            </article>
+            <article class="highlight-card">
+                <div class="highlight-icon">🛡️</div>
+                <div class="highlight-content">
+                    <h3>Bảo mật &amp; minh bạch</h3>
+                    <p>Dữ liệu phương tiện được mã hóa và chỉ sử dụng cho mục đích xác thực tại EV SWAP.</p>
+                </div>
+            </article>
+        </div>
 
-<form th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
-    <input type="hidden" name="driverId" th:value="${driverId}" />
+        <div class="vehicle-meta">
+            <span class="status-dot"></span>
+            <span>Thông tin có thể được cập nhật lại bất cứ lúc nào sau khi đăng ký.</span>
+        </div>
+    </section>
 
-    <p>Model xe: <input id="model" type="text" th:field="*{model}" required /></p>
-    <p>Số VIN: <input id="vin" type="text" th:field="*{vin}" required /></p>
-    <p>Biển số: <input id="plateNumber" type="text" th:field="*{plateNumber}" /></p>
+    <section class="auth-card vehicle-card" aria-labelledby="vehicle-title">
+        <div class="auth-card-header">
+            <a th:href="@{/dashboard}">← Quay lại bảng điều khiển</a>
+            <a class="btn btn-ghost" th:href="@{/logout}">Đăng xuất</a>
+        </div>
 
-    <p>Thông tin xe sẽ được sử dụng để xác nhận khi đổi pin tại trạm.</p>
+        <div class="vehicle-info">
+            <h2 id="vehicle-title">Đăng ký xe máy điện</h2>
+            <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
+        </div>
 
-    <p><button type="submit">Hoàn tất đăng ký</button></p>
-</form>
+        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
+        <div th:if="${vehicleError}" class="alert-message alert-error" th:text="${vehicleError}"></div>
+
+        <form class="auth-form vehicle-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+            <input type="hidden" name="driverId" th:value="${driverId}">
+
+            <div class="vehicle-form-grid">
+                <div class="auth-field">
+                    <label for="model">Model xe</label>
+                    <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
+                </div>
+                <div class="auth-field">
+                    <label for="vin">Số VIN</label>
+                    <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
+                </div>
+                <div class="auth-field">
+                    <label for="plateNumber">Biển số</label>
+                    <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
+                </div>
+            </div>
+
+            <div class="vehicle-tip">
+                <strong>Gợi ý:</strong> Số VIN thường nằm trên phần thân xe hoặc giấy đăng ký xe. Hãy kiểm tra kỹ để tránh sai sót.
+            </div>
+
+            <div class="auth-submit">
+                <button class="btn btn-primary" type="submit">Hoàn tất đăng ký</button>
+            </div>
+        </form>
+
+        <div class="vehicle-support">
+            <h3>Cần hỗ trợ?</h3>
+            <p>Liên hệ hotline 1900-0000 hoặc ghé trạm EV SWAP gần nhất để được nhân viên hướng dẫn bổ sung hồ sơ.</p>
+        </div>
+    </section>
+</main>
 </body>
 </html>
