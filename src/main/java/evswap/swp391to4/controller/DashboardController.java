@@ -34,6 +34,10 @@ public class DashboardController {
             return "redirect:/login";
         }
 
+        if ("Phương tiện".equalsIgnoreCase(feature)) {
+            return "redirect:/vehicles/manage";
+        }
+
         redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + feature);
         return "redirect:/dashboard";
     }
