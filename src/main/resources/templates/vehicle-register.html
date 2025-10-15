@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/auth.css">
 </head>
 <body>
 <header class="auth-nav">
@@ -16,8 +16,8 @@
         <span>EV SWAP</span>
     </div>
     <div class="auth-nav-actions">
-        <a class="btn btn-ghost" th:href="@{/dashboard}">Bảng điều khiển</a>
-        <a class="btn btn-primary" th:href="@{/logout}">Đăng xuất</a>
+        <a class="btn btn-ghost" href="/dashboard.html">Bảng điều khiển</a>
+        <button class="btn btn-primary" type="button" id="vehicleRegisterLogout">Đăng xuất</button>
     </div>
 </header>
 
@@ -26,9 +26,7 @@
         <div class="showcase-header">
             <p class="section-badge">Bước cuối cùng</p>
             <h1>Hoàn thiện hồ sơ phương tiện của bạn</h1>
-            <p th:text="'Xin chào ' + ${driverName} + ', hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.'">
-                Xin chào Người dùng, hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.
-            </p>
+            <p id="vehicleRegisterGreeting">Xin chào người dùng, hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.</p>
         </div>
 
         <div class="vehicle-highlights">
@@ -56,8 +54,8 @@
 
     <section class="auth-card vehicle-card" aria-labelledby="vehicle-title">
         <div class="auth-card-header">
-            <a th:href="@{/dashboard}">← Quay lại bảng điều khiển</a>
-            <a class="btn btn-ghost" th:href="@{/logout}">Đăng xuất</a>
+            <a href="/dashboard.html">← Quay lại bảng điều khiển</a>
+            <button class="btn btn-ghost" type="button" id="vehicleRegisterLogoutSecondary">Đăng xuất</button>
         </div>
 
         <div class="vehicle-info">
@@ -65,24 +63,22 @@
             <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
         </div>
 
-        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
-        <div th:if="${vehicleError}" class="alert-message alert-error" th:text="${vehicleError}"></div>
+        <div id="vehicleRegisterMessage" class="alert-message" data-base-class="alert-message" hidden></div>
 
-        <form class="auth-form vehicle-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
-            <input type="hidden" name="driverId" th:value="${driverId}">
+        <form class="auth-form vehicle-form" id="vehicleRegisterForm">
 
             <div class="vehicle-form-grid">
                 <div class="auth-field">
                     <label for="model">Model xe</label>
-                    <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
+                    <input id="model" name="model" type="text" placeholder="VinFast Feliz S" required>
                 </div>
                 <div class="auth-field">
                     <label for="vin">Số VIN</label>
-                    <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
+                    <input id="vin" name="vin" type="text" placeholder="VN1234567890" required>
                 </div>
                 <div class="auth-field">
                     <label for="plateNumber">Biển số</label>
-                    <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
+                    <input id="plateNumber" name="plateNumber" type="text" placeholder="29A1-123.45">
                 </div>
             </div>
 
@@ -101,5 +97,11 @@
         </div>
     </section>
 </main>
+<script src="/js/app.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        window.evswap?.initVehicleRegisterPage?.();
+    });
+</script>
 </body>
 </html>

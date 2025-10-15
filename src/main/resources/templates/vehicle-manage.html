@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,40 +7,40 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/vehicle-manage.css}" href="/css/vehicle-manage.css">
+    <link rel="stylesheet" href="/css/vehicle-manage.css">
 </head>
-<body class="vehicle-manage-body" th:attr="data-open-modal=${vehicleError != null}">
+<body class="vehicle-manage-body" data-page="vehicle-manage">
 <div class="vehicle-manage-background"></div>
 <div class="vehicle-manage-glow"></div>
 
 <header class="manage-header container">
     <div class="driver-identity">
-        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-avatar" id="manageDriverInitial">D</div>
         <div class="driver-intro">
             <span class="subtitle">Quản lý phương tiện</span>
-            <h1 class="page-title" th:text="${driverName}">Kiara</h1>
+            <h1 class="page-title" id="manageDriverName">Người dùng</h1>
             <p class="page-hint">Theo dõi trạng thái pin và thêm phương tiện mới chỉ với vài thao tác.</p>
         </div>
     </div>
     <div class="header-actions">
-        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
-        <button class="btn primary" type="button" onclick="openVehicleModal()">+ Thêm phương tiện</button>
+        <a class="btn ghost" href="/dashboard.html">Quay về Dashboard</a>
+        <button class="btn primary" type="button" id="openVehicleModalButton">+ Thêm phương tiện</button>
     </div>
 </header>
 
 <main class="manage-main container">
-    <div class="alert success" th:if="${vehicleSuccess}" th:text="${vehicleSuccess}"></div>
-    <div class="alert error" th:if="${vehicleError}" th:text="${vehicleError}"></div>
+    <div class="alert" id="vehicleManageSuccess" data-base-class="alert" hidden></div>
+    <div class="alert" id="vehicleManageError" data-base-class="alert" hidden></div>
 
     <section class="manage-stats">
         <article class="stat-card">
             <span class="stat-label">Tổng số phương tiện</span>
-            <strong class="stat-value" th:text="${totalVehicles}">0</strong>
+            <strong class="stat-value" id="totalVehicles">0</strong>
             <span class="stat-caption">Gồm cả xe đang hoạt động và dự phòng</span>
         </article>
         <article class="stat-card">
             <span class="stat-label">Cập nhật gần nhất</span>
-            <strong class="stat-value" th:text="${lastUpdatedAt != null ? #temporals.format(lastUpdatedAt, 'dd/MM/yyyy HH:mm') : 'Chưa có'}">16/08/2024 09:24</strong>
+            <strong class="stat-value" id="lastUpdatedAt">Chưa có</strong>
             <span class="stat-caption">Thời điểm thêm phương tiện cuối cùng</span>
         </article>
         <article class="stat-card">
@@ -50,25 +50,27 @@
         </article>
     </section>
 
-    <section class="vehicle-grid" th:if="${#lists.isEmpty(vehicleCards)}">
+    <section class="vehicle-grid" id="vehicleEmptyState">
         <div class="empty-state">
             <div class="empty-icon">🚙</div>
             <h2>Chưa có phương tiện nào</h2>
             <p>Thêm phương tiện đầu tiên để EV SWAP theo dõi tình trạng pin và lịch sử vận hành cho bạn.</p>
-            <button class="btn primary" type="button" onclick="openVehicleModal()">Thêm phương tiện</button>
+            <button class="btn primary" type="button" id="emptyStateAddButton">Thêm phương tiện</button>
         </div>
     </section>
 
-    <section class="vehicle-grid" th:if="${!#lists.isEmpty(vehicleCards)}">
-        <article class="vehicle-card" th:each="card : ${vehicleCards}">
+    <section class="vehicle-grid" id="vehicleCardsContainer" hidden></section>
+
+    <template id="vehicleCardTemplate">
+        <article class="vehicle-card">
             <header class="vehicle-card__header">
                 <div class="vehicle-main">
-                    <h2 class="vehicle-name" th:text="${card.vehicleName()}">Kiara</h2>
-                    <span class="status-badge" th:text="${card.statusLabel()}" th:classappend="' ' + ${card.statusBadge()}">Hoạt động</span>
+                    <h2 class="vehicle-name">Tên xe</h2>
+                    <span class="status-badge status-online">Đang hoạt động</span>
                 </div>
                 <div class="vehicle-meta-inline">
                     <span class="plate-label">Biển số</span>
-                    <span class="plate-value" th:text="${card.plateNumber()}">59A3-08364</span>
+                    <span class="plate-value">59A3-08364</span>
                 </div>
             </header>
 
@@ -77,102 +79,76 @@
                     <div class="battery-meta">
                         <div>
                             <span class="meta-label">Model pin</span>
-                            <strong class="meta-value" th:text="${card.batteryModel()}">VinFast 48V</strong>
+                            <strong class="meta-value">VinFast 48V</strong>
                         </div>
                         <div>
                             <span class="meta-label">Trạng thái</span>
-                            <strong class="meta-value" th:text="${card.batteryStatus()}">Đang sử dụng</strong>
+                            <strong class="meta-value">Đang sử dụng</strong>
                         </div>
                     </div>
                     <div class="battery-progress">
                         <div class="progress-track">
-                            <div class="progress-fill" th:style="'width:' + ${card.batteryPercent()} + '%'"></div>
+                            <div class="progress-fill" style="width: 80%"></div>
                         </div>
                         <div class="progress-details">
-                            <span class="progress-value" th:text="${card.batteryPercent()} + '%'">98%</span>
-                            <span class="progress-status" th:text="${card.healthLabel()}">Tình trạng tuyệt vời</span>
+                            <span class="progress-value">80%</span>
+                            <span class="progress-status">Tình trạng tuyệt vời</span>
                         </div>
-                        <p class="progress-caption" th:text="${card.healthDescription()}">Pin hoạt động tối ưu</p>
+                        <p class="progress-caption">Pin hoạt động tối ưu</p>
                     </div>
                 </div>
                 <div class="vehicle-details">
                     <div class="detail-item">
                         <span class="detail-label">Model xe</span>
-                        <span class="detail-value" th:text="${card.model()}">VinFast Feliz S</span>
+                        <span class="detail-value">VinFast Feliz S</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Số VIN</span>
-                        <span class="detail-value" th:text="${card.vin()}">VF9S093983927239</span>
+                        <span class="detail-value">VF9S093983927239</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Ngày thêm</span>
-                        <span class="detail-value"
-                              th:text="${card.createdAt() != null ? #temporals.format(card.createdAt(), 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'}">16/08/2024 09:24</span>
+                        <span class="detail-value">16/08/2024 09:24</span>
                     </div>
                 </div>
             </div>
         </article>
-    </section>
+    </template>
 </main>
 
 <div class="vehicle-modal" id="vehicleModal" aria-hidden="true" role="dialog">
-    <div class="modal-backdrop" onclick="closeVehicleModal()"></div>
+    <div class="modal-backdrop" id="modalBackdrop"></div>
     <div class="modal-content" role="document">
-        <button class="modal-close" type="button" aria-label="Đóng" onclick="closeVehicleModal()">×</button>
+        <button class="modal-close" type="button" aria-label="Đóng" id="closeVehicleModal">×</button>
         <h2>Thêm phương tiện mới</h2>
         <p>Nhập thông tin chính xác để EV SWAP đồng bộ dữ liệu và đảm bảo pin phù hợp.</p>
-        <form th:action="@{/vehicles/manage}" method="post" th:object="${vehicleForm}" class="modal-form">
+        <form id="vehicleManageForm" class="modal-form">
             <div class="form-grid">
                 <label>
                     <span>Model xe</span>
-                    <input type="text" th:field="*{model}" placeholder="Ví dụ: VinFast Feliz S" required>
+                    <input type="text" name="model" placeholder="Ví dụ: VinFast Feliz S" required>
                 </label>
                 <label>
                     <span>Số VIN</span>
-                    <input type="text" th:field="*{vin}" placeholder="VF9S093983927239" required>
+                    <input type="text" name="vin" placeholder="VF9S093983927239" required>
                 </label>
                 <label>
                     <span>Biển số</span>
-                    <input type="text" th:field="*{plateNumber}" placeholder="59A3-08364">
+                    <input type="text" name="plateNumber" placeholder="59A3-08364">
                 </label>
             </div>
             <div class="modal-actions">
-                <button class="btn ghost" type="button" onclick="closeVehicleModal()">Huỷ</button>
+                <button class="btn ghost" type="button" id="cancelVehicleModal">Huỷ</button>
                 <button class="btn primary" type="submit">Lưu phương tiện</button>
             </div>
         </form>
     </div>
 </div>
 
+<script src="/js/app.js"></script>
 <script>
-    const modal = document.getElementById('vehicleModal');
-
-    function openVehicleModal() {
-        modal.setAttribute('aria-hidden', 'false');
-        modal.classList.add('is-open');
-        document.body.classList.add('modal-open');
-        const firstInput = modal.querySelector('input');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 100);
-        }
-    }
-
-    function closeVehicleModal() {
-        modal.setAttribute('aria-hidden', 'true');
-        modal.classList.remove('is-open');
-        document.body.classList.remove('modal-open');
-    }
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-            closeVehicleModal();
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (document.body.dataset.openModal === 'true') {
-            openVehicleModal();
-        }
+    window.addEventListener('DOMContentLoaded', () => {
+        window.evswap?.initVehicleManagePage?.();
     });
 </script>
 </body>

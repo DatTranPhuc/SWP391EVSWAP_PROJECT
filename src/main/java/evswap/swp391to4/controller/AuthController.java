@@ -29,6 +29,7 @@ public class AuthController {
             Driver driver = driverService.login(request.getEmail(), request.getPassword());
             session.setAttribute("loggedInDriver", driver);
             return ResponseEntity.ok(new LoginResponse(
+                    driver.getDriverId(),
                     driver.getEmail(),
                     driver.getFullName(),
                     null,
@@ -68,12 +69,14 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request, HttpSession session) {
         try {
             Driver driver = driverService.verifyOtp(request.getEmail(), request.getOtp());
+            session.setAttribute("loggedInDriver", driver);
             return ResponseEntity.ok(Map.of(
                     "message", "Xác minh email thành công! Vui lòng đăng ký phương tiện.",
-                    "driverId", driver.getDriverId()
+                    "driverId", driver.getDriverId(),
+                    "fullName", driver.getFullName()
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
