@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class StaffService {
@@ -19,6 +21,7 @@ public class StaffService {
     private final StationRepository stationRepo;
     private final PasswordEncoder passwordEncoder;
 
+    // ------------------ CREATE ------------------
     @Transactional
     public StaffResponse createStaff(StaffCreateRequest req) {
         if (staffRepo.existsByEmail(req.getEmail())) {
@@ -50,12 +53,31 @@ public class StaffService {
 
         Staff saved = staffRepo.save(staff);
 
+        return toResponse(saved);
+    }
+
+    // ------------------ FIND BY ID ------------------
+    public StaffResponse getStaffById(Integer id) {
+        Staff staff = staffRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy nhân viên với ID: " + id));
+        return toResponse(staff);
+    }
+
+    // ------------------ GET ALL ------------------
+    public List<StaffResponse> getAllStaff() {
+        return staffRepo.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ------------------ HELPER ------------------
+    private StaffResponse toResponse(Staff staff) {
         return StaffResponse.builder()
-                .staffId(saved.getStaffId())
-                .email(saved.getEmail())
-                .fullName(saved.getFullName())
-                .isActive(saved.getIsActive())
-                .stationId(saved.getStation() != null ? saved.getStation().getStationId() : null)
+                .staffId(staff.getStaffId())
+                .email(staff.getEmail())
+                .fullName(staff.getFullName())
+                .isActive(staff.getIsActive())
+                .stationId(staff.getStation() != null ? staff.getStation().getStationId() : null)
                 .build();
     }
 }

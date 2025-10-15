@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -18,6 +20,9 @@ public class AdminController {
     private final StaffService staffService;
     private final StationService stationService;
 
+    // ------------------ STAFF ------------------
+
+    // Tạo nhân viên mới
     @PostMapping("/add-staff")
     public ResponseEntity<?> addStaff(@RequestBody StaffCreateRequest req) {
         try {
@@ -31,6 +36,32 @@ public class AdminController {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
     }
+
+    // Lấy thông tin 1 nhân viên theo ID
+    @GetMapping("/staff/{id}")
+    public ResponseEntity<?> getStaffById(@PathVariable Integer id) {
+        try {
+            StaffResponse resp = staffService.getStaffById(id);
+            return ResponseEntity.ok(resp);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+        }
+    }
+
+    // Lấy danh sách tất cả nhân viên
+    @GetMapping("/staff")
+    public ResponseEntity<?> getAllStaff() {
+        try {
+            List<StaffResponse> list = staffService.getAllStaff();
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+        }
+    }
+
+    // ------------------ STATION ------------------
 
     @PostMapping("/add-station")
     public ResponseEntity<?> addStation(@RequestBody StationCreateRequest req) {

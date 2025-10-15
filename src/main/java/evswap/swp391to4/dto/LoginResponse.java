@@ -9,6 +9,6 @@ public class LoginResponse {
     private String email;
     private String fullName;
     private String token; // nếu dùng JWT
-    private String message; // ví dụ: "Login successful"
+    private String message;
 }
 
