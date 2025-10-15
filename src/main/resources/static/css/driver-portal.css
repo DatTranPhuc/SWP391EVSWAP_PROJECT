@@ -48,6 +48,29 @@
     gap: 12px;
 }
 
+.driver-meta {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.driver-meta strong {
+    color: var(--text-primary);
+}
+
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+}
+
 .page-hero__meta .driver-chip {
     display: flex;
     align-items: center;
@@ -78,6 +101,17 @@
     margin-bottom: 32px;
 }
 
+.section-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.section-header-inline .section-lead {
+    margin-bottom: 0;
+}
+
 .section-card h2 {
     margin-top: 0;
     margin-bottom: 10px;
@@ -99,6 +133,12 @@
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.metric-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .data-card {
     background: var(--surface);
     border-radius: var(--radius-md);
@@ -107,6 +147,75 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.metric-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 28px 24px;
+    border: 1px solid rgba(10, 31, 51, 0.1);
+    box-shadow: 0 18px 40px rgba(10, 31, 51, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card__label {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.metric-card__value {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 2.6rem);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.metric-card__action {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    text-decoration: none;
+}
+
+.metric-card__action:hover {
+    text-decoration: underline;
+}
+
+.metric-card__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    background: rgba(0, 133, 255, 0.12);
+    color: var(--accent-secondary);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.link-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--accent-secondary);
+    text-decoration: none;
+}
+
+.link-inline::after {
+    content: '→';
+    font-size: 0.85rem;
+}
+
+.link-inline:hover {
+    text-decoration: underline;
 }
 
 .data-card h3 {
@@ -202,6 +311,32 @@
     text-align: center;
     color: var(--text-secondary);
     border: 1px dashed rgba(10, 31, 51, 0.2);
+}
+
+.notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.activity-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.activity-meta {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
 }
 
 .support-layout {

@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
+    <link rel="stylesheet" th:if="${loggedIn}" th:href="@{/css/driver-portal.css}" href="/css/driver-portal.css">
 </head>
 <body class="dashboard-body">
 <div class="background-gradient"></div>
@@ -28,8 +29,8 @@
                 <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
                 <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
                 <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
-                <a th:href="@{/operations/console}">Vận hành</a>
-                <a th:href="@{/admin/console}">Quản trị</a>
+                <a th:if="${canAccessOperations}" th:href="@{/operations/console}">Vận hành</a>
+                <a th:if="${canAccessAdmin}" th:href="@{/admin/console}">Quản trị</a>
             </th:block>
             <th:block th:if="${!loggedIn}">
                 <a href="#overview">Tổng quan</a>
@@ -58,241 +59,400 @@
         <p class="alert" th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
     </div>
 
-    <section id="overview" class="hero-section container">
-        <div class="hero-content">
-            <p class="hero-subtitle">Tương lai xanh cho Việt Nam</p>
-            <h1 class="hero-title">Đổi pin xe điện <span>chỉ trong 3 phút</span></h1>
-            <p class="hero-description">Hệ thống đổi pin thông minh với công nghệ tiên tiến, trạm rộng khắp và đội ngũ hỗ trợ nhanh chóng. Trải nghiệm tương lai di chuyển xanh ngay hôm nay.</p>
-            <div class="hero-cta">
-                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
-                <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
-            </div>
-            <div class="hero-actions" th:if="${loggedIn}">
-                <div class="action-buttons">
-                    <a th:href="@{/dashboard}" class="nav-button">Tổng quan</a>
-                    <a th:href="@{/dashboard/vehicles}" class="nav-button">Phương tiện</a>
-                    <a th:href="@{/dashboard/reservations}" class="nav-button">Lịch đổi</a>
-                    <a th:href="@{/dashboard/payments}" class="nav-button">Thanh toán</a>
-                    <a th:href="@{/dashboard/notifications}" class="nav-button">Thông báo</a>
-                    <a th:href="@{/dashboard/support}" class="nav-button">Hỗ trợ</a>
+    <section class="page-shell driver-dashboard" th:if="${loggedIn}">
+        <section class="page-hero">
+            <div class="page-hero__content">
+                <p class="page-hero__eyebrow">Không gian tài xế</p>
+                <h1 class="page-hero__title">Xin chào <span th:text="${driverName}">tài xế EV</span>!</h1>
+                <p class="page-hero__description">
+                    <span th:if="${snapshot != null && snapshot.overview().nextReservation() != null}">
+                        Lịch đổi tiếp theo của bạn tại <strong th:text="${snapshot.overview().nextReservation().stationName()}">Trạm EV SWAP</strong>
+                        vào <strong th:text="${#temporals.format(snapshot.overview().nextReservation().reservedStart(), 'dd/MM/yyyy HH:mm')}">01/01/2024 09:00</strong>.
+                    </span>
+                    <span th:if="${snapshot == null || snapshot.overview().nextReservation() == null}">
+                        Hãy đặt lịch đổi đầu tiên để chúng tôi chuẩn bị pin tốt nhất cho hành trình của bạn.
+                    </span>
+                </p>
+                <div class="quick-actions">
+                    <a class="btn primary" th:href="@{/dashboard/reservations}">Đặt lịch đổi</a>
+                    <a class="btn outline" th:href="@{/dashboard/vehicles}">Quản lý phương tiện</a>
+                    <a class="btn ghost" th:href="@{/dashboard/support}">Liên hệ hỗ trợ</a>
                 </div>
             </div>
-            <div class="hero-actions locked" th:if="${!loggedIn}">
-                <div class="action-buttons">
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tổng quan</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Phương tiện</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tìm trạm</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Báo cáo</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Tài khoản</button>
-                    <button type="button" class="nav-button locked" onclick="openLoginModal()">Hỗ trợ</button>
+            <div class="page-hero__meta">
+                <div class="driver-chip">
+                    <span th:text="${driverInitial}">E</span>
+                    <strong th:text="${driverName}">EV Driver</strong>
                 </div>
-            </div>
-        </div>
-        <div class="hero-card">
-            <div class="card-icon">📺</div>
-            <div class="card-metric">
-                <span class="metric-label">Số điểm đổi pin</span>
-                <span class="metric-value">156 trạm</span>
-            </div>
-            <div class="card-metric">
-                <span class="metric-label">Khoảng cách gần nhất</span>
-                <span class="metric-value">2.3 km</span>
-            </div>
-            <div class="card-rating">
-                <span class="metric-label">Đánh giá</span>
-                <div class="rating-value">⭐ 4.9/5.0</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="stats-section container">
-        <div class="stat-card">
-            <div class="stat-value">50+</div>
-            <div class="stat-label">Trạm đổi pin</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">3 phút</div>
-            <div class="stat-label">Thời gian đổi</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">24/7</div>
-            <div class="stat-label">Dịch vụ</div>
-        </div>
-    </section>
-
-    <section id="benefits" class="feature-section container">
-        <div class="section-header">
-            <span class="section-badge">Tính năng</span>
-            <h2 class="section-title">Tại sao chọn EV SWAP?</h2>
-            <p class="section-description">Giải pháp đổi pin thông minh với công nghệ tiên tiến và dịch vụ tối nhất dành cho người dùng xe máy điện.</p>
-        </div>
-        <div class="feature-grid">
-            <article class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Siêu nhanh 3 phút</h3>
-                <p>Chỉ mất 3 phút để thay pin, sẵn sàng tiếp tục hành trình mà không cần chờ sạc.</p>
-            </article>
-            <article class="feature-card">
-                <div class="feature-icon">🌐</div>
-                <h3>Mạng lưới rộng khắp</h3>
-                <p>Hơn 50 trạm phủ khắp cả nước, luôn trong bán kính dưới 5km.</p>
-            </article>
-            <article class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>An toàn tuyệt đối</h3>
-                <p>Pin được kiểm định nghiêm ngặt, đảm bảo an toàn cho người dùng và phương tiện.</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="feature-section container">
-        <div class="feature-grid">
-            <article class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Tiết kiệm chi phí</h3>
-                <p>Chỉ 25.000đ mỗi lần đổi. Tiết kiệm 60% so với xăng truyền thống.</p>
-            </article>
-            <article class="feature-card">
-                <div class="feature-icon">🕒</div>
-                <h3>Hoạt động 24/7</h3>
-                <p>Trạm đổi pin phục vụ không ngừng nghỉ, hỗ trợ mọi nhu cầu di chuyển.</p>
-            </article>
-            <article class="feature-card">
-                <div class="feature-icon">🌱</div>
-                <h3>Thân thiện môi trường</h3>
-                <p>Giảm phát thải CO<sub>2</sub>, góp phần xây dựng tương lai giao thông xanh.</p>
-            </article>
-        </div>
-    </section>
-
-    <section id="reports" class="demo-section container">
-        <h2 class="section-title">Trải nghiệm ngay</h2>
-        <p class="section-description">Đăng nhập với tài khoản demo để khám phá đầy đủ tính năng hệ thống.</p>
-        <div class="demo-grid">
-            <div class="demo-card">
-                <div class="demo-icon">🛡️</div>
-                <h3>Admin</h3>
-                <p>Email: admin@evswap.com</p>
-                <p>Mật khẩu: Admin123456</p>
-                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Admin</a>
-            </div>
-            <div class="demo-card">
-                <div class="demo-icon">👥</div>
-                <h3>Staff</h3>
-                <p>Nhân viên trạm được Admin cấp quyền truy cập dashboard.</p>
-                <a th:href="@{/login}" class="btn ghost small">Đăng nhập Staff</a>
-            </div>
-            <div class="demo-card">
-                <div class="demo-icon">🛵</div>
-                <h3>Driver</h3>
-                <p>Đăng ký tài khoản Driver để sử dụng dịch vụ đổi pin tiện lợi.</p>
-                <a th:href="@{/register}" class="btn primary small">Đăng ký Driver</a>
-            </div>
-        </div>
-    </section>
-
-    <section id="account" class="cta-section">
-        <div class="container cta-inner">
-            <div class="cta-content">
-                <h2>Sẵn sàng chuyển đổi sang tương lai xanh?</h2>
-                <p>Gia nhập cộng đồng hơn 10,000 tài xế sử dụng EV SWAP. Trải nghiệm công nghệ đổi pin thông minh ngay hôm nay.</p>
-            </div>
-            <div class="cta-actions">
-                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
-                <a th:href="@{/login}" class="btn outline">Đăng nhập</a>
-            </div>
-        </div>
-    </section>
-
-    <section id="support" class="preview-section container">
-        <div class="preview-card">
-            <div class="preview-header">
-                <span class="brand-icon">📺</span>
-                <h3>EV SWAP</h3>
-                <p>Hệ thống đổi pin xe máy điện thông minh nhất Việt Nam.</p>
-            </div>
-            <ul class="preview-list">
-                <li>Đổi pin siêu nhanh</li>
-                <li>Mạng lưới rộng khắp</li>
-                <li>An toàn tuyệt đối</li>
-            </ul>
-            <a th:href="@{/login}" class="btn ghost full">Đăng nhập</a>
-        </div>
-        <div class="preview-card dark">
-            <h3>Hỗ trợ ưu tiên</h3>
-            <p>Kích hoạt tài khoản để nhận tư vấn riêng và đặc quyền chăm sóc khách hàng.</p>
-            <ul class="preview-list">
-                <li>Đội ngũ trực 24/7</li>
-                <li>Hướng dẫn sử dụng chi tiết</li>
-                <li>Ưu đãi dành riêng hội viên</li>
-            </ul>
-            <a th:href="@{/register}" class="btn primary full">Tham gia ngay</a>
-        </div>
-    </section>
-
-    <section class="footer container">
-        <p th:if="${dashboardMessage}" th:text="${dashboardMessage}" class="footer-message"></p>
-        <p class="footer-note">© 2024 EV SWAP. Mạng lưới đổi pin xe máy điện thông minh đầu tiên tại Việt Nam.</p>
-    </section>
-</main>
-
-<div class="login-modal" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title" hidden>
-    <div class="login-modal__overlay" onclick="closeLoginModal()"></div>
-    <div class="login-modal__dialog">
-        <button type="button" class="login-modal__close" aria-label="Đóng" onclick="closeLoginModal()">×</button>
-        <div class="login-modal__content">
-            <div class="login-showcase">
-                <span class="brand-icon">📺</span>
-                <h3 id="login-modal-title">EV SWAP</h3>
-                <p>Đăng nhập để truy cập đầy đủ các chức năng đổi pin thông minh.</p>
-                <ul>
-                    <li>Quản lý phương tiện và đổi pin</li>
-                    <li>Theo dõi lịch sử hoá đơn</li>
-                    <li>Nhận hỗ trợ ưu tiên 24/7</li>
+                <ul class="driver-meta">
+                    <li><strong>Email:</strong> <span th:text="${driverEmail}">driver@email.com</span></li>
+                    <li><strong>Điện thoại:</strong> <span th:text="${driverPhone}">Chưa cập nhật</span></li>
+                    <li th:if="${driverSince != null}"><strong>Tham gia:</strong> <span th:text="${#temporals.format(driverSince, 'dd/MM/yyyy')}">01/01/2024</span></li>
                 </ul>
             </div>
-            <div class="login-form-card">
-                <h4>Đăng nhập tài khoản</h4>
-                <p>Nhập thông tin để tiếp tục sử dụng dashboard.</p>
-                <form th:action="@{/login}" method="get">
-                    <div class="input-group">
-                        <label for="modal-email">Email</label>
-                        <input id="modal-email" name="email" type="email" placeholder="example@email.com" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="modal-password">Mật khẩu</label>
-                        <input id="modal-password" name="password" type="password" placeholder="********" required>
-                    </div>
-                    <button type="submit" class="btn primary full">Đăng nhập</button>
-                </form>
-                <p class="register-hint">Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a></p>
+        </section>
+
+        <section class="section-card">
+            <h2>Chỉ số chính</h2>
+            <p class="section-lead">Theo dõi nhanh tiến độ sử dụng dịch vụ đổi pin của bạn.</p>
+            <div class="metric-grid">
+                <article class="metric-card">
+                    <p class="metric-card__label">Phương tiện đã đăng ký</p>
+                    <p class="metric-card__value" th:text="${snapshot.overview().totalVehicles()}">0</p>
+                    <a class="metric-card__action" th:href="@{/dashboard/vehicles}">Xem phương tiện</a>
+                </article>
+                <article class="metric-card">
+                    <p class="metric-card__label">Lịch đổi sắp tới</p>
+                    <p class="metric-card__value" th:text="${snapshot.overview().upcomingReservations()}">0</p>
+                    <a class="metric-card__action" th:href="@{/dashboard/reservations}">Quản lý lịch</a>
+                </article>
+                <article class="metric-card">
+                    <p class="metric-card__label">Đổi pin thành công</p>
+                    <p class="metric-card__value" th:text="${snapshot.overview().completedSwaps()}">0</p>
+                    <a class="metric-card__action" th:href="@{/dashboard/reservations}">Xem lịch sử</a>
+                </article>
+                <article class="metric-card">
+                    <p class="metric-card__label">Tổng thanh toán</p>
+                    <p class="metric-card__value" th:text="${totalPaidFormatted}">0 ₫</p>
+                    <span class="metric-card__pill" th:text="${snapshot.overview().unreadNotifications()} + ' thông báo chưa đọc'">0 thông báo chưa đọc</span>
+                </article>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
 
-<script>
-    const loginModal = document.getElementById('login-modal');
+        <section class="section-card">
+            <h2>Lịch đổi &amp; Thanh toán</h2>
+            <div class="data-grid data-grid--two">
+                <article class="data-card">
+                    <div class="badge">Lịch đổi sắp tới</div>
+                    <div th:if="${snapshot.overview().nextReservation() != null}">
+                        <h3 th:text="${snapshot.overview().nextReservation().stationName()}">Trạm EV SWAP</h3>
+                        <div class="data-meta">
+                            <span>Thời gian: <strong th:text="${#temporals.format(snapshot.overview().nextReservation().reservedStart(), 'dd/MM/yyyy HH:mm')}">01/01/2024 09:00</strong></span>
+                            <span>Trạng thái: <strong th:text="${#strings.capitalizeWords(snapshot.overview().nextReservation().status()?.replace('_',' '))}">Đang xử lý</strong></span>
+                        </div>
+                        <a class="link-inline" th:href="@{/dashboard/reservations}">Xem chi tiết</a>
+                    </div>
+                    <div th:if="${snapshot.overview().nextReservation() == null}" class="empty-state">
+                        <p>Bạn chưa có lịch đổi nào. Hãy đặt lịch ngay để giữ chỗ tại trạm gần nhất.</p>
+                        <a class="btn primary" th:href="@{/dashboard/reservations}">Đặt lịch mới</a>
+                    </div>
+                </article>
+                <article class="data-card">
+                    <div class="badge">Thanh toán gần nhất</div>
+                    <div th:if="${snapshot.overview().lastPayment() != null}">
+                        <h3 th:text="${lastPaymentAmount != null ? lastPaymentAmount : '0 ₫'}">250.000 ₫</h3>
+                        <div class="data-meta">
+                            <span>Mã: <strong th:text="${snapshot.overview().lastPayment().paymentId()}">#123</strong></span>
+                            <span>Phương thức: <strong th:text="${snapshot.overview().lastPayment().method() != null ? snapshot.overview().lastPayment().method() : 'Không xác định'}">Ví điện tử</strong></span>
+                        </div>
+                        <p class="data-meta">Trạng thái: <strong th:text="${#strings.capitalizeWords(snapshot.overview().lastPayment().status()?.replace('_',' '))}">Thành công</strong></p>
+                        <p class="data-meta" th:if="${snapshot.overview().lastPayment().paidAt() != null}">Thời gian: <strong th:text="${#temporals.format(snapshot.overview().lastPayment().paidAt(), 'dd/MM/yyyy HH:mm')}">01/01/2024 09:00</strong></p>
+                        <a class="link-inline" th:href="@{/dashboard/payments}">Xem lịch sử thanh toán</a>
+                    </div>
+                    <div th:if="${snapshot.overview().lastPayment() == null}" class="empty-state">
+                        <p>Chưa ghi nhận giao dịch thanh toán nào. Lịch sử sẽ xuất hiện sau khi bạn hoàn tất đổi pin.</p>
+                        <a class="btn outline" th:href="@{/dashboard/payments}">Tìm hiểu phí dịch vụ</a>
+                    </div>
+                </article>
+            </div>
+        </section>
 
-    function openLoginModal() {
-        if (loginModal) {
-            loginModal.removeAttribute('hidden');
-            document.body.classList.add('modal-open');
-        }
-    }
+        <section class="section-card">
+            <div class="section-header-inline">
+                <div>
+                    <h2>Phương tiện của bạn</h2>
+                    <p class="section-lead">Những phương tiện mới sử dụng gần đây.</p>
+                </div>
+                <a class="link-inline" th:href="@{/dashboard/vehicles}">Quản lý tất cả</a>
+            </div>
+            <div th:if="${#lists.isEmpty(snapshot.vehicles())}" class="empty-state">
+                <p>Hãy thêm phương tiện đầu tiên để hệ thống gợi ý pin phù hợp và lịch đổi chính xác.</p>
+                <a class="btn primary" th:href="@{/vehicles/manage}">Thêm phương tiện</a>
+            </div>
+            <div th:if="${!#lists.isEmpty(snapshot.vehicles())}" class="data-grid data-grid--two">
+                <article class="data-card" th:each="vehicle, iterStat : ${snapshot.vehicles()}" th:if="${iterStat.index} < 3">
+                    <div class="badge">ID #<span th:text="${vehicle.vehicleId()}">1</span></div>
+                    <h3 th:text="${vehicle.displayName() != null ? vehicle.displayName() : 'Phương tiện EV'}">Xe máy điện</h3>
+                    <div class="data-meta">
+                        <span>Biển số: <strong th:text="${vehicle.plateNumber() != null ? vehicle.plateNumber() : 'Chưa cập nhật'}">Chưa cập nhật</strong></span>
+                        <span>VIN: <strong th:text="${vehicle.vin() != null ? vehicle.vin() : 'Chưa cập nhật'}">Chưa cập nhật</strong></span>
+                    </div>
+                    <p class="data-meta" th:if="${vehicle.createdAt() != null}">Ngày thêm: <strong th:text="${#temporals.format(vehicle.createdAt(), 'dd/MM/yyyy')}">01/01/2024</strong></p>
+                </article>
+            </div>
+        </section>
 
-    function closeLoginModal() {
-        if (loginModal) {
-            loginModal.setAttribute('hidden', '');
-            document.body.classList.remove('modal-open');
-        }
-    }
+        <section class="section-card">
+            <div class="section-header-inline">
+                <div>
+                    <h2>Thông báo mới</h2>
+                    <p class="section-lead">Cập nhật quan trọng từ EV SWAP.</p>
+                </div>
+                <a class="link-inline" th:href="@{/dashboard/notifications}">Xem tất cả thông báo</a>
+            </div>
+            <div th:if="${#lists.isEmpty(snapshot.notifications())}" class="empty-state">
+                <p>Chưa có thông báo nào gần đây.</p>
+            </div>
+            <div th:if="${!#lists.isEmpty(snapshot.notifications())}" class="notification-list">
+                <article class="notification-card" th:each="notification, iterStat : ${snapshot.notifications()}" th:if="${iterStat.index} < 3" th:classappend="${notification.getRead()} ? ' notification-card--read' : ''">
+                    <div class="notification-card__content">
+                        <p class="notification-card__title" th:text="${notification.getTitle() != null ? notification.getTitle() : 'Thông báo hệ thống'}">Thông báo hệ thống</p>
+                        <div class="notification-card__meta">
+                            <span th:text="${notification.getType() != null ? notification.getType() : 'Hệ thống'}">Hệ thống</span>
+                            <span th:text="${notification.getSentAt() != null ? #temporals.format(notification.getSentAt(), 'dd/MM/yyyy HH:mm') : 'Đang cập nhật'}">01/01/2024 09:00</span>
+                        </div>
+                        <p class="notification-card__meta" th:if="${notification.getReservationId() != null}">Lịch đổi #<span th:text="${notification.getReservationId()}">1</span></p>
+                        <p class="notification-card__meta" th:if="${notification.getPaymentId() != null}">Thanh toán #<span th:text="${notification.getPaymentId()}">1</span></p>
+                    </div>
+                    <div class="notification-card__actions">
+                        <span class="badge" th:if="${notification.getRead()}">Đã đọc</span>
+                        <span class="badge status-warning" th:if="${!notification.getRead()}">Mới</span>
+                    </div>
+                </article>
+            </div>
+        </section>
 
-    window.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
-            closeLoginModal();
-        }
-    });
-</script>
+        <section class="section-card">
+            <div class="data-grid data-grid--two">
+                <article class="data-card">
+                    <div class="badge">Hỗ trợ đang mở</div>
+                    <div th:if="${!#lists.isEmpty(snapshot.tickets())}">
+                        <ul class="activity-list">
+                            <li th:each="ticket, iterStat : ${snapshot.tickets()}" th:if="${iterStat.index} < 3">
+                                <strong th:text="${ticket.getCategory() != null ? ticket.getCategory() : 'Hỗ trợ'}">Hỗ trợ</strong>
+                                <span class="activity-meta" th:text="${#strings.capitalizeWords(ticket.getStatus()?.replace('_',' '))}">Đang xử lý</span>
+                                <span class="activity-meta" th:if="${ticket.getCreatedAt() != null}" th:text="${#temporals.format(ticket.getCreatedAt(), 'dd/MM/yyyy HH:mm')}">01/01/2024 09:00</span>
+                            </li>
+                        </ul>
+                        <a class="link-inline" th:href="@{/dashboard/support}">Xem tất cả yêu cầu</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(snapshot.tickets())}" class="empty-state">
+                        <p>Bạn không có yêu cầu hỗ trợ nào. Nếu cần trợ giúp, hãy tạo yêu cầu ngay.</p>
+                        <a class="btn ghost" th:href="@{/dashboard/support}">Tạo yêu cầu mới</a>
+                    </div>
+                </article>
+                <article class="data-card">
+                    <div class="badge">Trạm đề xuất</div>
+                    <div th:if="${!#lists.isEmpty(snapshot.stations())}">
+                        <ul class="activity-list">
+                            <li th:each="station, iterStat : ${snapshot.stations()}" th:if="${iterStat.index} < 3">
+                                <strong th:text="${station.getName() != null ? station.getName() : 'Trạm EV SWAP'}">Trạm EV SWAP</strong>
+                                <span class="activity-meta" th:text="${station.getAddress() != null ? station.getAddress() : 'Đang cập nhật địa chỉ'}">Địa chỉ</span>
+                                <span class="activity-meta" th:text="${station.getStatus() != null ? #strings.capitalizeWords(station.getStatus().replace('_',' ')) : 'Đang hoạt động'}">Đang hoạt động</span>
+                            </li>
+                        </ul>
+                        <a class="link-inline" th:href="@{/dashboard/reservations}">Đặt lịch tại trạm</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(snapshot.stations())}" class="empty-state">
+                        <p>Đang cập nhật danh sách trạm. Quay lại sau để xem các địa điểm được đề xuất.</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </section>
+
+    <th:block th:if="${!loggedIn}">
+        <section id="overview" class="hero-section container">
+            <div class="hero-content">
+                <p class="hero-subtitle">Tương lai xanh cho Việt Nam</p>
+                <h1 class="hero-title">Đổi pin xe điện <span>chỉ trong 3 phút</span></h1>
+                <p class="hero-description">Hệ thống đổi pin thông minh với công nghệ tiên tiến, trạm rộng khắp và đội ngũ hỗ trợ nhanh chóng. Trải nghiệm tương lai di chuyển xanh ngay hôm nay.</p>
+                <div class="hero-cta">
+                    <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
+                    <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
+                </div>
+                <div class="hero-actions locked">
+                    <div class="action-buttons">
+                        <a class="nav-button locked" th:href="@{/login}">Tổng quan</a>
+                        <a class="nav-button locked" th:href="@{/login}">Phương tiện</a>
+                        <a class="nav-button locked" th:href="@{/login}">Tìm trạm</a>
+                        <a class="nav-button locked" th:href="@{/login}">Báo cáo</a>
+                        <a class="nav-button locked" th:href="@{/login}">Tài khoản</a>
+                        <a class="nav-button locked" th:href="@{/login}">Hỗ trợ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="card-icon">📺</div>
+                <div class="card-metric">
+                    <span class="metric-label">Số điểm đổi pin</span>
+                    <span class="metric-value">156 trạm</span>
+                </div>
+                <div class="card-metric">
+                    <span class="metric-label">Khoảng cách gần nhất</span>
+                    <span class="metric-value">2.3 km</span>
+                </div>
+                <div class="card-rating">
+                    <span class="metric-label">Đánh giá</span>
+                    <div class="rating-value">⭐ 4.9/5.0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-section container">
+            <div class="stat-card">
+                <div class="stat-value">50+</div>
+                <div class="stat-label">Trạm đổi pin</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3 phút</div>
+                <div class="stat-label">Thời gian đổi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Dịch vụ</div>
+            </div>
+        </section>
+
+        <section id="benefits" class="feature-section container">
+            <div class="section-header">
+                <span class="section-badge">Tính năng</span>
+                <h2 class="section-title">Tại sao chọn EV SWAP?</h2>
+                <p class="section-description">Giải pháp đổi pin thông minh với công nghệ tiên tiến và dịch vụ tối nhất dành cho người dùng xe máy điện.</p>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Siêu nhanh 3 phút</h3>
+                    <p>Chỉ mất 3 phút để thay pin, sẵn sàng tiếp tục hành trình mà không cần chờ sạc.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Mạng lưới rộng khắp</h3>
+                    <p>Hơn 50 trạm phủ khắp cả nước, luôn trong bán kính dưới 5km.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>An toàn tuyệt đối</h3>
+                    <p>Pin được kiểm định nghiêm ngặt, đảm bảo an toàn cho người dùng và phương tiện.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="feature-section container">
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Tiết kiệm chi phí</h3>
+                    <p>Chỉ 25.000đ mỗi lần đổi. Tiết kiệm 60% so với xăng truyền thống.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">🕒</div>
+                    <h3>Hoạt động 24/7</h3>
+                    <p>Trạm đổi pin phục vụ không ngừng nghỉ, hỗ trợ mọi nhu cầu di chuyển.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Dịch vụ chuyên nghiệp</h3>
+                    <p>Đội ngũ nhân viên được đào tạo bài bản, sẵn sàng hỗ trợ bạn mọi lúc.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="stations" class="stations-section container">
+            <div class="section-header">
+                <span class="section-badge">Trạm</span>
+                <h2 class="section-title">Trạm đổi pin nổi bật</h2>
+                <p class="section-description">Lựa chọn trạm phù hợp với bạn, vị trí thuận tiện và dịch vụ chu đáo.</p>
+            </div>
+            <div class="station-grid">
+                <article class="station-card">
+                    <h3>EV SWAP - Quận 1</h3>
+                    <p>26 Lê Lợi, Quận 1, TP.HCM</p>
+                    <span class="badge">Hoạt động 24/7</span>
+                </article>
+                <article class="station-card">
+                    <h3>EV SWAP - Hà Đông</h3>
+                    <p>12 Tô Hiệu, Hà Đông, Hà Nội</p>
+                    <span class="badge">Có bãi đỗ rộng</span>
+                </article>
+                <article class="station-card">
+                    <h3>EV SWAP - Đà Nẵng</h3>
+                    <p>98 Phan Châu Trinh, Đà Nẵng</p>
+                    <span class="badge">Ưu đãi mở trạm</span>
+                </article>
+            </div>
+        </section>
+
+        <section id="reports" class="reports-section container">
+            <div class="section-header">
+                <span class="section-badge">Báo cáo</span>
+                <h2 class="section-title">Thống kê hoạt động</h2>
+                <p class="section-description">Theo dõi chỉ số hiệu suất của hệ thống đổi pin. Số liệu cập nhật tự động hàng ngày.</p>
+            </div>
+            <div class="reports-grid">
+                <article class="report-card">
+                    <h3>+36%</h3>
+                    <p>Tăng trưởng số lần đổi pin trong tháng 5.</p>
+                </article>
+                <article class="report-card">
+                    <h3>98%</h3>
+                    <p>Tỷ lệ khách hàng hài lòng sau khi sử dụng dịch vụ.</p>
+                </article>
+                <article class="report-card">
+                    <h3>+12</h3>
+                    <p>Trạm mới được khai trương trong quý này.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="account" class="account-section container">
+            <div class="account-grid">
+                <div class="account-card">
+                    <h3>Dịch vụ dành cho cá nhân</h3>
+                    <p>Quản lý phương tiện, theo dõi lịch sử đổi pin, thanh toán tiện lợi.</p>
+                    <ul>
+                        <li>Đặt lịch đổi pin tự động</li>
+                        <li>Thông báo nhắc lịch</li>
+                        <li>Hỗ trợ trực tuyến 24/7</li>
+                    </ul>
+                </div>
+                <div class="account-card">
+                    <h3>Giải pháp cho doanh nghiệp</h3>
+                    <p>Tích hợp đội xe lớn, báo cáo chi tiết và ưu đãi đặc biệt.</p>
+                    <ul>
+                        <li>Quản lý đội xe tập trung</li>
+                        <li>Thanh toán theo tháng</li>
+                        <li>Chuyên viên hỗ trợ riêng</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="support" class="support-section container">
+            <div class="support-grid">
+                <div class="support-card">
+                    <h3>Hỗ trợ khách hàng</h3>
+                    <p>Đội ngũ hỗ trợ 24/7 sẵn sàng giải đáp mọi thắc mắc của bạn.</p>
+                    <ul>
+                        <li>Chat trực tuyến ngay lập tức</li>
+                        <li>Tổng đài 1800 6868</li>
+                        <li>Email support@evswap.vn</li>
+                    </ul>
+                </div>
+                <div class="support-card">
+                    <h3>Tài nguyên hướng dẫn</h3>
+                    <p>Cẩm nang sử dụng trạm đổi pin, mẹo chăm sóc pin và hơn thế nữa.</p>
+                    <ul>
+                        <li>Video hướng dẫn</li>
+                        <li>Câu hỏi thường gặp</li>
+                        <li>Cập nhật phần mềm</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2>Trải nghiệm EV SWAP ngay hôm nay</h2>
+                    <p>Đăng ký tài khoản và khám phá dịch vụ đổi pin nhanh chóng, an toàn và tiện lợi.</p>
+                    <a class="btn primary" th:href="@{/register}">Bắt đầu ngay</a>
+                </div>
+                <div class="cta-illustration">⚡</div>
+            </div>
+        </section>
+    </th:block>
+</main>
 </body>
 </html>

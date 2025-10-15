@@ -1,6 +1,7 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.entity.Admin;
+import evswap.swp391to4.entity.Staff;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,19 +15,22 @@ public class OperationsConsoleController {
     public String showOperationsConsole(HttpSession session,
                                         Model model,
                                         RedirectAttributes redirectAttributes) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
+        Admin admin = (Admin) session.getAttribute("loggedInAdmin");
+        Staff staff = (Staff) session.getAttribute("loggedInStaff");
+        if (admin == null && staff == null) {
             redirectAttributes.addFlashAttribute("loginRequired",
-                    "Vui lòng đăng nhập để truy cập bảng điều khiển vận hành.");
+                    "Chỉ nhân viên hoặc quản trị viên mới được truy cập bảng điều khiển vận hành.");
             return "redirect:/login";
         }
 
-        String driverName = driver.getFullName() != null ? driver.getFullName() : "Tài xế EV";
-        String trimmed = driverName.trim();
-        String driverInitial = trimmed.isEmpty() ? "E" : trimmed.substring(0, 1).toUpperCase();
+        String displayName = admin != null
+                ? (admin.getFullName() != null ? admin.getFullName() : "Quản trị viên EV")
+                : (staff.getFullName() != null ? staff.getFullName() : "Nhân viên EV");
+        String trimmed = displayName.trim();
+        String initials = trimmed.isEmpty() ? "E" : trimmed.substring(0, 1).toUpperCase();
 
-        model.addAttribute("driverName", driverName);
-        model.addAttribute("driverInitial", driverInitial);
+        model.addAttribute("driverName", displayName);
+        model.addAttribute("driverInitial", initials);
         return "operations-console";
     }
 }

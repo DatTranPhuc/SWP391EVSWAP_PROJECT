@@ -55,7 +55,7 @@ public class DashboardFeaturePageController {
             return "redirect:/login";
         }
 
-        populateDriver(model, driver, "vehicles");
+        populateDriver(model, driver, session, "vehicles");
 
         List<VehicleSummary> vehicles = vehicleService.getVehiclesForDriver(driver.getDriverId()).stream()
                 .sorted(Comparator.comparing(Vehicle::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
@@ -79,7 +79,7 @@ public class DashboardFeaturePageController {
             return "redirect:/login";
         }
 
-        populateDriver(model, driver, "reservations");
+        populateDriver(model, driver, session, "reservations");
 
         List<ReservationSummary> reservations = reservationService.getReservationsForDriver(driver.getDriverId())
                 .stream()
@@ -113,7 +113,7 @@ public class DashboardFeaturePageController {
             return "redirect:/login";
         }
 
-        populateDriver(model, driver, "payments");
+        populateDriver(model, driver, session, "payments");
 
         List<PaymentResponse> driverPayments = paymentService.getPaymentsForDriver(driver.getDriverId());
 
@@ -147,7 +147,7 @@ public class DashboardFeaturePageController {
             return "redirect:/login";
         }
 
-        populateDriver(model, driver, "notifications");
+        populateDriver(model, driver, session, "notifications");
 
         List<NotificationSummary> notifications = notificationService.getNotificationsForDriver(driver.getDriverId()).stream()
                 .map(notification -> new NotificationSummary(
@@ -173,7 +173,7 @@ public class DashboardFeaturePageController {
             return "redirect:/login";
         }
 
-        populateDriver(model, driver, "support");
+        populateDriver(model, driver, session, "support");
 
         List<TicketSummary> tickets = ticketSupportService.getTicketsForDriver(driver.getDriverId()).stream()
                 .map(ticket -> new TicketSummary(
@@ -208,10 +208,14 @@ public class DashboardFeaturePageController {
         return driver;
     }
 
-    private void populateDriver(Model model, Driver driver, String activePage) {
+    private void populateDriver(Model model, Driver driver, HttpSession session, String activePage) {
         model.addAttribute("driverName", Optional.ofNullable(driver.getFullName()).orElse("Tài xế EV"));
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
         model.addAttribute("activePage", activePage);
+        boolean adminLoggedIn = session.getAttribute("loggedInAdmin") != null;
+        boolean staffLoggedIn = session.getAttribute("loggedInStaff") != null;
+        model.addAttribute("canAccessOperations", adminLoggedIn || staffLoggedIn);
+        model.addAttribute("canAccessAdmin", adminLoggedIn);
     }
 
     private String extractInitial(String fullName) {

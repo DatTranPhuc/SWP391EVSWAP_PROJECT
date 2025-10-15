@@ -28,8 +28,8 @@
             <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
             <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
             <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
-            <a th:href="@{/operations/console}">Vận hành</a>
-            <a th:href="@{/admin/console}">Quản trị</a>
+            <a th:if="${canAccessOperations}" th:href="@{/operations/console}">Vận hành</a>
+            <a th:if="${canAccessAdmin}" th:href="@{/admin/console}">Quản trị</a>
         </nav>
         <div class="auth-area">
             <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
