@@ -18,4 +18,6 @@ public interface StationRepository extends JpaRepository<Station, Integer> {
 
     // 🔍 Tìm theo trạng thái (active / closed)
     List<Station> findByStatus(String status);
+
+    long countByStatusIgnoreCase(String status);
 }
