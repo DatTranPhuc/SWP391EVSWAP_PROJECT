@@ -91,4 +91,15 @@ public class DriverService {
         return driverRepo.findById(driverId)
                 .orElseThrow(() -> new IllegalStateException("Tài khoản tài xế không tồn tại"));
     }
+
+    @Transactional(readOnly = true)
+    public Driver getDriverByEmail(String email) {
+        return driverRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Email không tồn tại"));
+    }
+
+    @Transactional
+    public Driver updateDriver(Driver driver) {
+        return driverRepo.save(driver);
+    }
 }

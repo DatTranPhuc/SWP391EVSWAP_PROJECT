@@ -2,12 +2,24 @@ package evswap.swp391to4.entity;
 
 
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity @Table(name = "driver")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -47,4 +59,9 @@ public class Driver {
     @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
+
+    // Explicit getters used by controllers/serializers
+    public Integer getDriverId() { return this.driverId; }
+    public String getFullName() { return this.fullName; }
+    public Boolean getEmailVerified() { return this.emailVerified; }
 }
