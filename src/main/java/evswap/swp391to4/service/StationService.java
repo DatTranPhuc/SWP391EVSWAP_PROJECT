@@ -17,15 +17,11 @@ public class StationService {
 
     private final StationRepository stationRepo;
 
-    /**
-     * 👑 Admin tạo trạm mới
-     */
     @Transactional
     public StationResponse createStation(StationCreateRequest req) {
         if (stationRepo.findByNameIgnoreCase(req.getName()).isPresent()) {
             throw new IllegalStateException("Station đã tồn tại");
         }
-
         Station station = Station.builder()
                 .name(req.getName())
                 .address(req.getAddress())
@@ -38,31 +34,21 @@ public class StationService {
         return toResponse(saved);
     }
 
-    /**
-     * 📋 Lấy tất cả trạm
-     */
     public List<StationResponse> getAllStations() {
         return stationRepo.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * 🔎 Tìm trạm theo tên (nếu không nhập → trả tất cả)
-     */
     public List<StationResponse> searchByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return getAllStations();
         }
-
         return stationRepo.findByNameContainingIgnoreCase(name).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    /**
-     * 📍 Tìm trạm gần vị trí (theo bán kính km)
-     */
     public List<StationResponse> findNearby(BigDecimal lat, BigDecimal lng, double radiusKm) {
         return stationRepo.findAll().stream()
                 .filter(s -> {
@@ -77,11 +63,35 @@ public class StationService {
                 .toList();
     }
 
-    /**
-     * 📏 Công thức Haversine tính khoảng cách giữa 2 tọa độ
-     */
+    public StationResponse findById(Integer stationId) {
+        Station s = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy trạm"));
+        return toResponse(s);
+    }
+
+    @Transactional
+    public StationResponse updateStation(Integer stationId, StationCreateRequest req) {
+        Station s = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy trạm"));
+        s.setName(req.getName());
+        s.setAddress(req.getAddress());
+        s.setLatitude(req.getLatitude());
+        s.setLongitude(req.getLongitude());
+        s.setStatus(req.getStatus() != null ? req.getStatus() : s.getStatus());
+        Station saved = stationRepo.save(s);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public void deleteStation(Integer stationId) {
+        if (!stationRepo.existsById(stationId)) {
+            throw new IllegalStateException("Không tìm thấy trạm");
+        }
+        stationRepo.deleteById(stationId);
+    }
+
     private double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
-        double R = 6371; // Bán kính Trái đất (km)
+        double R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
@@ -90,9 +100,6 @@ public class StationService {
         return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    /**
-     * 🔄 Convert Entity → DTO
-     */
     private StationResponse toResponse(Station s) {
         return StationResponse.builder()
                 .stationId(s.getStationId())

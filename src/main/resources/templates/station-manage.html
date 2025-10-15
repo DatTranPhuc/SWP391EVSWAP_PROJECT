@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Quản lý Trạm</title>
+    <link rel="stylesheet" href="/css/station.css">
+
+</head>
+<body>
+<!-- FORM THÊM / SỬA TRẠM -->
+<div th:if="${addOrEdit}">
+    <h2 th:text="${editMode}? 'Sửa trạm' : 'Thêm trạm mới'"></h2>
+    <form th:action="${editMode}? '/stations/update/' + ${stationForm.stationId} : '/stations/add'" th:object="${stationForm}" method="post">
+        <label>Tên trạm: <input th:field="*{name}" required></label><br>
+        <label>Địa chỉ: <input th:field="*{address}" required></label><br>
+        <label>Vĩ độ: <input th:field="*{latitude}" type="number" step="any" required></label><br>
+        <label>Kinh độ: <input th:field="*{longitude}" type="number" step="any" required></label><br>
+        <label>Trạng thái:
+            <select th:field="*{status}">
+                <option value="active">Hoạt động</option>
+                <option value="closed">Đã đóng</option>
+            </select>
+        </label><br>
+        <button type="submit" th:text="${editMode}? 'Cập nhật' : 'Thêm mới'"></button>
+        <a href="/stations">Huỷ</a>
+    </form>
+</div>
+
+<!-- FORM TÌM KIẾM THEO TÊN -->
+<div th:if="${showSearch}">
+    <form method="get" action="/stations/search">
+        <label>Tìm theo tên: <input type="text" name="name"></label>
+        <button type="submit">Tìm kiếm</button>
+    </form>
+</div>
+
+<!-- DANH SÁCH TRẠM -->
+<div th:if="${stations != null}">
+    <h2>Danh sách trạm</h2>
+    <a href="/stations/add-form">Thêm trạm mới</a>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tên trạm</th>
+            <th>Địa chỉ</th>
+            <th>Vĩ độ</th>
+            <th>Kinh độ</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="station : ${stations}">
+            <td th:text="${station.stationId}"></td>
+            <td th:text="${station.name}"></td>
+            <td th:text="${station.address}"></td>
+            <td th:text="${station.latitude}"></td>
+            <td th:text="${station.longitude}"></td>
+            <td th:text="${station.status}"></td>
+            <td>
+                <a th:href="@{|/stations/${station.stationId}|}">Xem</a>
+                <a th:href="@{|/stations/edit-form/${station.stationId}|}">Sửa</a>
+                <form th:action="@{|/stations/delete/${station.stationId}|}" method="post" style="display:inline;">
+                    <button type="submit" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- CHI TIẾT TRẠM -->
+<div th:if="${station != null}">
+    <h2>Chi tiết trạm</h2>
+    <ul>
+        <li><b>ID:</b> <span th:text="${station.stationId}"></span></li>
+        <li><b>Tên trạm:</b> <span th:text="${station.name}"></span></li>
+        <li><b>Địa chỉ:</b> <span th:text="${station.address}"></span></li>
+        <li><b>Vĩ độ:</b> <span th:text="${station.latitude}"></span></li>
+        <li><b>Kinh độ:</b> <span th:text="${station.longitude}"></span></li>
+        <li><b>Trạng thái:</b> <span th:text="${station.status}"></span></li>
+    </ul>
+    <a href="/stations">Quay lại danh sách</a>
+</div>
+
+<!-- FORM TÌM TRẠM GẦN VỊ TRÍ -->
+<div>
+    <h2>Tìm trạm gần vị trí của bạn</h2>
+    <form method="get" action="/stations/nearby">
+        <label>Vĩ độ: <input type="number" step="any" name="lat" required></label>
+        <label>Kinh độ: <input type="number" step="any" name="lng" required></label>
+        <label>Bán kính (km): <input type="number" step="any" name="radiusKm" value="5"></label>
+        <button type="submit">Tìm kiếm</button>
+    </form>
+    <table th:if="${nearbyStations != null}">
+        <thead>
+        <tr>
+            <th>Tên trạm</th>
+            <th>Khoảng cách</th>
+            <th>Địa chỉ</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="st : ${nearbyStations}">
+            <td th:text="${st.name}"></td>
+            <td th:text="${st.distance}"></td>
+            <td th:text="${st.address}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
