@@ -1,95 +1,62 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - EV SWAP</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+        .login-card { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 300px; }
+        .login-card h2 { margin-bottom: 1rem; }
+        .login-card input { width: 100%; padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px; border: 1px solid #ccc; }
+        .login-card button { width: 100%; padding: 0.5rem; margin-top: 1rem; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        .alert { padding: 0.5rem; margin: 0.5rem 0; border-radius: 4px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
 </head>
 <body>
-<header class="auth-nav">
-    <div class="auth-brand">
-        <span class="icon">🚗</span>
-        <span>EV SWAP</span>
-    </div>
-    <div class="auth-nav-actions">
-        <a class="btn btn-ghost" th:href="@{/login}">Đăng nhập</a>
-        <a class="btn btn-primary" th:href="@{/register}">Đăng ký</a>
-    </div>
-</header>
+<div class="login-card">
+    <h2>Đăng nhập</h2>
+    <div id="message"></div>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Mật khẩu" required>
+        <button type="submit">Đăng nhập</button>
+    </form>
+</div>
 
-<main class="auth-wrapper">
-    <section class="auth-showcase">
-        <div class="showcase-header">
-            <p class="section-badge">Hệ sinh thái pin thông minh</p>
-            <h1>EV SWAP - <span>Hệ thống đổi pin xe máy điện</span> thông minh nhất Việt Nam</h1>
-            <p>Trạm đổi pin phủ khắp, quy trình nhanh chóng và quản lý phương tiện tiện lợi. Sẵn sàng đồng hành trên mọi hành trình xanh của bạn.</p>
-        </div>
-        <div class="showcase-highlights">
-            <article class="highlight-card">
-                <div class="highlight-icon">⚡</div>
-                <div class="highlight-content">
-                    <h3>Đổi pin siêu tốc</h3>
-                    <p>Hoàn tất đổi pin chỉ trong 3 phút với hệ thống tự động hóa và hỗ trợ 24/7.</p>
-                </div>
-            </article>
-            <article class="highlight-card">
-                <div class="highlight-icon">📍</div>
-                <div class="highlight-content">
-                    <h3>Mạng lưới toàn quốc</h3>
-                    <p>Hơn 150 trạm phủ rộng, luôn tìm được địa điểm gần nhất ngay trên ứng dụng.</p>
-                </div>
-            </article>
-            <article class="highlight-card">
-                <div class="highlight-icon">🔒</div>
-                <div class="highlight-content">
-                    <h3>An tâm tuyệt đối</h3>
-                    <p>Quản lý tài khoản và phương tiện bảo mật cao, thông báo theo thời gian thực.</p>
-                </div>
-            </article>
-        </div>
-        <div class="auth-meta">
-            <span class="status-dot"></span>
-            <span>Hỗ trợ khách hàng 24/7 · Hotline 1900 636 900</span>
-        </div>
-    </section>
+<script>
+    const form = document.getElementById("loginForm");
+    const messageDiv = document.getElementById("message");
 
-    <section class="auth-card" aria-labelledby="login-title">
-        <div class="auth-card-header">
-            <a th:href="@{/dashboard}">← Quay lại</a>
-            <a class="btn btn-ghost" th:href="@{/register}">Tạo tài khoản</a>
-        </div>
-        <div>
-            <h2 id="login-title">Đăng nhập</h2>
-            <p>Đăng nhập vào hệ thống EV SWAP để bắt đầu hành trình của bạn.</p>
-        </div>
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault(); // tránh reload page
+        messageDiv.innerHTML = "";
 
-        <div th:if="${loginError}" class="alert-message alert-error" th:text="${loginError}"></div>
-        <div th:if="${loginSuccess}" class="alert-message alert-success" th:text="${loginSuccess}"></div>
-        <div th:if="${loginRequired}" class="alert-message alert-error" th:text="${loginRequired}"></div>
-        <div th:if="${logoutMessage}" class="alert-message alert-success" th:text="${logoutMessage}"></div>
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
 
-        <form class="auth-form" th:action="@{/login}" method="post">
-            <div class="auth-field">
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="example@email.com" required>
-            </div>
-            <div class="auth-field">
-                <label for="password">Mật khẩu</label>
-                <input id="password" name="password" type="password" placeholder="••••••••" required>
-            </div>
-            <div class="auth-submit">
-                <button class="btn btn-primary" type="submit">Đăng nhập</button>
-            </div>
-        </form>
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
 
-        <div class="form-footer">
-            Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
-        </div>
-    </section>
-</main>
+            const data = await res.json();
+
+            if (res.ok) {
+                messageDiv.innerHTML = `<div class="alert alert-success">${data.message} - Chào ${data.fullName}</div>`;
+                // Optionally redirect: window.location.href = "/dashboard";
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+            }
+        } catch (err) {
+            messageDiv.innerHTML = `<div class="alert alert-error">Lỗi kết nối server</div>`;
+            console.error(err);
+        }
+    });
+</script>
 </body>
 </html>

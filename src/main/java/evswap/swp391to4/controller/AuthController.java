@@ -1,96 +1,74 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.*;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.DriverService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final DriverService driverService;
 
-    // ===== LOGIN =====
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login";
-    }
-
-    @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        HttpSession session,
-                        RedirectAttributes redirect) {
-        try {
-            Driver driver = driverService.login(email, password);
-            session.setAttribute("loggedInDriver", driver);
-            redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
-            return "redirect:/dashboard"; // Thay bằng trang sau login
-        } catch (Exception e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
-    }
-
-    @PostMapping("/logout")
-    public String logout(HttpSession session, RedirectAttributes redirect) {
-        session.invalidate();
-        redirect.addFlashAttribute("logoutMessage", "Bạn đã đăng xuất thành công.");
-        return "redirect:/login";
-    }
-
     // ===== REGISTER =====
-    @GetMapping("/register")
-    public String registerPage() {
-        return "register";
-    }
-
     @PostMapping("/register")
-    public String register(@RequestParam String email,
-                           @RequestParam String password,
-                           @RequestParam String fullName,
-                           @RequestParam(required = false) String phone,
-                           RedirectAttributes redirect) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         try {
-            Driver driver = Driver.builder()
-                    .email(email)
-                    .passwordHash(password)
-                    .fullName(fullName)
-                    .phone(phone)
-                    .build();
-
-            driverService.register(driver);
-            redirect.addFlashAttribute("registerSuccess", "Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP");
-            redirect.addFlashAttribute("email", email); // Dùng trong verify.html
-            return "redirect:/verify";
+            Driver driver = driverService.register(req);
+            RegisterResponse resp = new RegisterResponse(
+                    driver.getEmail(),
+                    driver.getFullName(),
+                    "Vui lòng kiểm tra email để lấy OTP"
+            );
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
-            redirect.addFlashAttribute("registerError", e.getMessage());
-            return "redirect:/register";
+            return ResponseEntity.badRequest().body(new RegisterResponse(null, null, e.getMessage()));
         }
     }
 
     // ===== VERIFY OTP =====
-    @GetMapping("/verify")
-    public String verifyPage() {
-        return "verify";
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest req) {
+        try {
+            Driver driver = driverService.verifyOtp(req.getEmail(), req.getOtp());
+            return ResponseEntity.ok(new LoginResponse(
+                    driver.getEmail(),
+                    driver.getFullName(),
+                    null,
+                    "Xác minh email thành công"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new LoginResponse(null, null, null, e.getMessage()));
+        }
     }
 
-    @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam String email,
-                            @RequestParam String otp,
-                            RedirectAttributes redirect) {
+    // ===== LOGIN =====
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req, HttpSession session) {
         try {
-            Driver driver = driverService.verifyOtp(email, otp);
-            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng ký phương tiện.");
-            return "redirect:/vehicles/register?driverId=" + driver.getDriverId();
+            Driver driver = driverService.login(req.getEmail(), req.getPassword());
+            session.setAttribute("loggedInDriver", driver);
+            return ResponseEntity.ok(new LoginResponse(
+                    driver.getEmail(),
+                    driver.getFullName(),
+                    null,
+                    "Login thành công"
+            ));
         } catch (Exception e) {
-            redirect.addFlashAttribute("verifyError", e.getMessage());
-            redirect.addFlashAttribute("email", email); // giữ lại email để hiển thị form
-            return "redirect:/verify";
+            return ResponseEntity.badRequest().body(new LoginResponse(null, null, null, e.getMessage()));
         }
+    }
+
+    // ===== LOGOUT =====
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok(new LoginResponse(null, null, null, "Đăng xuất thành công"));
     }
 }

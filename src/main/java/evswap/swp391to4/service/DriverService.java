@@ -1,5 +1,6 @@
 package evswap.swp391to4.service;
 
+import evswap.swp391to4.dto.RegisterRequest;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.repository.DriverRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,18 @@ public class DriverService {
     private final JavaMailSender mailSender;
 
     @Transactional
-    public Driver register(Driver driver) {
-        if (driverRepo.findByEmail(driver.getEmail()).isPresent()) {
-            throw new IllegalStateException("Email đã được đăng ký");
-        }
+    public Driver register(RegisterRequest req) {
+        driverRepo.findByEmail(req.getEmail())
+                .ifPresent(d -> { throw new IllegalStateException("Email đã được đăng ký"); });
 
-        driver.setPasswordHash(passwordEncoder.encode(driver.getPasswordHash()));
-        driver.setEmailVerified(false);
-        driver.setCreatedAt(Instant.now());
+        Driver driver = Driver.builder()
+                .email(req.getEmail())
+                .passwordHash(passwordEncoder.encode(req.getPassword()))
+                .fullName(req.getFullName())
+                .phone(req.getPhone())
+                .emailVerified(false)
+                .createdAt(Instant.now())
+                .build();
 
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
         driver.setEmailOtp(otp);
@@ -36,12 +41,18 @@ public class DriverService {
 
         driverRepo.save(driver);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(driver.getEmail());
-        message.setSubject("Email Verification Code");
-        message.setText("Your verification code is: " + otp);
-        mailSender.send(message);
+        // Gửi email
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(driver.getEmail());
+            message.setSubject("Mã xác minh email");
+            message.setText("Mã OTP của bạn là: " + otp);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.out.println("Không gửi được email, in OTP ra console: " + otp);
+        }
 
+        System.out.println("OTP đăng ký (test): " + otp);
         return driver;
     }
 
@@ -50,7 +61,7 @@ public class DriverService {
         Driver driver = driverRepo.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User không tồn tại"));
 
-        if (driver.getEmailVerified()) {
+        if (Boolean.TRUE.equals(driver.getEmailVerified())) {
             throw new IllegalStateException("Email đã được xác minh");
         }
 
@@ -75,7 +86,7 @@ public class DriverService {
         Driver driver = driverRepo.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("Email không tồn tại"));
 
-        if (!driver.getEmailVerified()) {
+        if (!Boolean.TRUE.equals(driver.getEmailVerified())) {
             throw new IllegalStateException("Vui lòng xác minh email trước khi đăng nhập");
         }
 
