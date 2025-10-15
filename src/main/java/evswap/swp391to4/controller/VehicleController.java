@@ -1,143 +1,83 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.dto.VehicleRegistrationForm;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.VehicleService;
-import jakarta.servlet.http.HttpSession;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class VehicleController {
 
     private final DriverService driverService;
     private final VehicleService vehicleService;
 
-    @PostMapping("/api/drivers/{driverId}/vehicles")
-    public ResponseEntity<Vehicle> addVehicle(@PathVariable Integer driverId,
-                                              @RequestBody VehicleRequest request) {
-        Vehicle vehicle = Vehicle.builder()
-                .vin(request.vin())
-                .plateNumber(request.plateNumber())
-                .model(request.model())
-                .build();
-        Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
-        return ResponseEntity.ok(savedVehicle);
+    @PostMapping("/drivers/{driverId}/vehicles")
+    public ResponseEntity<?> addVehicle(@PathVariable Integer driverId,
+                                        @RequestBody VehicleRequest request) {
+        try {
+            Vehicle vehicle = Vehicle.builder()
+                    .vin(request.vin())
+                    .plateNumber(request.plateNumber())
+                    .model(request.model())
+                    .build();
+            Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedVehicle);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @GetMapping("/vehicles/register")
-    public String showRegistrationForm(@RequestParam("driverId") Integer driverId,
-                                       Model model,
-                                       RedirectAttributes redirect) {
+    @GetMapping("/drivers/{driverId}/vehicles")
+    public ResponseEntity<?> getVehicles(@PathVariable Integer driverId) {
+        try {
+            return ResponseEntity.ok(vehicleService.getVehiclesForDriver(driverId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/drivers/{driverId}/vehicles/overview")
+    public ResponseEntity<?> getVehicleOverview(@PathVariable Integer driverId) {
         try {
             Driver driver = driverService.getDriverById(driverId);
+            List<VehicleCardView> vehicleCards = buildVehicleCards(driverId);
 
-            model.addAttribute("driverId", driver.getDriverId());
-            model.addAttribute("driverName", driver.getFullName());
-            model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+            Map<String, Object> response = new HashMap<>();
+            response.put("driverId", driver.getDriverId());
+            response.put("driverName", driver.getFullName());
+            response.put("driverInitial", extractInitial(driver.getFullName()));
+            response.put("vehicleCards", vehicleCards);
+            response.put("totalVehicles", vehicleCards.size());
+            response.put("lastUpdatedAt", vehicleCards.stream()
+                    .map(VehicleCardView::createdAt)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null));
 
-            if (!model.containsAttribute("vehicleForm")) {
-                model.addAttribute("vehicleForm", new VehicleRegistrationForm());
-            }
-
-            return "vehicle-register";
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
-    }
-
-    @PostMapping("/vehicles/register")
-    public String registerVehicle(@RequestParam("driverId") Integer driverId,
-                                  @ModelAttribute("vehicleForm") VehicleRegistrationForm form,
-                                  RedirectAttributes redirect) {
-        try {
-            Vehicle vehicle = Vehicle.builder()
-                    .model(form.getModel())
-                    .vin(form.getVin())
-                    .plateNumber(form.getPlateNumber())
-                    .build();
-
-            vehicleService.addVehicleToDriver(driverId, vehicle);
-            redirect.addFlashAttribute("loginSuccess", "Đăng ký phương tiện thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("vehicleError", e.getMessage());
-            redirect.addFlashAttribute("vehicleForm", form);
-            redirect.addAttribute("driverId", driverId);
-            return "redirect:/vehicles/register";
-        }
-    }
-
-    @GetMapping("/vehicles/manage")
-    public String manageVehicles(HttpSession session,
-                                 Model model,
-                                 RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
-            return "redirect:/login";
-        }
-
-        var vehicleCards = buildVehicleCards(driver.getDriverId());
-        model.addAttribute("driverName", driver.getFullName());
-        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("vehicleCards", vehicleCards);
-        model.addAttribute("totalVehicles", vehicleCards.size());
-        model.addAttribute("lastUpdatedAt", vehicleCards.stream()
-                .map(VehicleCardView::createdAt)
-                .filter(java.util.Objects::nonNull)
-                .findFirst()
-                .orElse(null));
-
-        if (!model.containsAttribute("vehicleForm")) {
-            model.addAttribute("vehicleForm", new VehicleRegistrationForm());
-        }
-
-        return "vehicle-manage";
-    }
-
-    @PostMapping("/vehicles/manage")
-    public String addVehicleFromManager(@ModelAttribute("vehicleForm") VehicleRegistrationForm form,
-                                        HttpSession session,
-                                        RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
-            return "redirect:/login";
-        }
-
-        try {
-            Vehicle vehicle = Vehicle.builder()
-                    .model(form.getModel())
-                    .vin(form.getVin())
-                    .plateNumber(form.getPlateNumber())
-                    .build();
-
-            vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
-
-            Driver refreshed = driverService.getDriverById(driver.getDriverId());
-            session.setAttribute("loggedInDriver", refreshed);
-
-            redirect.addFlashAttribute("vehicleSuccess", "Thêm phương tiện mới thành công!");
-            return "redirect:/vehicles/manage";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("vehicleError", e.getMessage());
-            redirect.addFlashAttribute("vehicleForm", form);
-            return "redirect:/vehicles/manage";
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -155,73 +95,21 @@ public class VehicleController {
     public record VehicleRequest(String vin, String plateNumber, String model) {
     }
 
-    @Builder
-    private static class VehicleCardView {
-        private final Integer vehicleId;
-        private final String vehicleName;
-        private final String plateNumber;
-        private final String vin;
-        private final String model;
-        private final Instant createdAt;
-        private final String statusLabel;
-        private final String statusBadge;
-        private final String batteryModel;
-        private final String batteryStatus;
-        private final int batteryPercent;
-        private final String healthLabel;
-        private final String healthDescription;
-
-        public Integer vehicleId() {
-            return vehicleId;
-        }
-
-        public String vehicleName() {
-            return vehicleName;
-        }
-
-        public String plateNumber() {
-            return plateNumber;
-        }
-
-        public String vin() {
-            return vin;
-        }
-
-        public String model() {
-            return model;
-        }
-
-        public Instant createdAt() {
-            return createdAt;
-        }
-
-        public String statusLabel() {
-            return statusLabel;
-        }
-
-        public String statusBadge() {
-            return statusBadge;
-        }
-
-        public String batteryModel() {
-            return batteryModel;
-        }
-
-        public String batteryStatus() {
-            return batteryStatus;
-        }
-
-        public int batteryPercent() {
-            return batteryPercent;
-        }
-
-        public String healthLabel() {
-            return healthLabel;
-        }
-
-        public String healthDescription() {
-            return healthDescription;
-        }
+    public record VehicleCardView(
+            Integer vehicleId,
+            String vehicleName,
+            String plateNumber,
+            String vin,
+            String model,
+            Instant createdAt,
+            String statusLabel,
+            String statusBadge,
+            String batteryModel,
+            String batteryStatus,
+            int batteryPercent,
+            String healthLabel,
+            String healthDescription
+    ) {
     }
 
     private List<VehicleCardView> buildVehicleCards(Integer driverId) {
@@ -247,25 +135,25 @@ public class VehicleController {
 
             String statusBadge = batteryPercent >= 75 ? "status-online" : "status-warning";
 
-            cards.add(VehicleCardView.builder()
-                    .vehicleId(vehicle.getVehicleId())
-                    .vehicleName(Optional.ofNullable(vehicle.getModel())
+            cards.add(new VehicleCardView(
+                    vehicle.getVehicleId(),
+                    Optional.ofNullable(vehicle.getModel())
                             .filter(name -> !name.isBlank())
-                            .orElse("Phương tiện " + (index + 1)))
-                    .plateNumber(Optional.ofNullable(vehicle.getPlateNumber())
+                            .orElse("Phương tiện " + (index + 1)),
+                    Optional.ofNullable(vehicle.getPlateNumber())
                             .filter(plate -> !plate.isBlank())
-                            .orElse("Chưa cập nhật"))
-                    .vin(vehicle.getVin())
-                    .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
-                    .createdAt(vehicle.getCreatedAt())
-                    .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
-                    .statusBadge(statusBadge)
-                    .batteryModel(guessBatteryModel(vehicle.getModel()))
-                    .batteryStatus(batteryPercent >= 75 ? "Đang sử dụng" : "Cần bảo dưỡng")
-                    .batteryPercent(batteryPercent)
-                    .healthLabel(healthLabel)
-                    .healthDescription(healthDescription)
-                    .build());
+                            .orElse("Chưa cập nhật"),
+                    vehicle.getVin(),
+                    Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"),
+                    vehicle.getCreatedAt(),
+                    batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra",
+                    statusBadge,
+                    guessBatteryModel(vehicle.getModel()),
+                    batteryPercent >= 75 ? "Đang sử dụng" : "Cần bảo dưỡng",
+                    batteryPercent,
+                    healthLabel,
+                    healthDescription
+            ));
         }
 
         return cards;

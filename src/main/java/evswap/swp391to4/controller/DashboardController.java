@@ -2,71 +2,79 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.entity.Driver;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/dashboard")
 public class DashboardController {
 
-    @GetMapping({"/", "/dashboard"})
-    public String showDashboard(HttpSession session, Model model) {
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> showDashboard(HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        Map<String, Object> payload = new HashMap<>();
         if (driver != null) {
-            model.addAttribute("driverName", driver.getFullName());
-            model.addAttribute("loggedIn", true);
+            payload.put("driverName", driver.getFullName());
+            payload.put("loggedIn", true);
         } else {
-            model.addAttribute("loggedIn", false);
+            payload.put("loggedIn", false);
         }
-        return "dashboard";
+        return ResponseEntity.ok(payload);
     }
 
-    @PostMapping("/dashboard/action")
-    public String handleDashboardAction(@RequestParam("feature") String feature,
-                                        HttpSession session,
-                                        RedirectAttributes redirect) {
+    @PostMapping("/action")
+    public ResponseEntity<Map<String, String>> handleDashboardAction(@RequestBody DashboardActionRequest request,
+                                                                     HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để sử dụng chức năng.");
-            return "redirect:/login";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Vui lòng đăng nhập để sử dụng chức năng."));
         }
 
-        String normalizedFeature = feature == null ? "" : feature.trim();
+        String normalizedFeature = request.feature() == null ? "" : request.feature().trim();
+        Map<String, String> response = new HashMap<>();
 
         if ("Tổng quan".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Bạn đang ở trang tổng quan EV SWAP.");
-            return "redirect:/dashboard";
+            response.put("message", "Bạn đang ở trang tổng quan EV SWAP.");
+            response.put("redirect", "/api/dashboard");
+            return ResponseEntity.ok(response);
         }
 
         if ("Phương tiện".equalsIgnoreCase(normalizedFeature)) {
-            return "redirect:/vehicles/manage";
+            response.put("message", "Đi tới quản lý phương tiện");
+            response.put("redirect", "/api/drivers/" + driver.getDriverId() + "/vehicles/overview");
+            return ResponseEntity.ok(response);
         }
 
         if ("Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Tìm trạm đang được phát triển.");
-            return "redirect:/dashboard";
+            response.put("message", "Chức năng Tìm trạm đang được phát triển.");
+            return ResponseEntity.ok(response);
         }
 
         if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
-            return "redirect:/dashboard";
+            response.put("message", "Chức năng Báo cáo sẽ sớm ra mắt.");
+            return ResponseEntity.ok(response);
         }
 
         if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Truy cập trang tài khoản trong phiên bản sắp tới.");
-            return "redirect:/dashboard";
+            response.put("message", "Truy cập trang tài khoản trong phiên bản sắp tới.");
+            return ResponseEntity.ok(response);
         }
 
         if ("Hỗ trợ".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Đội ngũ hỗ trợ sẽ sẵn sàng sau khi bạn đăng nhập.");
-            return "redirect:/dashboard";
+            response.put("message", "Đội ngũ hỗ trợ sẽ sẵn sàng sau khi bạn đăng nhập.");
+            return ResponseEntity.ok(response);
         }
 
-        redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + normalizedFeature);
-        return "redirect:/dashboard";
+        response.put("message", "Bạn đã chọn chức năng: " + normalizedFeature);
+        return ResponseEntity.ok(response);
+    }
+
+    public record DashboardActionRequest(String feature) {
     }
 }
 
