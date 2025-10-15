@@ -8,5 +8,8 @@ import java.util.Optional;
 
 public interface SwapTransactionRepository extends JpaRepository<SwapTransaction, Integer> {
     Optional<SwapTransaction> findByReservationReservationId(Integer reservationId);
+
     List<SwapTransaction> findByStationStationIdOrderBySwappedAtDesc(Integer stationId);
+
+    List<SwapTransaction> findByReservationDriverDriverIdOrderBySwappedAtDesc(Integer driverId);
 }

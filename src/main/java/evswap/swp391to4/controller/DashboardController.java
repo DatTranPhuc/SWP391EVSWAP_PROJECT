@@ -17,6 +17,11 @@ public class DashboardController {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
+            model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+            model.addAttribute("driverEmail", driver.getEmail());
+            model.addAttribute("driverPhone", driver.getPhone() != null ? driver.getPhone() : "Chưa cập nhật");
+            model.addAttribute("driverId", driver.getDriverId());
+            model.addAttribute("driverSince", driver.getCreatedAt());
             model.addAttribute("loggedIn", true);
         } else {
             model.addAttribute("loggedIn", false);
@@ -73,6 +78,17 @@ public class DashboardController {
 
         redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + normalizedFeature);
         return "redirect:/dashboard";
+}
+
+    private String extractInitial(String fullName) {
+        if (fullName == null) {
+            return "U";
+        }
+        String trimmed = fullName.trim();
+        if (trimmed.isEmpty()) {
+            return "U";
+        }
+        return trimmed.substring(0, 1).toUpperCase();
     }
 }
 

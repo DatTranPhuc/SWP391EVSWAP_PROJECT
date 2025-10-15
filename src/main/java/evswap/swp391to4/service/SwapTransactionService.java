@@ -77,6 +77,13 @@ public class SwapTransactionService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<SwapTransactionResponse> listByDriver(Integer driverId) {
+        return swapTransactionRepository.findByReservationDriverDriverIdOrderBySwappedAtDesc(driverId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private SwapTransactionResponse toResponse(SwapTransaction transaction) {
         return SwapTransactionResponse.builder()
                 .swapId(transaction.getSwapId())
