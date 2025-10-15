@@ -1,77 +1,75 @@
 package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.StaffCreateRequest;
-import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StationCreateRequest;
-import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/admin")
+@Controller
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
 
-    // ------------------ STAFF ------------------
+    // ====================== STAFF ======================
 
-    // Tạo nhân viên mới
-    @PostMapping("/add-staff")
-    public ResponseEntity<?> addStaff(@RequestBody StaffCreateRequest req) {
-        try {
-            StaffResponse resp = staffService.createStaff(req);
-            return ResponseEntity.status(201).body(resp);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(409).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
-        }
-    }
-
-    // Lấy thông tin 1 nhân viên theo ID
-    @GetMapping("/staff/{id}")
-    public ResponseEntity<?> getStaffById(@PathVariable Integer id) {
-        try {
-            StaffResponse resp = staffService.getStaffById(id);
-            return ResponseEntity.ok(resp);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
-        }
-    }
-
-    // Lấy danh sách tất cả nhân viên
+    // Hiển thị danh sách nhân viên
     @GetMapping("/staff")
-    public ResponseEntity<?> getAllStaff() {
+    public String viewAllStaff(Model model) {
+        model.addAttribute("staffList", staffService.getAllStaff());
+        return "admin/staff-list"; // trỏ đến file templates/admin/staff-list.html
+    }
+
+    // Hiển thị form thêm nhân viên
+    @GetMapping("/staff/add")
+    public String showAddStaffForm(Model model) {
+        model.addAttribute("staff", new StaffCreateRequest());
+        return "admin/staff-add"; // templates/admin/staff-add.html
+    }
+
+    // Xử lý thêm nhân viên (POST)
+    @PostMapping("/staff/add")
+    public String createStaff(@ModelAttribute("staff") StaffCreateRequest req, Model model) {
         try {
-            List<StaffResponse> list = staffService.getAllStaff();
-            return ResponseEntity.ok(list);
+            staffService.createStaff(req);
+            return "redirect:/admin/staff"; // quay lại danh sách
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            return "admin/staff-add";
         }
     }
 
-    // ------------------ STATION ------------------
+    // ====================== STATION ======================
 
-    @PostMapping("/add-station")
-    public ResponseEntity<?> addStation(@RequestBody StationCreateRequest req) {
+    // Hiển thị danh sách trạm
+    @GetMapping("/station")
+    public String viewAllStations(Model model) {
+        model.addAttribute("stationList", stationService.getAllStations());
+        return "admin/station-list"; // templates/admin/station-list.html
+    }
+
+    // Hiển thị form thêm trạm
+    @GetMapping("/station/add")
+    public String showAddStationForm(Model model) {
+        model.addAttribute("station", new StationCreateRequest());
+        return "admin/station-add";
+    }
+
+    // Xử lý thêm trạm
+    @PostMapping("/station/add")
+    public String createStation(@ModelAttribute("station") StationCreateRequest req, Model model) {
         try {
-            StationResponse resp = stationService.createStation(req);
-            return ResponseEntity.status(201).body(resp);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(409).body(e.getMessage());
+            stationService.createStation(req);
+            return "redirect:/admin/station";
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+            model.addAttribute("error", e.getMessage());
+            return "admin/station-add";
         }
     }
 }
