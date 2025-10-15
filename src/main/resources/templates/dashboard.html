@@ -23,6 +23,7 @@
             <th:block th:if="${loggedIn}">
                 <a href="#overview-section" class="nav-link-button active" data-nav-target="overview-section">Tổng quan</a>
                 <a href="#vehicles-section" class="nav-link-button" data-nav-target="vehicles-section">Phương tiện</a>
+                <a href="#reservations-section" class="nav-link-button" data-nav-target="reservations-section">Lịch đổi</a>
                 <a th:href="@{/operations/console}" class="nav-link-button nav-link-button--external">Vận hành</a>
                 <a href="#stations-section" class="nav-link-button" data-nav-target="stations-section">Tìm trạm</a>
                 <a href="#reports-section" class="nav-link-button" data-nav-target="reports-section">Báo cáo</a>
@@ -32,6 +33,7 @@
             <th:block th:if="${!loggedIn}">
                 <a href="#overview" class="nav-link-button nav-link-button--locked" data-locked>Tổng quan</a>
                 <a href="#benefits" class="nav-link-button nav-link-button--locked" data-locked>Phương tiện</a>
+                <a href="#stations" class="nav-link-button nav-link-button--locked" data-locked>Lịch đổi</a>
                 <a href="#stations" class="nav-link-button nav-link-button--locked" data-locked>Vận hành</a>
                 <a href="#stations" class="nav-link-button nav-link-button--locked" data-locked>Tìm trạm</a>
                 <a href="#benefits" class="nav-link-button nav-link-button--locked" data-locked>Báo cáo</a>
