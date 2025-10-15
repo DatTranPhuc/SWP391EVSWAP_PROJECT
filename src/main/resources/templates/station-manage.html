@@ -3,24 +3,21 @@
 <head>
     <title>Quản lý Trạm</title>
     <link rel="stylesheet" href="/css/station.css">
-
 </head>
-<body>
-<!-- FORM THÊM / SỬA TRẠM -->
+<body class="dashboard-body">
+<!-- FORM THÊM TRẠM -->
 <div th:if="${addOrEdit}">
-    <h2 th:text="${editMode}? 'Sửa trạm' : 'Thêm trạm mới'"></h2>
-    <form th:action="${editMode}? '/stations/update/' + ${stationForm.stationId} : '/stations/add'" th:object="${stationForm}" method="post">
+    <h2>Thêm trạm mới</h2>
+    <form th:action="@{/stations/add}" th:object="${stationForm}" method="post">
         <label>Tên trạm: <input th:field="*{name}" required></label><br>
         <label>Địa chỉ: <input th:field="*{address}" required></label><br>
-        <label>Vĩ độ: <input th:field="*{latitude}" type="number" step="any" required></label><br>
-        <label>Kinh độ: <input th:field="*{longitude}" type="number" step="any" required></label><br>
         <label>Trạng thái:
             <select th:field="*{status}">
                 <option value="active">Hoạt động</option>
                 <option value="closed">Đã đóng</option>
             </select>
         </label><br>
-        <button type="submit" th:text="${editMode}? 'Cập nhật' : 'Thêm mới'"></button>
+        <button type="submit">Thêm mới</button>
         <a href="/stations">Huỷ</a>
     </form>
 </div>
@@ -43,8 +40,6 @@
             <th>ID</th>
             <th>Tên trạm</th>
             <th>Địa chỉ</th>
-            <th>Vĩ độ</th>
-            <th>Kinh độ</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
         </tr>
@@ -54,12 +49,9 @@
             <td th:text="${station.stationId}"></td>
             <td th:text="${station.name}"></td>
             <td th:text="${station.address}"></td>
-            <td th:text="${station.latitude}"></td>
-            <td th:text="${station.longitude}"></td>
             <td th:text="${station.status}"></td>
             <td>
                 <a th:href="@{|/stations/${station.stationId}|}">Xem</a>
-                <a th:href="@{|/stations/edit-form/${station.stationId}|}">Sửa</a>
                 <form th:action="@{|/stations/delete/${station.stationId}|}" method="post" style="display:inline;">
                     <button type="submit" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
                 </form>
@@ -76,8 +68,6 @@
         <li><b>ID:</b> <span th:text="${station.stationId}"></span></li>
         <li><b>Tên trạm:</b> <span th:text="${station.name}"></span></li>
         <li><b>Địa chỉ:</b> <span th:text="${station.address}"></span></li>
-        <li><b>Vĩ độ:</b> <span th:text="${station.latitude}"></span></li>
-        <li><b>Kinh độ:</b> <span th:text="${station.longitude}"></span></li>
         <li><b>Trạng thái:</b> <span th:text="${station.status}"></span></li>
     </ul>
     <a href="/stations">Quay lại danh sách</a>
@@ -86,11 +76,11 @@
 <!-- FORM TÌM TRẠM GẦN VỊ TRÍ -->
 <div>
     <h2>Tìm trạm gần vị trí của bạn</h2>
-    <form method="get" action="/stations/nearby">
-        <label>Vĩ độ: <input type="number" step="any" name="lat" required></label>
-        <label>Kinh độ: <input type="number" step="any" name="lng" required></label>
+    <form id="nearby-form" method="get" action="/stations/nearby" style="max-width:400px;">
+        <input type="hidden" name="lat" id="latitude">
+        <input type="hidden" name="lng" id="longitude">
         <label>Bán kính (km): <input type="number" step="any" name="radiusKm" value="5"></label>
-        <button type="submit">Tìm kiếm</button>
+        <button type="button" onclick="getLocation()">Tìm trạm gần vị trí của tôi</button>
     </form>
     <table th:if="${nearbyStations != null}">
         <thead>
@@ -109,5 +99,21 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                document.getElementById('nearby-form').submit();
+            }, function (error) {
+                alert('Bạn cần cho phép truy cập vị trí để dùng chức năng này!');
+            });
+        } else {
+            alert('Trình duyệt không hỗ trợ lấy vị trí!');
+        }
+    }
+</script>
 </body>
 </html>
