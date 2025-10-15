@@ -51,8 +51,7 @@ public class DashboardController {
         }
 
         if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
-            return "redirect:/dashboard";
+            return "redirect:/reports";
         }
 
         if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {
