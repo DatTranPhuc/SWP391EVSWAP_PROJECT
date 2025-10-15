@@ -45,6 +45,12 @@ public class DashboardController {
             return "redirect:/vehicles/manage";
         }
 
+        if ("Vận hành".equalsIgnoreCase(normalizedFeature)
+                || "Trung tâm vận hành".equalsIgnoreCase(normalizedFeature)
+                || "Operations".equalsIgnoreCase(normalizedFeature)) {
+            return "redirect:/operations/console";
+        }
+
         if ("Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
             redirect.addFlashAttribute("dashboardMessage", "Chức năng Tìm trạm đang được phát triển.");
             return "redirect:/dashboard";

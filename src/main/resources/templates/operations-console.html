@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển vận hành - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/console.css}" href="/css/console.css">
+</head>
+<body class="console-body">
+<div class="console-background"></div>
+<div class="console-overlay"></div>
+
+<header class="console-header">
+    <div class="container console-header__inner">
+        <div class="brand">
+            <span class="brand-icon">🚀</span>
+            <div class="brand-meta">
+                <span class="brand-name">EV SWAP</span>
+                <span class="brand-caption">Bảng điều khiển vận hành</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="driver-chip">
+                <div class="chip-avatar" th:text="${driverInitial}">E</div>
+                <div class="chip-info">
+                    <span class="chip-label">Đang đăng nhập</span>
+                    <span class="chip-name" th:text="${driverName}">Tài xế EV</span>
+                </div>
+            </div>
+            <a class="btn ghost" th:href="@{/dashboard}">Quay về dashboard</a>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="console-hero">
+        <div class="container console-hero__inner">
+            <div class="hero-copy">
+                <span class="hero-badge">Phiên bản dành cho tài xế</span>
+                <h1>Điều phối toàn bộ nghiệp vụ EV SWAP trong một bảng điều khiển.</h1>
+                <p>Sử dụng các khối hành động phía dưới để thao tác nhanh với API: quản lý pin, đặt lịch đổi, thanh toán, thông báo, hỗ trợ và nhiều hơn nữa. Mọi yêu cầu đều hiển thị phản hồi ngay lập tức để bạn dễ tinh chỉnh.</p>
+                <div class="hero-actions">
+                    <button type="button" class="btn primary" data-scroll-target="#module-batteries">Bắt đầu thao tác</button>
+                    <a class="btn outline" href="#console-guide">Hướng dẫn sử dụng</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-card__header">
+                    <span class="hero-card__icon">⚙️</span>
+                    <div>
+                        <p class="hero-card__label">API đang bật</p>
+                        <p class="hero-card__title">8 mô-đun nghiệp vụ</p>
+                    </div>
+                </div>
+                <ul class="hero-card__list">
+                    <li>Gửi yêu cầu REST trực tiếp từ trình duyệt.</li>
+                    <li>Tuỳ chỉnh dữ liệu ngay trước khi gửi.</li>
+                    <li>Phản hồi định dạng JSON đẹp mắt.</li>
+                </ul>
+                <p class="hero-card__foot">Tip: nhập dữ liệu chính xác (ID, thời gian ISO) để tránh lỗi.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="console-guide" class="console-guide">
+        <div class="container console-guide__inner">
+            <article>
+                <h2>Hướng dẫn nhanh</h2>
+                <p>Mỗi thẻ mô-đun đại diện cho một nhóm API. Các form được dựng sẵn tham số bắt buộc và tùy chọn. Bạn có thể:</p>
+                <ul>
+                    <li>Điền dữ liệu rồi bấm <strong>"Gửi yêu cầu"</strong> để thực thi.</li>
+                    <li>Sử dụng nút <strong>"Xem danh sách"</strong> để gọi nhanh các API đọc dữ liệu.</li>
+                    <li>Quan sát phản hồi phía dưới cùng của từng mô-đun. Nội dung phản hồi được ghi lại theo chuẩn JSON với thông tin trạng thái HTTP.</li>
+                </ul>
+                <p>Nếu API trả lỗi, kiểm tra lại ID tham chiếu, định dạng thời gian (ISO 8601) hoặc trạng thái hợp lệ.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="console-grid">
+        <div class="container console-grid__inner">
+            <article class="module-card" id="module-batteries">
+                <header class="module-header">
+                    <div class="module-icon">🔋</div>
+                    <div>
+                        <h2>Quản lý pin</h2>
+                        <p>Thêm mới, cập nhật trạng thái pin và truy vấn theo trạm.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Thêm pin mới</summary>
+                    <form class="api-form" data-endpoint="/api/batteries" data-method="POST">
+                        <div class="form-grid">
+                            <label>Trạm (ID)
+                                <input type="number" name="stationId" min="1" required>
+                            </label>
+                            <label>Model pin
+                                <input type="text" name="model" required>
+                            </label>
+                            <label>Trạng thái (ví dụ: available)
+                                <input type="text" name="state" placeholder="available">
+                            </label>
+                            <label>SOH (%)
+                                <input type="number" name="sohPercent" min="0" max="100">
+                            </label>
+                            <label>SOC (%)
+                                <input type="number" name="socPercent" min="0" max="100">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Gửi yêu cầu</button>
+                    </form>
+                </details>
+
+                <details class="module-section">
+                    <summary>Cập nhật pin</summary>
+                    <form class="api-form" data-url-template="/api/batteries/{batteryId}" data-method="PATCH">
+                        <div class="form-grid">
+                            <label>Mã pin
+                                <input type="number" name="batteryId" min="1" required data-path="true">
+                            </label>
+                            <label>Trạm mới (ID)
+                                <input type="number" name="stationId" min="1">
+                            </label>
+                            <label>Trạng thái mới
+                                <input type="text" name="state" placeholder="available / charging / faulty">
+                            </label>
+                            <label>SOH mới (%)
+                                <input type="number" name="sohPercent" min="0" max="100">
+                            </label>
+                            <label>SOC mới (%)
+                                <input type="number" name="socPercent" min="0" max="100">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Cập nhật</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <button type="button" class="btn outline api-trigger" data-endpoint="/api/batteries" data-method="GET">Xem toàn bộ pin</button>
+                    <form class="api-form inline" data-url-template="/api/batteries/station/{stationId}" data-method="GET">
+                        <label>Trạm
+                            <input type="number" name="stationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Danh sách theo trạm</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-reservations">
+                <header class="module-header">
+                    <div class="module-icon">📅</div>
+                    <div>
+                        <h2>Đặt lịch đổi pin</h2>
+                        <p>Tạo, cập nhật trạng thái và truy vấn lịch đổi pin.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Tạo lịch mới</summary>
+                    <form class="api-form" data-endpoint="/api/reservations" data-method="POST">
+                        <div class="form-grid">
+                            <label>Tài xế (ID)
+                                <input type="number" name="driverId" min="1" required>
+                            </label>
+                            <label>Trạm (ID)
+                                <input type="number" name="stationId" min="1" required>
+                            </label>
+                            <label>Thời gian đặt (local)
+                                <input type="datetime-local" name="reservedStart" data-type="instant" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Đặt lịch</button>
+                    </form>
+                </details>
+
+                <details class="module-section">
+                    <summary>Cập nhật trạng thái</summary>
+                    <form class="api-form" data-url-template="/api/reservations/{reservationId}" data-method="PATCH">
+                        <div class="form-grid">
+                            <label>Mã lịch hẹn
+                                <input type="number" name="reservationId" min="1" required data-path="true">
+                            </label>
+                            <label>Trạng thái mới
+                                <input type="text" name="status" placeholder="pending / confirmed / completed">
+                            </label>
+                            <label>Giờ check-in
+                                <input type="datetime-local" name="checkedInAt" data-type="instant">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Cập nhật trạng thái</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/reservations/{reservationId}/qr" data-method="POST">
+                        <label>ID lịch hẹn
+                            <input type="number" name="reservationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Làm mới QR</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/reservations/driver/{driverId}" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Lịch của tài xế</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/reservations/station/{stationId}" data-method="GET">
+                        <div class="form-grid form-grid--inline">
+                            <label>Trạm
+                                <input type="number" name="stationId" min="1" required data-path="true">
+                            </label>
+                            <label>Ngày bắt đầu
+                                <input type="datetime-local" name="start" data-type="instant" required>
+                            </label>
+                            <label>Ngày kết thúc
+                                <input type="datetime-local" name="end" data-type="instant" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn ghost">Lịch theo trạm</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-payments">
+                <header class="module-header">
+                    <div class="module-icon">💳</div>
+                    <div>
+                        <h2>Thanh toán</h2>
+                        <p>Tạo hoá đơn và theo dõi trạng thái thanh toán.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Tạo hoá đơn</summary>
+                    <form class="api-form" data-endpoint="/api/payments" data-method="POST">
+                        <div class="form-grid">
+                            <label>Tài xế (ID)
+                                <input type="number" name="driverId" min="1" required>
+                            </label>
+                            <label>Đặt lịch (ID)
+                                <input type="number" name="reservationId" min="1" required>
+                            </label>
+                            <label>Số tiền
+                                <input type="number" name="amount" min="0" step="0.01" data-type="decimal" required>
+                            </label>
+                            <label>Phương thức
+                                <input type="text" name="method" placeholder="Momo / ZaloPay" required>
+                            </label>
+                            <label>Đơn vị tiền tệ
+                                <input type="text" name="currency" value="VND" required>
+                            </label>
+                            <label>Mã giao dịch đối tác
+                                <input type="text" name="providerTxnId" placeholder="TXN-2024-001">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Tạo hoá đơn</button>
+                    </form>
+                </details>
+
+                <details class="module-section">
+                    <summary>Cập nhật trạng thái</summary>
+                    <form class="api-form" data-url-template="/api/payments/{paymentId}" data-method="PATCH">
+                        <div class="form-grid">
+                            <label>Mã thanh toán
+                                <input type="number" name="paymentId" min="1" required data-path="true">
+                            </label>
+                            <label>Trạng thái mới
+                                <input type="text" name="status" placeholder="pending / completed / failed" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Cập nhật</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/payments/driver/{driverId}" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Danh sách thanh toán</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-notifications">
+                <header class="module-header">
+                    <div class="module-icon">🔔</div>
+                    <div>
+                        <h2>Thông báo</h2>
+                        <p>Gửi thông báo đến tài xế và đánh dấu đã đọc.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Gửi thông báo</summary>
+                    <form class="api-form" data-endpoint="/api/notifications" data-method="POST">
+                        <div class="form-grid">
+                            <label>Tài xế (ID)
+                                <input type="number" name="driverId" min="1" required>
+                            </label>
+                            <label>Loại thông báo
+                                <input type="text" name="type" placeholder="reservation / payment" required>
+                            </label>
+                            <label>Tiêu đề
+                                <input type="text" name="title" required>
+                            </label>
+                            <label>ID lịch hẹn (tuỳ chọn)
+                                <input type="number" name="reservationId" min="1">
+                            </label>
+                            <label>ID thanh toán (tuỳ chọn)
+                                <input type="number" name="paymentId" min="1">
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Gửi thông báo</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/notifications/{notificationId}/read" data-method="PATCH">
+                        <label>Mã thông báo
+                            <input type="number" name="notificationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Đánh dấu đã đọc</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/notifications/driver/{driverId}" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Thông báo của tài xế</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/notifications/driver/{driverId}/unread-count" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Số lượng chưa đọc</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-feedback">
+                <header class="module-header">
+                    <div class="module-icon">💬</div>
+                    <div>
+                        <h2>Phản hồi &amp; đánh giá</h2>
+                        <p>Thu thập đánh giá từ tài xế và xem theo từng trạm.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Gửi phản hồi</summary>
+                    <form class="api-form" data-endpoint="/api/feedback" data-method="POST">
+                        <div class="form-grid">
+                            <label>Tài xế (ID)
+                                <input type="number" name="driverId" min="1" required>
+                            </label>
+                            <label>Trạm (ID)
+                                <input type="number" name="stationId" min="1" required>
+                            </label>
+                            <label>Điểm đánh giá (1-5)
+                                <input type="number" name="rating" min="1" max="5" required>
+                            </label>
+                            <label>Nhận xét
+                                <textarea name="comment" rows="3" placeholder="Nội dung phản hồi"></textarea>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Gửi phản hồi</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/feedback/driver/{driverId}" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Phản hồi của tài xế</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/feedback/station/{stationId}" data-method="GET">
+                        <label>Trạm
+                            <input type="number" name="stationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Phản hồi theo trạm</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-support">
+                <header class="module-header">
+                    <div class="module-icon">🛟</div>
+                    <div>
+                        <h2>Hỗ trợ khách hàng</h2>
+                        <p>Tạo ticket hỗ trợ và phân công cho nhân viên.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Tạo ticket hỗ trợ</summary>
+                    <form class="api-form" data-endpoint="/api/support" data-method="POST">
+                        <div class="form-grid">
+                            <label>Tài xế (ID)
+                                <input type="number" name="driverId" min="1" required>
+                            </label>
+                            <label>Nhân viên phụ trách (ID)
+                                <input type="number" name="staffId" min="1">
+                            </label>
+                            <label>Danh mục sự cố
+                                <input type="text" name="category" placeholder="battery / station / payment" required>
+                            </label>
+                            <label>Mô tả chi tiết
+                                <textarea name="comment" rows="3" placeholder="Tóm tắt vấn đề"></textarea>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Gửi ticket</button>
+                    </form>
+                </details>
+
+                <details class="module-section">
+                    <summary>Cập nhật ticket</summary>
+                    <form class="api-form" data-url-template="/api/support/{ticketId}" data-method="PATCH">
+                        <div class="form-grid">
+                            <label>Mã ticket
+                                <input type="number" name="ticketId" min="1" required data-path="true">
+                            </label>
+                            <label>Nhân viên xử lý (ID)
+                                <input type="number" name="staffId" min="1">
+                            </label>
+                            <label>Trạng thái
+                                <input type="text" name="status" placeholder="open / in_progress / resolved">
+                            </label>
+                            <label>Ghi chú
+                                <textarea name="note" rows="3" placeholder="Diễn giải thêm"></textarea>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Cập nhật ticket</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/support/driver/{driverId}" data-method="GET">
+                        <label>Tài xế
+                            <input type="number" name="driverId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Ticket của tài xế</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/support/staff/{staffId}" data-method="GET">
+                        <label>Nhân viên
+                            <input type="number" name="staffId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Ticket của nhân viên</button>
+                    </form>
+                    <form class="api-form inline" data-endpoint="/api/support" data-method="GET">
+                        <label>Trạng thái
+                            <input type="text" name="status" placeholder="open / resolved" required>
+                        </label>
+                        <button type="submit" class="btn ghost">Lọc theo trạng thái</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-swaps">
+                <header class="module-header">
+                    <div class="module-icon">🔄</div>
+                    <div>
+                        <h2>Giao dịch đổi pin</h2>
+                        <p>Ghi nhận phiên đổi pin và truy vấn lịch sử theo trạm.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Ghi nhận giao dịch</summary>
+                    <form class="api-form" data-endpoint="/api/swaps" data-method="POST">
+                        <div class="form-grid">
+                            <label>Đặt lịch (ID)
+                                <input type="number" name="reservationId" min="1" required>
+                            </label>
+                            <label>Trạm (ID)
+                                <input type="number" name="stationId" min="1" required>
+                            </label>
+                            <label>Pin trả (ID)
+                                <input type="number" name="batteryOutId" min="1" required>
+                            </label>
+                            <label>Pin nhận (ID)
+                                <input type="number" name="batteryInId" min="1" required>
+                            </label>
+                            <label>Kết quả
+                                <input type="text" name="result" placeholder="success / failed" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Ghi nhận</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/swaps/reservation/{reservationId}" data-method="GET">
+                        <label>Đặt lịch
+                            <input type="number" name="reservationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Giao dịch theo lịch</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/swaps/station/{stationId}" data-method="GET">
+                        <label>Trạm
+                            <input type="number" name="stationId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Lịch sử theo trạm</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+
+            <article class="module-card" id="module-compatibility">
+                <header class="module-header">
+                    <div class="module-icon">🧩</div>
+                    <div>
+                        <h2>Tương thích xe &amp; pin</h2>
+                        <p>Liên kết hoặc gỡ liên kết giữa model xe và pin.</p>
+                    </div>
+                </header>
+
+                <details class="module-section" open>
+                    <summary>Liên kết tương thích</summary>
+                    <form class="api-form" data-endpoint="/api/vehicle-batteries" data-method="POST">
+                        <div class="form-grid">
+                            <label>Xe (ID)
+                                <input type="number" name="vehicleId" min="1" required>
+                            </label>
+                            <label>Pin (ID)
+                                <input type="number" name="batteryId" min="1" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Tạo liên kết</button>
+                    </form>
+                </details>
+
+                <details class="module-section">
+                    <summary>Gỡ liên kết</summary>
+                    <form class="api-form" data-endpoint="/api/vehicle-batteries" data-method="DELETE">
+                        <div class="form-grid">
+                            <label>Xe (ID)
+                                <input type="number" name="vehicleId" min="1" required>
+                            </label>
+                            <label>Pin (ID)
+                                <input type="number" name="batteryId" min="1" required>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn primary">Gỡ bỏ</button>
+                    </form>
+                </details>
+
+                <div class="module-quick">
+                    <form class="api-form inline" data-url-template="/api/vehicle-batteries/vehicle/{vehicleId}" data-method="GET">
+                        <label>Xe
+                            <input type="number" name="vehicleId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Pin tương thích</button>
+                    </form>
+                    <form class="api-form inline" data-url-template="/api/vehicle-batteries/battery/{batteryId}" data-method="GET">
+                        <label>Pin
+                            <input type="number" name="batteryId" min="1" required data-path="true">
+                        </label>
+                        <button type="submit" class="btn ghost">Xe hỗ trợ</button>
+                    </form>
+                </div>
+
+                <pre class="module-output" aria-live="polite">Chưa có yêu cầu nào.</pre>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer class="console-footer">
+    <div class="container console-footer__inner">
+        <p>EV SWAP &mdash; Bảng điều khiển vận hành dành cho nội bộ. Sẵn sàng tinh chỉnh cho nhu cầu dự án thực tế.</p>
+        <p class="footer-note">Các yêu cầu sẽ sử dụng session đăng nhập hiện tại. Đảm bảo tài khoản của bạn có đủ dữ liệu mẫu.</p>
+    </div>
+</footer>
+
+<script>
+    (function () {
+        const scrollButtons = document.querySelectorAll('[data-scroll-target]');
+        scrollButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = document.querySelector(button.dataset.scrollTarget);
+                if (target) {
+                    target.scrollIntoView({behavior: 'smooth'});
+                }
+            });
+        });
+
+        const cssEscape = (window.CSS && typeof window.CSS.escape === 'function')
+            ? window.CSS.escape.bind(window.CSS)
+            : (value) => String(value).replace(/[^a-zA-Z0-9_\-]/g, (char) => `\\${char}`);
+
+        function parseValue(field, raw) {
+            if (raw === '') {
+                return null;
+            }
+            const type = field.dataset.type || field.type;
+            if (type === 'number' || type === 'integer') {
+                const numberValue = Number(raw);
+                return Number.isFinite(numberValue) ? numberValue : raw;
+            }
+            if (field.dataset.type === 'decimal') {
+                return raw;
+            }
+            if (field.dataset.type === 'instant') {
+                const date = new Date(raw);
+                if (!Number.isNaN(date.getTime())) {
+                    return date.toISOString();
+                }
+                return raw;
+            }
+            return raw;
+        }
+
+        function buildRequest(form) {
+            const method = (form.dataset.method || form.getAttribute('method') || 'POST').toUpperCase();
+            let url = form.dataset.urlTemplate || form.dataset.endpoint || form.getAttribute('action') || '';
+            const formData = new FormData(form);
+            const payload = {};
+            const query = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                const field = form.querySelector(`[name="${cssEscape(key)}"]`);
+                if (!field) {
+                    continue;
+                }
+                if (field.dataset.path === 'true') {
+                    url = url.replace(`{${key}}`, encodeURIComponent(value));
+                    continue;
+                }
+                const parsed = parseValue(field, value);
+                if (parsed === null || parsed === '') {
+                    continue;
+                }
+                if (method === 'GET') {
+                    query.append(key, parsed);
+                } else {
+                    payload[key] = parsed;
+                }
+            }
+
+            if (method === 'GET' && Array.from(query.keys()).length > 0) {
+                url += (url.includes('?') ? '&' : '?') + query.toString();
+            }
+
+            return {method, url, payload: method === 'GET' || method === 'DELETE' ? null : payload};
+        }
+
+        function formatOutput(status, body) {
+            if (body === null || typeof body === 'undefined' || body === '') {
+                return `HTTP ${status}\n`;
+            }
+            if (typeof body === 'string') {
+                return `HTTP ${status}\n${body}`;
+            }
+            return `HTTP ${status}\n${JSON.stringify(body, null, 2)}`;
+        }
+
+        function getOutputElement(context) {
+            return context.closest('.module-card').querySelector('.module-output');
+        }
+
+        async function sendRequest(context, request) {
+            const output = getOutputElement(context);
+            if (!output) {
+                return;
+            }
+            output.dataset.state = 'loading';
+            output.textContent = 'Đang gửi yêu cầu...';
+
+            const options = {method: request.method, headers: {}};
+            if (request.payload !== null) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(request.payload);
+            }
+
+            try {
+                const response = await fetch(request.url, options);
+                const text = await response.text();
+                let parsedBody = text;
+                if (text) {
+                    try {
+                        parsedBody = JSON.parse(text);
+                    } catch (error) {
+                        parsedBody = text;
+                    }
+                } else {
+                    parsedBody = null;
+                }
+                output.dataset.state = response.ok ? 'success' : 'error';
+                output.textContent = formatOutput(response.status, parsedBody);
+            } catch (error) {
+                output.dataset.state = 'error';
+                output.textContent = `Không thể gọi API: ${error.message}`;
+            }
+        }
+
+        document.querySelectorAll('.api-form').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const request = buildRequest(form);
+                sendRequest(form, request);
+            });
+        });
+
+        document.querySelectorAll('.api-trigger').forEach((button) => {
+            button.addEventListener('click', () => {
+                const method = (button.dataset.method || 'GET').toUpperCase();
+                const url = button.dataset.endpoint;
+                if (!url) {
+                    return;
+                }
+                sendRequest(button, {method, url, payload: null});
+            });
+        });
+    })();
+</script>
+</body>
+</html>

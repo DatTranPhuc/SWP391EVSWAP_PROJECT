@@ -45,6 +45,18 @@
                 aria-label="Phương tiện - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Phương tiện</button>
 
             <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
+                <input type="hidden" name="feature" value="Trung tâm vận hành">
+                <button type="submit" class="nav-link-button">Vận hành</button>
+            </form>
+            <button
+                th:if="${!loggedIn}"
+                type="button"
+                class="nav-link-button nav-link-button--locked"
+                data-feature="Vận hành"
+                title="Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng"
+                aria-label="Vận hành - Vui lòng đăng nhập hoặc đăng ký để tiếp tục sử dụng">Vận hành</button>
+
+            <form th:if="${loggedIn}" class="nav-links__form" th:action="@{/dashboard/action}" method="post">
                 <input type="hidden" name="feature" value="Tìm trạm">
                 <button type="submit" class="nav-link-button">Tìm trạm</button>
             </form>
