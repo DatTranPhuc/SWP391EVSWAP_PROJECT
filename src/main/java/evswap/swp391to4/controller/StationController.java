@@ -2,6 +2,7 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
+import evswap.swp391to4.dto.StationUpdateRequest;
 import evswap.swp391to4.service.StationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,33 @@ public class StationController {
     @GetMapping
     public ResponseEntity<List<StationResponse>> getAllStations() {
         return ResponseEntity.ok(stationService.getAllStations());
+    }
+
+    /**
+     * ➕ Tạo trạm mới (Admin)
+     */
+    @PostMapping
+    public ResponseEntity<StationResponse> createStation(@RequestBody StationCreateRequest request) {
+        StationResponse created = stationService.createStation(request);
+        return ResponseEntity.status(201).body(created);
+    }
+
+    /**
+     * ✏️ Cập nhật thông tin trạm (Admin)
+     */
+    @PutMapping("/{stationId}")
+    public ResponseEntity<StationResponse> updateStation(@PathVariable Integer stationId,
+                                                         @RequestBody StationUpdateRequest request) {
+        return ResponseEntity.ok(stationService.updateStation(stationId, request));
+    }
+
+    /**
+     * 🗑️ Xóa trạm (Admin)
+     */
+    @DeleteMapping("/{stationId}")
+    public ResponseEntity<Void> deleteStation(@PathVariable Integer stationId) {
+        stationService.deleteStation(stationId);
+        return ResponseEntity.noContent().build();
     }
 
     /**

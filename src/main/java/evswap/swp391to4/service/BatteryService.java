@@ -49,6 +49,13 @@ public class BatteryService {
             battery.setStation(newStation);
         }
 
+        if (request.getModel() != null) {
+            String trimmed = request.getModel().trim();
+            if (trimmed.isEmpty()) {
+                throw new IllegalArgumentException("Model pin không được để trống");
+            }
+            battery.setModel(trimmed);
+        }
         if (request.getState() != null) {
             battery.setState(request.getState());
         }
@@ -61,6 +68,13 @@ public class BatteryService {
 
         Battery updated = batteryRepository.save(battery);
         return toResponse(updated);
+    }
+
+    @Transactional
+    public void deleteBattery(Integer batteryId) {
+        Battery battery = batteryRepository.findById(batteryId)
+                .orElseThrow(() -> new IllegalArgumentException("Battery không tồn tại"));
+        batteryRepository.delete(battery);
     }
 
     @Transactional(readOnly = true)

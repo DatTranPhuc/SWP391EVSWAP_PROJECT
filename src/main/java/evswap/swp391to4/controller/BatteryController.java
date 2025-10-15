@@ -28,6 +28,12 @@ public class BatteryController {
         return ResponseEntity.ok(batteryService.updateBattery(batteryId, request));
     }
 
+    @DeleteMapping("/{batteryId}")
+    public ResponseEntity<Void> delete(@PathVariable Integer batteryId) {
+        batteryService.deleteBattery(batteryId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<BatteryResponse>> listAll() {
         return ResponseEntity.ok(batteryService.listAll());

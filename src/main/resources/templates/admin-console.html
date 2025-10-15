@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển Admin - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin-console.css}" href="/css/admin-console.css">
+    <script defer th:src="@{/js/admin-console.js}" src="/js/admin-console.js"></script>
+</head>
+<body>
+<header class="admin-header">
+    <div class="container">
+        <div class="brand">
+            <span class="brand-icon">⚡</span>
+            <div class="brand-copy">
+                <h1>EV SWAP Admin</h1>
+                <p>Quản lý toàn bộ dữ liệu vận hành và cơ sở hạ tầng.</p>
+            </div>
+        </div>
+        <nav class="admin-nav" aria-label="Điều hướng phụ">
+            <a th:href="@{/dashboard}" class="nav-link">← Quay lại dashboard</a>
+            <a th:href="@{/operations/console}" class="nav-link">Bảng điều khiển vận hành</a>
+        </nav>
+    </div>
+</header>
+
+<main class="admin-main container" data-admin-console>
+    <section class="panel" aria-labelledby="stations-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="stations-heading">Trạm sạc &amp; đổi pin</h2>
+                <p>Thêm, chỉnh sửa và đóng/mở trạm trong mạng lưới.</p>
+            </div>
+            <div class="panel-tools">
+                <button type="button" class="btn ghost" data-reload-stations>Tải lại danh sách</button>
+            </div>
+        </div>
+
+        <div class="feedback" data-station-feedback role="status" aria-live="polite" hidden></div>
+
+        <div class="panel-grid">
+            <form class="card form" data-station-form>
+                <h3 class="card-title" data-station-form-title>Thêm trạm mới</h3>
+                <div class="form-group">
+                    <label for="station-name">Tên trạm</label>
+                    <input id="station-name" name="name" type="text" placeholder="VD: EV Swap Bình Thạnh" required>
+                </div>
+                <div class="form-group">
+                    <label for="station-address">Địa chỉ</label>
+                    <input id="station-address" name="address" type="text" placeholder="123 Điện Biên Phủ, Quận 3">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="station-lat">Vĩ độ</label>
+                        <input id="station-lat" name="latitude" type="number" step="0.000001" placeholder="10.762622">
+                    </div>
+                    <div class="form-group">
+                        <label for="station-lng">Kinh độ</label>
+                        <input id="station-lng" name="longitude" type="number" step="0.000001" placeholder="106.660172">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="station-status">Trạng thái</label>
+                    <select id="station-status" name="status">
+                        <option value="active">Hoạt động</option>
+                        <option value="maintenance">Bảo trì</option>
+                        <option value="closed">Đã đóng</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button class="btn primary" type="submit" data-station-submit>Thêm trạm</button>
+                    <button class="btn ghost" type="button" data-station-reset hidden>Hủy chỉnh sửa</button>
+                </div>
+            </form>
+
+            <div class="card list-card">
+                <div class="card-title-row">
+                    <h3 class="card-title">Danh sách trạm hiện có</h3>
+                    <div class="search-group">
+                        <label class="sr-only" for="station-search">Tìm kiếm</label>
+                        <input id="station-search" type="search" placeholder="Nhập tên trạm..." data-station-search>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên</th>
+                            <th>Địa chỉ</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody data-station-table>
+                        <tr class="empty-row" data-empty>
+                            <td colspan="5">Chưa có trạm nào trong hệ thống.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel" aria-labelledby="batteries-heading">
+        <div class="panel-header">
+            <div>
+                <h2 id="batteries-heading">Pin dự phòng</h2>
+                <p>Quản lý kho pin tại từng trạm để đảm bảo khả năng đáp ứng.</p>
+            </div>
+            <div class="panel-tools">
+                <button type="button" class="btn ghost" data-reload-batteries>Tải lại danh sách</button>
+            </div>
+        </div>
+
+        <div class="feedback" data-battery-feedback role="status" aria-live="polite" hidden></div>
+
+        <div class="panel-grid">
+            <form class="card form" data-battery-form>
+                <h3 class="card-title" data-battery-form-title>Thêm pin mới</h3>
+                <div class="form-group">
+                    <label for="battery-station">ID trạm</label>
+                    <input id="battery-station" name="stationId" type="number" min="1" placeholder="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="battery-model">Model pin</label>
+                    <input id="battery-model" name="model" type="text" placeholder="Nio-100kWh" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="battery-state">Trạng thái</label>
+                        <select id="battery-state" name="state">
+                            <option value="full">Đầy</option>
+                            <option value="charging">Đang sạc</option>
+                            <option value="reserved">Đã đặt trước</option>
+                            <option value="maintenance">Bảo trì</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="battery-soh">SOH (%)</label>
+                        <input id="battery-soh" name="sohPercent" type="number" min="0" max="100" placeholder="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="battery-soc">SOC (%)</label>
+                        <input id="battery-soc" name="socPercent" type="number" min="0" max="100" placeholder="100">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn primary" type="submit" data-battery-submit>Thêm pin</button>
+                    <button class="btn ghost" type="button" data-battery-reset hidden>Hủy chỉnh sửa</button>
+                </div>
+            </form>
+
+            <div class="card list-card">
+                <div class="card-title-row">
+                    <h3 class="card-title">Tồn kho pin</h3>
+                    <div class="search-group">
+                        <label class="sr-only" for="battery-filter">Lọc theo trạm</label>
+                        <input id="battery-filter" type="number" min="1" placeholder="ID trạm" data-battery-filter>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Trạm</th>
+                            <th>Model</th>
+                            <th>Trạng thái</th>
+                            <th>SOH/SOC</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody data-battery-table>
+                        <tr class="empty-row" data-empty>
+                            <td colspan="6">Chưa có pin nào trong kho.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="admin-footer">
+    <div class="container">
+        <small>© <span data-year></span> EV SWAP Platform. Tất cả các quyền được bảo lưu.</small>
+    </div>
+</footer>
+</body>
+</html>

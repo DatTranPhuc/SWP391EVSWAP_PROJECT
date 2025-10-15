@@ -2,6 +2,7 @@ package evswap.swp391to4.service;
 
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
+import evswap.swp391to4.dto.StationUpdateRequest;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,20 +23,78 @@ public class StationService {
      */
     @Transactional
     public StationResponse createStation(StationCreateRequest req) {
-        if (stationRepo.findByNameIgnoreCase(req.getName()).isPresent()) {
-            throw new IllegalStateException("Station đã tồn tại");
+        String normalizedName = req.getName() != null ? req.getName().trim() : null;
+        if (normalizedName == null || normalizedName.isEmpty()) {
+            throw new IllegalArgumentException("Tên trạm không được để trống");
         }
 
+        stationRepo.findByNameIgnoreCase(normalizedName)
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Station đã tồn tại");
+                });
+
         Station station = Station.builder()
-                .name(req.getName())
+                .name(normalizedName)
                 .address(req.getAddress())
                 .latitude(req.getLatitude())
                 .longitude(req.getLongitude())
-                .status(req.getStatus() != null ? req.getStatus() : "active")
+                .status(req.getStatus() != null && !req.getStatus().isBlank() ? req.getStatus() : "active")
                 .build();
 
         Station saved = stationRepo.save(station);
         return toResponse(saved);
+    }
+
+    /**
+     * ✏️ Admin cập nhật trạm hiện hữu
+     */
+    @Transactional
+    public StationResponse updateStation(Integer stationId, StationUpdateRequest req) {
+        Station station = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalArgumentException("Station không tồn tại"));
+
+        if (req.getName() != null) {
+            String trimmed = req.getName().trim();
+            if (trimmed.isEmpty()) {
+                throw new IllegalArgumentException("Tên trạm không được để trống");
+            }
+            stationRepo.findByNameIgnoreCase(trimmed)
+                    .filter(existing -> !existing.getStationId().equals(stationId))
+                    .ifPresent(existing -> {
+                        throw new IllegalStateException("Station đã tồn tại");
+                    });
+            station.setName(trimmed);
+        }
+
+        if (req.getAddress() != null) {
+            station.setAddress(req.getAddress());
+        }
+        if (req.getLatitude() != null) {
+            station.setLatitude(req.getLatitude());
+        }
+        if (req.getLongitude() != null) {
+            station.setLongitude(req.getLongitude());
+        }
+        if (req.getStatus() != null) {
+            if (req.getStatus().isBlank()) {
+                station.setStatus(null);
+            } else {
+                station.setStatus(req.getStatus());
+            }
+        }
+
+        Station updated = stationRepo.save(station);
+        return toResponse(updated);
+    }
+
+    /**
+     * 🗑️ Admin xóa trạm
+     */
+    @Transactional
+    public void deleteStation(Integer stationId) {
+        Station station = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalArgumentException("Station không tồn tại"));
+        stationRepo.delete(station);
     }
 
     /**
