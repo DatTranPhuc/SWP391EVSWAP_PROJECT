@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán • EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/driver-portal.css}" href="/css/driver-portal.css">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">📺</span>
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a th:href="@{/dashboard}" th:classappend="${activePage} == 'overview' ? ' active' : ''">Tổng quan</a>
+            <a th:href="@{/dashboard/vehicles}" th:classappend="${activePage} == 'vehicles' ? ' active' : ''">Phương tiện</a>
+            <a th:href="@{/dashboard/reservations}" th:classappend="${activePage} == 'reservations' ? ' active' : ''">Lịch đổi</a>
+            <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
+            <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
+            <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
+            <a th:href="@{/operations/console}">Vận hành</a>
+            <a th:href="@{/admin/console}">Quản trị</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__content">
+            <p class="page-hero__eyebrow">Dòng tiền minh bạch</p>
+            <h1 class="page-hero__title">Thanh toán gần đây</h1>
+            <p class="page-hero__description">
+                Theo dõi chi tiết các giao dịch thanh toán, trạng thái xử lý và mã tham chiếu. Thông tin được cập nhật tức
+                thời để bạn dễ dàng đối soát chi phí đổi pin.
+            </p>
+        </div>
+        <div class="page-hero__meta">
+            <div class="driver-chip">
+                <span th:text="${driverInitial}">E</span>
+                <strong th:text="${driverName}">EV Driver</strong>
+            </div>
+            <p class="alert-inline">Tổng đã thanh toán: <strong th:text="${paymentTotal}">0 ₫</strong> · <span
+                    th:text="${paymentCount}">0</span> giao dịch</p>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Lịch sử thanh toán</h2>
+        <p class="section-lead">Các khoản phí liên quan đến đổi pin hoặc dịch vụ gia tăng.</p>
+        <div th:if="${payments.isEmpty()}" class="empty-state">
+            <p>Chưa có giao dịch nào được ghi nhận.</p>
+        </div>
+        <div th:if="${!payments.isEmpty()}" class="table-wrapper">
+            <table class="feature-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Reservation</th>
+                    <th>Số tiền</th>
+                    <th>Phương thức</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th>
+                    <th>Mã đối tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="payment : ${payments}">
+                    <td th:text="${payment.id()}">1</td>
+                    <td th:text="${payment.reservationId()}">102</td>
+                    <td th:text="${payment.amount()}">25.000 ₫</td>
+                    <td th:text="${payment.method()}">MOMO</td>
+                    <td>
+                        <span class="badge" th:text="${payment.status()}">Hoàn tất</span>
+                    </td>
+                    <td th:text="${payment.paidAt()}">01/01/2024 10:30</td>
+                    <td th:text="${payment.providerTxnId()}">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

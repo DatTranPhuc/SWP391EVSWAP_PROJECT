@@ -30,4 +30,9 @@ public class SwapTransactionController {
     public ResponseEntity<List<SwapTransactionResponse>> listByStation(@PathVariable Integer stationId) {
         return ResponseEntity.ok(swapTransactionService.listByStation(stationId));
     }
+
+    @GetMapping("/driver/{driverId}")
+    public ResponseEntity<List<SwapTransactionResponse>> listByDriver(@PathVariable Integer driverId) {
+        return ResponseEntity.ok(swapTransactionService.listByDriver(driverId));
+    }
 }

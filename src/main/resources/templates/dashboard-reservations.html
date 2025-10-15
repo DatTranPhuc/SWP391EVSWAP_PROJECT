@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch đổi pin • EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/driver-portal.css}" href="/css/driver-portal.css">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">📺</span>
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a th:href="@{/dashboard}" th:classappend="${activePage} == 'overview' ? ' active' : ''">Tổng quan</a>
+            <a th:href="@{/dashboard/vehicles}" th:classappend="${activePage} == 'vehicles' ? ' active' : ''">Phương tiện</a>
+            <a th:href="@{/dashboard/reservations}" th:classappend="${activePage} == 'reservations' ? ' active' : ''">Lịch đổi</a>
+            <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
+            <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
+            <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
+            <a th:href="@{/operations/console}">Vận hành</a>
+            <a th:href="@{/admin/console}">Quản trị</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__content">
+            <p class="page-hero__eyebrow">Lịch trình đổi pin</p>
+            <h1 class="page-hero__title">Theo dõi lịch đặt và giao dịch</h1>
+            <p class="page-hero__description">
+                Xem nhanh các lịch đổi pin sắp tới, tình trạng mã QR và kết quả giao dịch đã thực hiện. Mọi thông tin đều
+                được đồng bộ tức thời để bạn luôn chủ động cho chuyến đi tiếp theo.
+            </p>
+        </div>
+        <div class="page-hero__meta">
+            <div class="driver-chip">
+                <span th:text="${driverInitial}">E</span>
+                <strong th:text="${driverName}">EV Driver</strong>
+            </div>
+            <a class="btn outline" th:href="@{/operations/console}">Mở bảng vận hành</a>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Lịch đổi sắp tới</h2>
+        <p class="section-lead">Danh sách bao gồm tất cả lịch đặt đã tạo cùng trạng thái mã QR hiện tại.</p>
+        <div th:if="${reservations.isEmpty()}" class="empty-state">
+            <p>Bạn chưa có lịch đặt nào. Hãy đến trạm gần nhất để đặt lịch đổi pin.</p>
+        </div>
+        <div th:if="${!reservations.isEmpty()}" class="table-wrapper">
+            <table class="feature-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Trạm</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Mã QR</th>
+                    <th>Hết hạn QR</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="reservation : ${reservations}">
+                    <td th:text="${reservation.id()}">1</td>
+                    <td th:text="${reservation.stationName()}">EV SWAP Nguyễn Huệ</td>
+                    <td th:text="${reservation.startTime()}">01/01/2024 10:00</td>
+                    <td>
+                        <span class="badge" th:text="${reservation.status()}">Đang xử lý</span>
+                    </td>
+                    <td>
+                        <span class="badge" th:text="${reservation.qrStatus()}">Kích hoạt</span>
+                    </td>
+                    <td th:text="${reservation.qrExpiresAt()}">01/01/2024 11:00</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Lịch sử giao dịch đổi pin</h2>
+        <p class="section-lead">Tổng hợp các lần đổi pin đã hoàn tất cùng kết quả kiểm tra.</p>
+        <div th:if="${swaps.isEmpty()}" class="empty-state">
+            <p>Chưa có giao dịch đổi pin nào được ghi nhận.</p>
+        </div>
+        <div th:if="${!swaps.isEmpty()}" class="table-wrapper">
+            <table class="feature-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Reservation</th>
+                    <th>Trạm</th>
+                    <th>Thời gian</th>
+                    <th>Kết quả</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="swap : ${swaps}">
+                    <td th:text="${swap.id()}">1</td>
+                    <td th:text="${swap.reservationId()}">102</td>
+                    <td th:text="${swap.stationName()}">EV SWAP Nguyễn Huệ</td>
+                    <td th:text="${swap.swappedAt()}">01/01/2024 10:15</td>
+                    <td>
+                        <span class="badge" th:text="${swap.result()}">Thành công</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

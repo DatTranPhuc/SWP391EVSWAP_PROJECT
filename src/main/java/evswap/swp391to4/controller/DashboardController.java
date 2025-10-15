@@ -23,6 +23,7 @@ public class DashboardController {
             model.addAttribute("driverId", driver.getDriverId());
             model.addAttribute("driverSince", driver.getCreatedAt());
             model.addAttribute("loggedIn", true);
+            model.addAttribute("activePage", "overview");
         } else {
             model.addAttribute("loggedIn", false);
         }

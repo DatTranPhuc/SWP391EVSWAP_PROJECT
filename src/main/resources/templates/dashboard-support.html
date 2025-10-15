@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỗ trợ • EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/driver-portal.css}" href="/css/driver-portal.css">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">📺</span>
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a th:href="@{/dashboard}" th:classappend="${activePage} == 'overview' ? ' active' : ''">Tổng quan</a>
+            <a th:href="@{/dashboard/vehicles}" th:classappend="${activePage} == 'vehicles' ? ' active' : ''">Phương tiện</a>
+            <a th:href="@{/dashboard/reservations}" th:classappend="${activePage} == 'reservations' ? ' active' : ''">Lịch đổi</a>
+            <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
+            <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
+            <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
+            <a th:href="@{/operations/console}">Vận hành</a>
+            <a th:href="@{/admin/console}">Quản trị</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__content">
+            <p class="page-hero__eyebrow">Đồng hành cùng bạn</p>
+            <h1 class="page-hero__title">Hỗ trợ & phản hồi</h1>
+            <p class="page-hero__description">
+                Gửi yêu cầu tới đội ngũ chăm sóc khách hàng, theo dõi trạng thái xử lý ticket và xem lại những phản hồi bạn
+                đã gửi cho trạm EV SWAP.
+            </p>
+        </div>
+        <div class="page-hero__meta">
+            <div class="driver-chip">
+                <span th:text="${driverInitial}">E</span>
+                <strong th:text="${driverName}">EV Driver</strong>
+            </div>
+            <a class="btn outline" th:href="@{/dashboard/notifications}">Xem thông báo</a>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Tạo yêu cầu hỗ trợ mới</h2>
+        <p class="section-lead">Điền thông tin chi tiết để chúng tôi giúp bạn nhanh nhất.</p>
+        <form class="support-form" data-support-form th:attr="data-driver-id=${driverId}">
+            <label for="support-category">Loại yêu cầu</label>
+            <select id="support-category" name="category" required>
+                <option value="SCHEDULING">Lịch đổi</option>
+                <option value="PAYMENT">Thanh toán</option>
+                <option value="TECHNICAL">Kỹ thuật</option>
+                <option value="OTHER" selected>Khác</option>
+            </select>
+            <label for="support-comment">Nội dung</label>
+            <textarea id="support-comment" name="comment" placeholder="Mô tả vấn đề bạn gặp phải" required></textarea>
+            <button type="submit" class="btn primary">Gửi yêu cầu</button>
+            <p class="alert-inline" data-support-message hidden></p>
+        </form>
+    </section>
+
+    <section class="section-card">
+        <h2>Ticket đã gửi</h2>
+        <p class="section-lead">Theo dõi tiến trình xử lý từ đội ngũ EV SWAP.</p>
+        <div th:if="${tickets.isEmpty()}" class="empty-state">
+            <p>Bạn chưa gửi yêu cầu nào.</p>
+        </div>
+        <div th:if="${!tickets.isEmpty()}" class="table-wrapper">
+            <table class="feature-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Danh mục</th>
+                    <th>Trạng thái</th>
+                    <th>Tạo lúc</th>
+                    <th>Hoàn tất</th>
+                    <th>Ghi chú</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ticket : ${tickets}">
+                    <td th:text="${ticket.id()}">1</td>
+                    <td th:text="${ticket.category()}">Lịch đổi</td>
+                    <td><span class="badge" th:text="${ticket.status()}">Đang xử lý</span></td>
+                    <td th:text="${ticket.createdAt()}">01/01/2024 09:00</td>
+                    <td th:text="${ticket.resolvedAt()}">-</td>
+                    <td th:text="${ticket.note()}">Chưa có ghi chú</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Phản hồi của bạn</h2>
+        <p class="section-lead">Cảm ơn bạn đã đóng góp ý kiến giúp EV SWAP hoàn thiện dịch vụ.</p>
+        <div th:if="${feedback.isEmpty()}" class="empty-state">
+            <p>Chưa có phản hồi nào. Hãy chia sẻ cảm nhận sau mỗi lần đổi pin.</p>
+        </div>
+        <div th:if="${!feedback.isEmpty()}" class="data-grid data-grid--two">
+            <article class="data-card" th:each="item : ${feedback}">
+                <h3 th:text="${item.stationName()}">EV SWAP Nguyễn Huệ</h3>
+                <div class="data-meta">
+                    <span>Đánh giá: <strong th:text="${item.rating()} + ' / 5'">5 / 5</strong></span>
+                    <span>Gửi lúc: <strong th:text="${item.createdAt()}">01/01/2024 11:30</strong></span>
+                </div>
+                <p th:text="${item.comment()}">Dịch vụ rất tốt!</p>
+            </article>
+        </div>
+    </section>
+</main>
+
+<script type="module" th:src="@{/js/support-page.js}"></script>
+</body>
+</html>

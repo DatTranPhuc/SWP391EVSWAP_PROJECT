@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phương tiện của tôi • EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" href="/css/dashboard.css">
+    <link rel="stylesheet" th:href="@{/css/driver-portal.css}" href="/css/driver-portal.css">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">📺</span>
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a th:href="@{/dashboard}" th:classappend="${activePage} == 'overview' ? ' active' : ''">Tổng quan</a>
+            <a th:href="@{/dashboard/vehicles}" th:classappend="${activePage} == 'vehicles' ? ' active' : ''">Phương tiện</a>
+            <a th:href="@{/dashboard/reservations}" th:classappend="${activePage} == 'reservations' ? ' active' : ''">Lịch đổi</a>
+            <a th:href="@{/dashboard/payments}" th:classappend="${activePage} == 'payments' ? ' active' : ''">Thanh toán</a>
+            <a th:href="@{/dashboard/notifications}" th:classappend="${activePage} == 'notifications' ? ' active' : ''">Thông báo</a>
+            <a th:href="@{/dashboard/support}" th:classappend="${activePage} == 'support' ? ' active' : ''">Hỗ trợ</a>
+            <a th:href="@{/operations/console}">Vận hành</a>
+            <a th:href="@{/admin/console}">Quản trị</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page-shell">
+    <section class="page-hero">
+        <div class="page-hero__content">
+            <p class="page-hero__eyebrow">Không gian phương tiện</p>
+            <h1 class="page-hero__title">Phương tiện đã đăng ký</h1>
+            <p class="page-hero__description">
+                Kiểm soát toàn bộ phương tiện đã liên kết với tài khoản của bạn. Từ đây bạn có thể theo dõi biển số,
+                số khung cũng như thời điểm đăng ký mỗi phương tiện với EV SWAP.
+            </p>
+        </div>
+        <div class="page-hero__meta">
+            <div class="driver-chip">
+                <span th:text="${driverInitial}">E</span>
+                <strong th:text="${driverName}">EV Driver</strong>
+            </div>
+            <a class="btn primary" th:href="@{/vehicles/manage}">Quản lý chi tiết</a>
+        </div>
+    </section>
+
+    <section class="section-card">
+        <h2>Tổng quan phương tiện</h2>
+        <p class="section-lead">Bạn hiện có <strong th:text="${vehicleCount}">0</strong> phương tiện được kích hoạt.</p>
+        <div th:if="${vehicles.isEmpty()}" class="empty-state">
+            <p>Chưa có phương tiện nào được thêm. Hãy sử dụng nút "Quản lý chi tiết" để đăng ký phương tiện đầu tiên.</p>
+        </div>
+        <div th:if="${!vehicles.isEmpty()}" class="data-grid data-grid--two">
+            <article class="data-card" th:each="vehicle : ${vehicles}">
+                <div class="badge">ID #<span th:text="${vehicle.id()}">1</span></div>
+                <h3 th:text="${vehicle.name()}">Xe máy điện</h3>
+                <div class="data-meta">
+                    <span>Biển số: <strong th:text="${vehicle.plate()}">Chưa cập nhật</strong></span>
+                    <span>VIN: <strong th:text="${vehicle.vin()}">Chưa cập nhật</strong></span>
+                </div>
+                <p class="data-meta">Ngày thêm: <strong th:text="${vehicle.addedOn()}">01/01/2024</strong></p>
+            </article>
+        </div>
+    </section>
+</main>
+</body>
+</html>
