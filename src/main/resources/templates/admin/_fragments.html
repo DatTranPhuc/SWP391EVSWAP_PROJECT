@@ -1,0 +1,32 @@
+<!-- templates/admin/_fragments.html -->
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navbar" class="bg-white/80 backdrop-blur border-b">
+    <div class="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
+        <a th:href="@{/}" class="flex items-center gap-2">
+            <span class="text-2xl">🚗</span>
+            <span class="font-semibold">EV SWAP</span>
+        </a>
+        <ul class="flex items-center gap-6 text-slate-700">
+            <li><a th:href="@{/admin/dashboard}" class="hover:text-slate-900">Tổng quan</a></li>
+            <li><a th:href="@{/admin/staff}" class="hover:text-slate-900">Nhân viên</a></li>
+            <li><a th:href="@{/admin/station}" class="hover:text-slate-900">Trạm</a></li>
+            <li><a th:href="@{/support}" class="hover:text-slate-900">Hỗ trợ</a></li>
+        </ul>
+        <div class="flex items-center gap-3">
+            <span th:text="${username}">System Admin</span>
+            <form th:action="@{/admin/logout}" method="post">
+                <button class="rounded-lg bg-slate-900 text-white px-3 py-2">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="mt-16 border-t">
+    <div class="mx-auto max-w-7xl px-4 py-6 text-sm text-slate-600">
+        © 2025 EV SWAP. All rights reserved.
+    </div>
+</footer>
+</body>
+</html>
