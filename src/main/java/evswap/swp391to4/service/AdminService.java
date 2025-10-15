@@ -10,23 +10,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AdminService {
 
-    private final AdminRepository adminRepository;
+    private final AdminRepository adminRepo;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Login admin bằng email và password
-     * @param email
-     * @param password
-     * @return Admin nếu login thành công
-     * @throws Exception nếu email không tồn tại hoặc mật khẩu sai
-     */
-    public Admin login(String email, String password) throws Exception {
-        Admin admin = adminRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("Admin không tồn tại"));
+    public Admin login(String email, String password) {
+        Admin admin = adminRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Email không tồn tại"));
 
-        // Kiểm tra mật khẩu
         if (!passwordEncoder.matches(password, admin.getPasswordHash())) {
-            throw new Exception("Mật khẩu không đúng");
+            throw new IllegalArgumentException("Mật khẩu không đúng");
         }
 
         return admin;

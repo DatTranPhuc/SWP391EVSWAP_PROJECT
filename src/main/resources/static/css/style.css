@@ -1,57 +1,76 @@
+/* ==========================================================================
+   MAIN AUTHENTICATION STYLESHEET - COMPACT & ELEGANT REVISION
+   ========================================================================== */
+
+/* ----------------------------------------------
+   1. ROOT VARIABLES & GLOBAL STYLES
+   ---------------------------------------------- */
 :root {
-    --primary-color: #0067f4;
-    --secondary-color: #f3f4f6;
-    --text-dark: #1f2937;
-    --text-light: #6b7280;
-    --white: #ffffff;
-    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --border-color: #d1d5db;
+    /* Color Palette */
+    --primary-color: #3b82f6;      /* Royal Blue */
+    --primary-hover: #2563eb;      /* Darker Blue */
+    --primary-light: rgba(59, 130, 246, 0.15); /* Light Blue for focus ring */
+
+    --text-primary: #1f2937;       /* Titanium Gray (Dark) */
+    --text-secondary: #6b7280;     /* Steel Gray (Medium) */
+    --text-on-primary: #ffffff;
+
+    --bg-main: #f9fafb;            /* Platinum White */
+    --bg-card: #ffffff;
+    --bg-input: #f9fafb;           /* Input background */
+
+    --border-color: #d1d5db;       /* Silver Border */
+    --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: var(--secondary-color);
-    color: var(--text-dark);
 }
 
+/* ----------------------------------------------
+   2. AUTH CONTAINER & BRANDING PANEL
+   ---------------------------------------------- */
 .auth-container {
     display: flex;
     width: 100%;
-    max-width: 900px;
-    background: var(--white);
-    border-radius: 1rem;
-    box-shadow: var(--card-shadow);
+    max-width: 920px; /* << GIẢM KÍCH THƯỚC */
+    background: var(--bg-card);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow);
     overflow: hidden;
-    margin: 1rem;
+    margin: 1.5rem;
+    animation: popUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes popUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .branding-panel {
     flex-basis: 50%;
-    background: url('https://images.unsplash.com/photo-1617886322207-6f504e7472c5?q=80&w=1887&auto=format&fit=crop') no-repeat center center;
+    background-color: #111827;
+    background-image: url('https://images.unsplash.com/photo-1517581177682-a085bb7ffb7da?q=80&w=1887&auto=format&fit=crop');
+    background-blend-mode: overlay;
     background-size: cover;
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 2.5rem;
-    color: var(--white);
-}
-
-.branding-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0, 77, 179, 0.85), rgba(0, 103, 244, 0.4));
+    padding: 3rem; /* << GIẢM PADDING */
+    color: var(--text-on-primary);
 }
 
 .branding-content {
@@ -60,43 +79,44 @@ body {
 }
 
 .branding-content h1 {
-    font-size: 2.25rem;
+    font-size: 2.5rem; /* << GIẢM FONT */
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .branding-content p {
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.6;
+    font-size: 1.05rem; /* << GIẢM FONT */
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
 }
 
+/* ----------------------------------------------
+   3. FORM PANEL & INPUT GROUPS
+   ---------------------------------------------- */
 .form-panel {
     flex-basis: 50%;
-    padding: 2.5rem 3rem;
+    padding: 2.5rem 3.5rem; /* << GIẢM PADDING */
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
 .form-panel h2 {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
+    font-size: 1.875rem; /* << GIẢM FONT */
+    font-weight: 700;
+    margin-bottom: 0.75rem;
     text-align: center;
 }
 
 .form-panel .subtitle {
     text-align: center;
-    color: var(--text-light);
-    margin-bottom: 2.5rem;
-    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 3rem; /* << GIẢM KHOẢNG CÁCH */
 }
 
 .input-group {
     position: relative;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem; /* << GIẢM KHOẢNG CÁCH */
 }
 
 .input-group i {
@@ -104,89 +124,125 @@ body {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-light);
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    pointer-events: none;
 }
 
-.input-group input, .input-group select {
+.input-group input,
+.input-group select {
     width: 100%;
-    padding: 0.8rem 1rem 0.8rem 2.8rem;
+    padding: 0.875rem 1rem 0.875rem 3rem; /* << GIẢM PADDING (CHIỀU CAO) */
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    font-size: 0.9rem;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    border-radius: 0.625rem; /* Bo góc ít hơn một chút */
+    font-size: 0.95rem; /* << GIẢM FONT */
+    background-color: var(--bg-input);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input-group select {
-    padding-left: 2.8rem;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+    padding-left: 3rem;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.7rem center;
+    background-position: right 1rem center;
     background-repeat: no-repeat;
     background-size: 1.25em;
 }
 
-
-.input-group input:focus, .input-group select:focus {
+.input-group input:focus,
+.input-group select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 103, 244, 0.2);
+    box-shadow: 0 0 0 4px var(--primary-light);
 }
 
+.password-group input {
+    padding-right: 3rem;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-secondary);
+    pointer-events: auto;
+}
+
+/* ----------------------------------------------
+   4. BUTTONS & LINKS
+   ---------------------------------------------- */
 button[type="submit"] {
     width: 100%;
-    padding: 0.8rem;
-    margin-top: 1rem;
+    padding: 0.875rem; /* << GIẢM PADDING (CHIỀU CAO) */
+    margin-top: 0.75rem;
     background: var(--primary-color);
-    color: var(--white);
+    color: var(--text-on-primary);
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    font-family: 'Poppins', sans-serif;
-    transition: background-color 0.3s, transform 0.2s;
+    font-size: 0.95rem; /* << GIẢM FONT */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px -5px rgba(59, 130, 246, 0.5);
+    transition: all 0.2s ease-in-out;
 }
 
 button[type="submit"]:hover:not(:disabled) {
-    background: #0056b3;
-    transform: translateY(-2px);
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px -5px rgba(59, 130, 246, 0.4);
 }
+
 button[type="submit"]:disabled {
-    background-color: #94a3b8;
+    background-color: #9ca3af;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-.form-footer {
-    text-align: center;
-    margin-top: 1.5rem;
-    color: var(--text-light);
+.form-options {
+    text-align: right;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem; /* << GIẢM KHOẢNG CÁCH */
+}
+
+.forgot-password-link {
     font-size: 0.9rem;
-}
-
-.form-footer a {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 500;
 }
-.form-footer a:hover {
+
+.form-footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 1.25rem;
+}
+
+.form-footer a,
+.forgot-password-link:hover {
     text-decoration: underline;
 }
 
+/* ----------------------------------------------
+   5. RESPONSIVE DESIGN
+   ---------------------------------------------- */
 @media (max-width: 768px) {
+    body { align-items: flex-start; }
     .auth-container {
         flex-direction: column;
-        max-width: 420px;
-        margin-top: 2rem;
-        margin-bottom: 2rem;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
     }
-    .branding-panel {
-        display: none;
-    }
-    .form-panel {
-        padding: 2rem;
-    }
+    .branding-panel { display: none; }
+    .form-panel { padding: 3rem 1.5rem; justify-content: flex-start; }
 }

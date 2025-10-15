@@ -1,7 +1,9 @@
 package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.*;
+import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.AdminService;
 import evswap.swp391to4.service.DriverService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final DriverService driverService;
+    private final AdminService adminService;
 
     // ===== REGISTER =====
     @PostMapping("/register")
@@ -71,4 +74,28 @@ public class AuthController {
         session.invalidate();
         return ResponseEntity.ok(new LoginResponse(null, null, null, "Đăng xuất thành công"));
     }
+
+    // ===== LOGIN (Admin) - ĐÃ SỬA LẠI HOÀN CHỈNH =====
+    @PostMapping("/admin/login")
+    public ResponseEntity<?> adminLogin(@Valid @RequestBody LoginRequest req, HttpSession session) {
+        try {
+            Admin admin = adminService.login(req.getEmail(), req.getPassword());
+            session.setAttribute("loggedInAdmin", admin);
+
+            LoginResponse resp = new LoginResponse(
+                    admin.getEmail(),
+                    admin.getFullName(),
+                    null, // token nếu muốn triển khai JWT sau
+                    "Login thành công"
+            );
+
+            return ResponseEntity.ok(resp);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    new LoginResponse(null, null, null, e.getMessage())
+            );
+        }
+    }
+
 }

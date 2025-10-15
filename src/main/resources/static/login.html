@@ -37,12 +37,20 @@
                 <i class="fa-solid fa-envelope"></i>
                 <input type="email" id="email" placeholder="Email" required>
             </div>
-            <div class="input-group">
+
+            <div class="input-group password-group">
                 <i class="fa-solid fa-lock"></i>
                 <input type="password" id="password" placeholder="Mật khẩu" required>
+                <i class="fa-solid fa-eye-slash toggle-password" id="togglePassword"></i>
             </div>
+
             <button type="submit">Đăng nhập</button>
         </form>
+
+        <div class="form-options">
+            <a href="/forgot-password.html" class="forgot-password-link">Quên mật khẩu?</a>
+        </div>
+
         <div class="form-footer">
             <p>Chưa có tài khoản? <a href="/register.html">Đăng ký ngay</a></p>
         </div>
@@ -51,6 +59,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // --- PHẦN LOGIC ĐĂNG NHẬP (GIỮ NGUYÊN) ---
     const form = document.getElementById("loginForm");
     const loginButton = form.querySelector('button[type="submit"]');
 
@@ -81,7 +90,8 @@
                     timer: 1500,
                     showConfirmButton: false,
                 }).then(() => {
-                    const redirectUrl = userType === "admin" ? "/admin/dashboard" : "/dashboard";
+                    // Chuyển hướng đến trang dashboard tương ứng
+                    const redirectUrl = userType === "admin" ? "/admin/dashboard.html" : "/driver/dashboard.html";
                     window.location.href = redirectUrl;
                 });
             } else {
@@ -101,6 +111,20 @@
             loginButton.disabled = false;
             loginButton.innerHTML = 'Đăng nhập';
         }
+    });
+
+    // --- PHẦN LOGIC HIỆN/ẨN MẬT KHẨU ---
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+
+    togglePassword.addEventListener('click', function () {
+        // Thay đổi type của input
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // Thay đổi icon con mắt
+        this.classList.toggle('fa-eye-slash');
+        this.classList.toggle('fa-eye');
     });
 </script>
 

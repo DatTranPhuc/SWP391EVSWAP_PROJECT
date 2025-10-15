@@ -19,7 +19,7 @@ public class AdminBootstrap implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         String adminEmail = "admin@gmail.com";
-        String adminPassword = "Admin123"; // mặc định, đổi sau khi  lần đầu
+        String adminPassword = "Admin123"; // mặc định, đổi sau khi login lần đầu
 
         if (adminRepo.findByEmail(adminEmail).isEmpty()) {
             Admin admin = Admin.builder()

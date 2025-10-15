@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+</head>
+<body>
+<div class="dashboard-container">
+    <nav class="sidebar">
+        <header class="sidebar-header">
+            <a href="#" class="logo">
+                <i class="fa-solid fa-charging-station"></i>
+                <span>EV SWAP ADMIN</span>
+            </a>
+        </header>
+
+        <ul class="sidebar-menu">
+            <li class="menu-item active" data-target="overview-section">
+                <a href="#"><i class="fa-solid fa-gauge-high"></i><span>Tổng quan</span></a>
+            </li>
+            <li class="menu-item" data-target="staff-section">
+                <a href="#"><i class="fa-solid fa-user-gear"></i><span>Quản lý Nhân viên</span></a>
+            </li>
+            <li class="menu-item" data-target="station-section">
+                <a href="#"><i class="fa-solid fa-battery-full"></i><span>Quản lý Trạm Pin</span></a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" id="logoutButton">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                <h1 id="main-title">Bảng điều khiển</h1>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+            </div>
+        </header>
+
+        <section id="overview-section" class="content-section active">
+            <div class="placeholder-content">
+                <h2>Chào mừng Admin!</h2>
+                <p>Chọn một mục từ thanh bên để bắt đầu quản lý.</p>
+            </div>
+        </section>
+
+        <section id="staff-section" class="content-section">
+            <div class="section-header">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="staff-search" placeholder="Tìm theo tên hoặc email...">
+                </div>
+                <button class="add-new-btn" id="addStaffBtn"><i class="fa-solid fa-plus"></i> Thêm nhân viên</button>
+            </div>
+            <div class="table-wrapper">
+                <div class="loading-overlay" id="staff-loader"><div class="spinner"></div></div>
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Họ và Tên</th><th>Email</th><th>Trạm</th><th>Trạng thái</th><th>Hành động</th></tr>
+                    </thead>
+                    <tbody id="staff-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="station-section" class="content-section">
+            <div class="section-header">
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="station-search" placeholder="Tìm theo tên trạm hoặc địa chỉ...">
+                </div>
+                <button class="add-new-btn" id="addStationBtn"><i class="fa-solid fa-plus"></i> Thêm trạm mới</button>
+            </div>
+            <div class="table-wrapper">
+                <div class="loading-overlay" id="station-loader"><div class="spinner"></div></div>
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Tên Trạm</th><th>Địa chỉ</th><th>Tình trạng</th><th>Hành động</th></tr>
+                    </thead>
+                    <tbody id="station-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/admin-dashboard.js"></script>
+</body>
+</html>
