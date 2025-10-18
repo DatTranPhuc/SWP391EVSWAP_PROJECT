@@ -1,13 +1,14 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.ReservationSummary;
 import evswap.swp391to4.dto.SessionDriver;
-import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.service.ReservationService;
 import evswap.swp391to4.service.StationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,11 +26,13 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
 
 @Controller
 @RequestMapping("/reservations")
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -58,7 +61,18 @@ public class ReservationController {
         model.addAttribute("driverName", driver.fullName());
         model.addAttribute("driverInitial", extractInitial(driver.fullName()));
         model.addAttribute("stations", stationService.getAllStations());
-        model.addAttribute("reservations", mapReservations(reservationService.getReservationsForDriver(driver.driverId())));
+
+        List<ReservationSummary> reservations = Collections.emptyList();
+        try {
+            reservations = reservationService.getReservationsForDriver(driver.driverId());
+        } catch (RuntimeException ex) {
+            log.error("Không thể tải danh sách đặt lịch cho tài xế {}", driver.driverId(), ex);
+            if (!model.containsAttribute("reservationError")) {
+                model.addAttribute("reservationError", "Không thể tải lịch hiện có. Vui lòng thử lại sau.");
+            }
+        }
+
+        model.addAttribute("reservations", reservations);
 
         return "reservation-schedule";
     }
@@ -105,22 +119,22 @@ public class ReservationController {
             return "redirect:/reservations/new";
         }
 
-        reservationService.createReservation(driver.driverId(), form.getStationId(), reservedStart);
+        try {
+            reservationService.createReservation(driver.driverId(), form.getStationId(), reservedStart);
+        } catch (RuntimeException ex) {
+            log.error("Không thể tạo đặt lịch cho tài xế {} tại trạm {}", driver.driverId(), form.getStationId(), ex);
+            redirect.addFlashAttribute("reservationError", ex.getMessage() != null
+                    ? ex.getMessage()
+                    : "Không thể đặt lịch. Vui lòng thử lại sau.");
+            redirect.addFlashAttribute("reservationForm", form);
+            if (form.getStationId() != null) {
+                redirect.addAttribute("stationId", form.getStationId());
+            }
+            return "redirect:/reservations/new";
+        }
         redirect.addFlashAttribute("reservationSuccess", "Đặt lịch đổi pin thành công!");
         redirect.addAttribute("stationId", form.getStationId());
         return "redirect:/reservations/new";
-    }
-
-    private List<ReservationView> mapReservations(List<Reservation> reservations) {
-        return reservations.stream()
-                .map(reservation -> new ReservationView(
-                        reservation.getReservationId(),
-                        reservation.getStation().getName(),
-                        reservation.getStation().getAddress(),
-                        reservation.getReservedStart(),
-                        reservation.getStatus()
-                ))
-                .toList();
     }
 
     private String extractInitial(String fullName) {
@@ -140,12 +154,5 @@ public class ReservationController {
 
         @NotNull
         private String time;
-    }
-
-    public record ReservationView(Integer reservationId,
-                                  String stationName,
-                                  String stationAddress,
-                                  Instant reservedStart,
-                                  String status) {
     }
 }

@@ -1,5 +1,6 @@
 package evswap.swp391to4.service;
 
+import evswap.swp391to4.dto.ReservationSummary;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.entity.Station;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,22 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Reservation> getReservationsForDriver(Integer driverId) {
-        return reservationRepository.findByDriver_DriverIdOrderByReservedStartAsc(driverId);
+    public List<ReservationSummary> getReservationsForDriver(Integer driverId) {
+        return reservationRepository.findByDriver_DriverIdOrderByReservedStartAsc(driverId)
+                .stream()
+                .map(this::toSummary)
+                .collect(Collectors.toList());
+    }
+
+    private ReservationSummary toSummary(Reservation reservation) {
+        Station station = reservation.getStation();
+        return new ReservationSummary(
+                reservation.getReservationId(),
+                station != null ? station.getStationId() : null,
+                station != null ? station.getName() : null,
+                station != null ? station.getAddress() : null,
+                reservation.getReservedStart(),
+                reservation.getStatus()
+        );
     }
 }
