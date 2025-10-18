@@ -1,6 +1,6 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.dto.SessionDriver;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +14,9 @@ public class DashboardController {
 
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        SessionDriver driver = (SessionDriver) session.getAttribute("loggedInDriver");
         if (driver != null) {
-            model.addAttribute("driverName", driver.getFullName());
+            model.addAttribute("driverName", driver.fullName());
             model.addAttribute("loggedIn", true);
         } else {
             model.addAttribute("loggedIn", false);
@@ -28,7 +28,7 @@ public class DashboardController {
     public String handleDashboardAction(@RequestParam("feature") String feature,
                                         HttpSession session,
                                         RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        SessionDriver driver = (SessionDriver) session.getAttribute("loggedInDriver");
         if (driver == null) {
             redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để sử dụng chức năng.");
             return "redirect:/login";

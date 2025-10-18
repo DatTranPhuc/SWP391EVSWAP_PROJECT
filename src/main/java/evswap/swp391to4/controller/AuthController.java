@@ -1,5 +1,6 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.SessionDriver;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.DriverService;
 import jakarta.servlet.http.HttpSession;
@@ -27,7 +28,11 @@ public class AuthController {
                         RedirectAttributes redirect) {
         try {
             Driver driver = driverService.login(email, password);
-            session.setAttribute("loggedInDriver", driver);
+            session.setAttribute("loggedInDriver", new SessionDriver(
+                    driver.getDriverId(),
+                    driver.getFullName(),
+                    driver.getEmail()
+            ));
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
             return "redirect:/dashboard"; // Thay bằng trang sau login
         } catch (Exception e) {
