@@ -4,46 +4,108 @@ import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/stations")
+@Controller
+@RequestMapping("/stations")
 @RequiredArgsConstructor
 public class StationController {
 
     private final StationService stationService;
 
     /**
-     * 📋 Xem tất cả trạm
+     * Hiển thị trang quản lý trạm chính.
+     * Luôn cung cấp danh sách tất cả trạm và một form trống cho modal.
      */
     @GetMapping
-    public ResponseEntity<List<StationResponse>> getAllStations() {
-        return ResponseEntity.ok(stationService.getAllStations());
+    public String listStations(Model model) {
+        model.addAttribute("stations", stationService.getAllStations());
+        model.addAttribute("stationForm", new StationCreateRequest());
+        // Thêm một danh sách rỗng để Thymeleaf không báo lỗi khi render lần đầu
+        model.addAttribute("nearbyStations", Collections.emptyList());
+        return "station-manage";
     }
 
     /**
-     * 🔎 Tìm trạm theo tên (rỗng → hiện tất cả)
-     * /api/stations/search?name=Station A
+     * Xử lý yêu cầu thêm một trạm mới từ modal.
+     */
+    @PostMapping("/add")
+    public String addStation(@ModelAttribute("stationForm") StationCreateRequest req, RedirectAttributes redirect) {
+        try {
+            stationService.createStation(req);
+            redirect.addFlashAttribute("stationSuccess", "Thêm trạm mới thành công!");
+        } catch (IllegalStateException e) {
+            redirect.addFlashAttribute("stationError", e.getMessage());
+        }
+        return "redirect:/stations";
+    }
+
+    /**
+     * Xử lý yêu cầu xóa một trạm.
+     */
+    @PostMapping("/delete/{id}")
+    public String deleteStation(@PathVariable Integer id, RedirectAttributes redirect) {
+        try {
+            stationService.deleteStation(id);
+            redirect.addFlashAttribute("stationSuccess", "Đã xoá trạm thành công!");
+        } catch (IllegalStateException e) {
+            redirect.addFlashAttribute("stationError", e.getMessage());
+        }
+        return "redirect:/stations";
+    }
+
+    /**
+     * Hiển thị trang chi tiết một trạm.
+     */
+    @GetMapping("/{id}")
+    public String viewStation(@PathVariable Integer id, Model model) {
+        model.addAttribute("station", stationService.findById(id));
+        // Cần thêm các thuộc tính này để các phần khác của trang không bị lỗi
+        model.addAttribute("stations", stationService.getAllStations());
+        model.addAttribute("stationForm", new StationCreateRequest());
+        return "station-manage";
+    }
+
+    /**
+     * Xử lý yêu cầu tìm kiếm trạm theo tên.
      */
     @GetMapping("/search")
-    public ResponseEntity<List<StationResponse>> searchStationsByName(@RequestParam(required = false) String name) {
-        return ResponseEntity.ok(stationService.searchByName(name));
+    public String searchByName(@RequestParam(name = "name", required = false) String name, Model model) {
+        model.addAttribute("stations", stationService.searchByName(name));
+        model.addAttribute("stationForm", new StationCreateRequest());
+        return "station-manage";
     }
 
     /**
-     * 📍 Tìm trạm gần vị trí hiện tại
-     * /api/stations/nearby?lat=10.7626&lng=106.6822&radiusKm=5
+     * Xử lý yêu cầu tìm các trạm gần một vị trí tọa độ cho trước.
+     * Đây là phương thức quan trọng nhất cần kiểm tra.
      */
     @GetMapping("/nearby")
-    public ResponseEntity<List<StationResponse>> findNearbyStations(
-            @RequestParam BigDecimal lat,
-            @RequestParam BigDecimal lng,
-            @RequestParam(defaultValue = "5") double radiusKm
-    ) {
-        return ResponseEntity.ok(stationService.findNearby(lat, lng, radiusKm));
+    public String findNearby(@RequestParam BigDecimal lat,
+                             @RequestParam BigDecimal lng,
+                             @RequestParam(defaultValue = "5") double radiusKm,
+                             Model model) {
+        // 1. Gọi service để lấy danh sách các trạm gần đó
+        List<StationResponse> nearbyStations = stationService.findNearby(lat, lng, radiusKm);
+
+        // 2. Thêm danh sách kết quả tìm kiếm vào model
+        model.addAttribute("nearbyStations", nearbyStations);
+
+        // 3. Thêm tọa độ người dùng vào model để JavaScript có thể vẽ bản đồ
+        model.addAttribute("userLat", lat);
+        model.addAttribute("userLng", lng);
+
+        // 4. Thêm các thuộc tính phụ để các phần khác của trang (danh sách chính, modal) không bị lỗi
+        model.addAttribute("stations", stationService.getAllStations());
+        model.addAttribute("stationForm", new StationCreateRequest());
+
+        return "station-manage";
     }
 }

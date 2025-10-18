@@ -3,6 +3,7 @@ package evswap.swp391to4.service;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.repository.StationDistance;
 import evswap.swp391to4.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,16 @@ public class StationService {
     private final StationRepository stationRepo;
 
     /**
-     * 👑 Admin tạo trạm mới
+     * Tạo một trạm mới dựa trên yêu cầu.
+     * Ném ra lỗi nếu tên trạm đã tồn tại.
+     * @param req Đối tượng chứa thông tin trạm mới.
+     * @return DTO của trạm vừa được tạo.
      */
     @Transactional
     public StationResponse createStation(StationCreateRequest req) {
-        if (stationRepo.findByNameIgnoreCase(req.getName()).isPresent()) {
-            throw new IllegalStateException("Station đã tồn tại");
-        }
+        stationRepo.findByNameIgnoreCase(req.getName()).ifPresent(s -> {
+            throw new IllegalStateException("Tên trạm '" + req.getName() + "' đã tồn tại.");
+        });
 
         Station station = Station.builder()
                 .name(req.getName())
@@ -39,7 +43,8 @@ public class StationService {
     }
 
     /**
-     * 📋 Lấy tất cả trạm
+     * Lấy danh sách tất cả các trạm.
+     * @return Danh sách DTO của tất cả các trạm.
      */
     public List<StationResponse> getAllStations() {
         return stationRepo.findAll().stream()
@@ -48,50 +53,92 @@ public class StationService {
     }
 
     /**
-     * 🔎 Tìm trạm theo tên (nếu không nhập → trả tất cả)
+     * Tìm kiếm trạm theo tên (chứa từ khóa, không phân biệt hoa thường).
+     * @param name Từ khóa để tìm kiếm.
+     * @return Danh sách các trạm phù hợp.
      */
     public List<StationResponse> searchByName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return getAllStations();
         }
-
         return stationRepo.findByNameContainingIgnoreCase(name).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     /**
-     * 📍 Tìm trạm gần vị trí (theo bán kính km)
+     * Tìm các trạm trong một bán kính cho trước bằng cách sử dụng Native Query đã được tối ưu.
+     * @param lat Vĩ độ của người dùng.
+     * @param lng Kinh độ của người dùng.
+     * @param radiusKm Bán kính tìm kiếm (tính bằng km).
+     * @return Danh sách DTO của các trạm trong bán kính, đã sắp xếp từ gần đến xa.
      */
     public List<StationResponse> findNearby(BigDecimal lat, BigDecimal lng, double radiusKm) {
-        return stationRepo.findAll().stream()
-                .filter(s -> {
-                    if (s.getLatitude() == null || s.getLongitude() == null) return false;
-                    double distance = distanceInKm(
-                            lat.doubleValue(), lng.doubleValue(),
-                            s.getLatitude().doubleValue(), s.getLongitude().doubleValue()
-                    );
-                    return distance <= radiusKm;
-                })
-                .map(this::toResponse)
+        // Gọi phương thức đã được tối ưu từ Repository
+        List<StationDistance> results = stationRepo.findNearbyStations(lat.doubleValue(), lng.doubleValue(), radiusKm);
+
+        // Chuyển đổi (map) danh sách kết quả từ projection sang StationResponse DTO
+        return results.stream()
+                .map(result -> StationResponse.builder()
+                        .stationId(result.getStationId())
+                        .name(result.getName())
+                        .address(result.getAddress())
+                        .status(result.getStatus())
+                        .latitude(result.getLatitude())
+                        .longitude(result.getLongitude())
+                        .distance(result.getDistance()) // Lấy distance trực tiếp từ kết quả
+                        .build())
                 .toList();
     }
 
     /**
-     * 📏 Công thức Haversine tính khoảng cách giữa 2 tọa độ
+     * Tìm một trạm theo ID.
+     * @param stationId ID của trạm cần tìm.
+     * @return DTO của trạm tìm thấy.
+     * @throws IllegalStateException nếu không tìm thấy trạm.
      */
-    private double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
-        double R = 6371; // Bán kính Trái đất (km)
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    public StationResponse findById(Integer stationId) {
+        Station s = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy trạm với ID: " + stationId));
+        return toResponse(s);
     }
 
     /**
-     * 🔄 Convert Entity → DTO
+     * Cập nhật thông tin của một trạm.
+     * @param stationId ID của trạm cần cập nhật.
+     * @param req Đối tượng chứa thông tin cập nhật.
+     * @return DTO của trạm sau khi đã cập nhật.
+     */
+    @Transactional
+    public StationResponse updateStation(Integer stationId, StationCreateRequest req) {
+        Station s = stationRepo.findById(stationId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy trạm với ID: " + stationId));
+        s.setName(req.getName());
+        s.setAddress(req.getAddress());
+        s.setLatitude(req.getLatitude());
+        s.setLongitude(req.getLongitude());
+        s.setStatus(req.getStatus() != null ? req.getStatus() : s.getStatus());
+        Station saved = stationRepo.save(s);
+        return toResponse(saved);
+    }
+
+    /**
+     * Xóa một trạm theo ID.
+     * @param stationId ID của trạm cần xóa.
+     */
+    @Transactional
+    public void deleteStation(Integer stationId) {
+        if (!stationRepo.existsById(stationId)) {
+            throw new IllegalStateException("Không tìm thấy trạm với ID: " + stationId);
+        }
+        stationRepo.deleteById(stationId);
+    }
+
+    /**
+     * Phương thức private để chuyển đổi từ Entity Station sang DTO StationResponse.
+     * Dùng cho các trường hợp không cần tính toán khoảng cách.
+     * @param s Entity Station.
+     * @return DTO StationResponse.
      */
     private StationResponse toResponse(Station s) {
         return StationResponse.builder()
@@ -101,6 +148,7 @@ public class StationService {
                 .latitude(s.getLatitude())
                 .longitude(s.getLongitude())
                 .status(s.getStatus())
+                // Lưu ý: trường distance sẽ là null/0.0 khi gọi từ đây, đó là điều mong muốn.
                 .build();
     }
 }

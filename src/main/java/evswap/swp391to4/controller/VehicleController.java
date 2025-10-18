@@ -21,11 +21,13 @@ import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
+@RequestMapping("/vehicles") // Đường dẫn chung cho tất cả các request trong controller này
 public class VehicleController {
 
     private final DriverService driverService;
     private final VehicleService vehicleService;
 
+    // API này có thể giữ nguyên hoặc thay đổi tùy theo cấu trúc API của bạn
     @PostMapping("/api/drivers/{driverId}/vehicles")
     public ResponseEntity<Vehicle> addVehicle(@PathVariable Integer driverId,
                                               @RequestBody VehicleRequest request) {
@@ -38,7 +40,11 @@ public class VehicleController {
         return ResponseEntity.ok(savedVehicle);
     }
 
-    @GetMapping("/vehicles/register")
+    /**
+     * Hiển thị form đăng ký phương tiện.
+     * URL: GET /vehicles/register
+     */
+    @GetMapping("/register")
     public String showRegistrationForm(@RequestParam("driverId") Integer driverId,
                                        Model model,
                                        RedirectAttributes redirect) {
@@ -60,7 +66,11 @@ public class VehicleController {
         }
     }
 
-    @PostMapping("/vehicles/register")
+    /**
+     * Xử lý việc đăng ký phương tiện mới.
+     * URL: POST /vehicles/register
+     */
+    @PostMapping("/register")
     public String registerVehicle(@RequestParam("driverId") Integer driverId,
                                   @ModelAttribute("vehicleForm") VehicleRegistrationForm form,
                                   RedirectAttributes redirect) {
@@ -82,7 +92,11 @@ public class VehicleController {
         }
     }
 
-    @GetMapping("/vehicles/manage")
+    /**
+     * Hiển thị trang quản lý phương tiện cho tài xế đã đăng nhập.
+     * URL: GET /vehicles
+     */
+    @GetMapping
     public String manageVehicles(HttpSession session,
                                  Model model,
                                  RedirectAttributes redirect) {
@@ -110,7 +124,11 @@ public class VehicleController {
         return "vehicle-manage";
     }
 
-    @PostMapping("/vehicles/manage")
+    /**
+     * Xử lý việc thêm phương tiện mới từ trang quản lý.
+     * URL: POST /vehicles
+     */
+    @PostMapping
     public String addVehicleFromManager(@ModelAttribute("vehicleForm") VehicleRegistrationForm form,
                                         HttpSession session,
                                         RedirectAttributes redirect) {
@@ -133,28 +151,27 @@ public class VehicleController {
             session.setAttribute("loggedInDriver", refreshed);
 
             redirect.addFlashAttribute("vehicleSuccess", "Thêm phương tiện mới thành công!");
-            return "redirect:/vehicles/manage";
+            return "redirect:/vehicles"; // Chuyển hướng về trang quản lý
         } catch (Exception e) {
             redirect.addFlashAttribute("vehicleError", e.getMessage());
             redirect.addFlashAttribute("vehicleForm", form);
-            return "redirect:/vehicles/manage";
+            return "redirect:/vehicles"; // Chuyển hướng về trang quản lý
         }
     }
 
+    // --- CÁC PHƯƠNG THỨC HỖ TRỢ (PRIVATE) ---
+
     private String extractInitial(String fullName) {
-        if (fullName == null) {
+        if (fullName == null || fullName.trim().isEmpty()) {
             return "U";
         }
-        String trimmed = fullName.trim();
-        if (trimmed.isEmpty()) {
-            return "U";
-        }
-        return trimmed.substring(0, 1).toUpperCase();
+        return fullName.trim().substring(0, 1).toUpperCase();
     }
 
     public record VehicleRequest(String vin, String plateNumber, String model) {
     }
 
+    // Lớp nội bộ để hiển thị dữ liệu trên view, giữ nguyên
     @Builder
     private static class VehicleCardView {
         private final Integer vehicleId;
@@ -171,59 +188,23 @@ public class VehicleController {
         private final String healthLabel;
         private final String healthDescription;
 
-        public Integer vehicleId() {
-            return vehicleId;
-        }
-
-        public String vehicleName() {
-            return vehicleName;
-        }
-
-        public String plateNumber() {
-            return plateNumber;
-        }
-
-        public String vin() {
-            return vin;
-        }
-
-        public String model() {
-            return model;
-        }
-
-        public Instant createdAt() {
-            return createdAt;
-        }
-
-        public String statusLabel() {
-            return statusLabel;
-        }
-
-        public String statusBadge() {
-            return statusBadge;
-        }
-
-        public String batteryModel() {
-            return batteryModel;
-        }
-
-        public String batteryStatus() {
-            return batteryStatus;
-        }
-
-        public int batteryPercent() {
-            return batteryPercent;
-        }
-
-        public String healthLabel() {
-            return healthLabel;
-        }
-
-        public String healthDescription() {
-            return healthDescription;
-        }
+        // Các phương thức getter giữ nguyên...
+        public Integer vehicleId() { return vehicleId; }
+        public String vehicleName() { return vehicleName; }
+        public String plateNumber() { return plateNumber; }
+        public String vin() { return vin; }
+        public String model() { return model; }
+        public Instant createdAt() { return createdAt; }
+        public String statusLabel() { return statusLabel; }
+        public String statusBadge() { return statusBadge; }
+        public String batteryModel() { return batteryModel; }
+        public String batteryStatus() { return batteryStatus; }
+        public int batteryPercent() { return batteryPercent; }
+        public String healthLabel() { return healthLabel; }
+        public String healthDescription() { return healthDescription; }
     }
 
+    // Phương thức build card view, giữ nguyên
     private List<VehicleCardView> buildVehicleCards(Integer driverId) {
         List<Vehicle> vehicles = vehicleService.getVehiclesForDriver(driverId);
         List<VehicleCardView> cards = new ArrayList<>();
@@ -271,6 +252,7 @@ public class VehicleController {
         return cards;
     }
 
+    // Phương thức đoán model pin, giữ nguyên
     private String guessBatteryModel(String vehicleModel) {
         if (vehicleModel == null) {
             return "EVS Pack 48V";
