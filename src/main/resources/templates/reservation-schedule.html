@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch đổi pin - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">U</div>
+        <div class="driver-intro">
+            <span class="subtitle">Đặt lịch đổi pin</span>
+            <h1 class="page-title">Lên lịch cho lần đổi pin tiếp theo</h1>
+            <p class="page-hint">
+                Chọn trạm, ngày và giờ mong muốn để đảm bảo pin luôn sẵn sàng cho hành trình của bạn.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
+        <a class="btn outline" th:href="@{/stations}">Tìm trạm</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-form-section">
+        <h2>Thông tin đặt lịch</h2>
+        <form th:action="@{/reservations}" th:object="${reservationForm}" method="post" class="reservation-form">
+            <div class="form-grid">
+                <label>
+                    <span>Trạm đổi pin</span>
+                    <select th:field="*{stationId}" required>
+                        <option value="" disabled th:selected="${reservationForm.stationId == null}">-- Chọn trạm --</option>
+                        <option th:each="st : ${stations}"
+                                th:value="${st.stationId}"
+                                th:text="${st.name}"
+                                th:selected="${st.stationId == reservationForm.stationId}"></option>
+                    </select>
+                    <div class="field-error" th:if="${#fields.hasErrors('stationId')}" th:errors="*{stationId}"></div>
+                </label>
+                <label>
+                    <span>Ngày đổi pin</span>
+                    <input type="date" th:field="*{date}" th:attr="min=${T(java.time.LocalDate).now()}" required>
+                    <div class="field-error" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></div>
+                </label>
+                <label>
+                    <span>Giờ đổi pin</span>
+                    <input type="time" th:field="*{time}" required>
+                    <div class="field-error" th:if="${#fields.hasErrors('time')}" th:errors="*{time}"></div>
+                </label>
+            </div>
+            <div class="form-actions">
+                <button class="btn ghost" type="reset">Xoá</button>
+                <button class="btn primary" type="submit">Đặt lịch</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="reservation-list-section">
+        <h2>Lịch đổi pin của bạn</h2>
+        <p class="section-hint">Theo dõi các lịch đã đặt để chủ động sắp xếp thời gian.</p>
+        <table th:if="${reservations != null and !reservations.isEmpty()}">
+            <thead>
+            <tr>
+                <th>Trạm</th>
+                <th>Địa chỉ</th>
+                <th>Thời gian</th>
+                <th>Trạng thái</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="rv : ${reservations}">
+                <td th:text="${rv.stationName}"></td>
+                <td th:text="${rv.stationAddress}"></td>
+                <td th:text="${#temporals.format(rv.reservedStart, 'HH:mm dd/MM/yyyy')}"></td>
+                <td>
+                    <span class="status-badge" th:text="${rv.status != null ? rv.status : 'pending'}"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="empty-state" th:if="${reservations == null || reservations.isEmpty()}">
+            <p>Bạn chưa có lịch đổi pin nào. Hãy đặt lịch để đảm bảo luôn có pin sẵn sàng!</p>
+            <a class="btn primary" href="#top" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">Đặt lịch ngay</a>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

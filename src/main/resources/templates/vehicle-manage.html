@@ -121,7 +121,7 @@
         <button class="modal-close" type="button" aria-label="Đóng" onclick="closeVehicleModal()">×</button>
         <h2>Thêm phương tiện mới</h2>
         <p>Nhập thông tin chính xác để EV SWAP đồng bộ dữ liệu và đảm bảo pin phù hợp.</p>
-        <form th:action="@{/vehicles/manage}" method="post" th:object="${vehicleForm}" class="modal-form">
+        <form th:action="@{/vehicles}" method="post" th:object="${vehicleForm}" class="modal-form">
             <div class="form-grid">
                 <label>
                     <span>Model xe</span>

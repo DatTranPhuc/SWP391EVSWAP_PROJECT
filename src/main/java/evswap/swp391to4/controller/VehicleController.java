@@ -1,5 +1,6 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.SessionDriver;
 import evswap.swp391to4.dto.VehicleRegistrationForm;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
@@ -100,15 +101,15 @@ public class VehicleController {
     public String manageVehicles(HttpSession session,
                                  Model model,
                                  RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        SessionDriver driver = (SessionDriver) session.getAttribute("loggedInDriver");
         if (driver == null) {
             redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
             return "redirect:/login";
         }
 
-        var vehicleCards = buildVehicleCards(driver.getDriverId());
-        model.addAttribute("driverName", driver.getFullName());
-        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+        var vehicleCards = buildVehicleCards(driver.driverId());
+        model.addAttribute("driverName", driver.fullName());
+        model.addAttribute("driverInitial", extractInitial(driver.fullName()));
         model.addAttribute("vehicleCards", vehicleCards);
         model.addAttribute("totalVehicles", vehicleCards.size());
         model.addAttribute("lastUpdatedAt", vehicleCards.stream()
@@ -132,7 +133,7 @@ public class VehicleController {
     public String addVehicleFromManager(@ModelAttribute("vehicleForm") VehicleRegistrationForm form,
                                         HttpSession session,
                                         RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        SessionDriver driver = (SessionDriver) session.getAttribute("loggedInDriver");
         if (driver == null) {
             redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
             return "redirect:/login";
@@ -145,10 +146,7 @@ public class VehicleController {
                     .plateNumber(form.getPlateNumber())
                     .build();
 
-            vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
-
-            Driver refreshed = driverService.getDriverById(driver.getDriverId());
-            session.setAttribute("loggedInDriver", refreshed);
+            vehicleService.addVehicleToDriver(driver.driverId(), vehicle);
 
             redirect.addFlashAttribute("vehicleSuccess", "Thêm phương tiện mới thành công!");
             return "redirect:/vehicles"; // Chuyển hướng về trang quản lý
