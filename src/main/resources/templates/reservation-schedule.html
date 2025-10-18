@@ -81,9 +81,18 @@
             </thead>
             <tbody>
             <tr th:each="rv : ${reservations}">
-                <td th:text="${rv.stationName}"></td>
-                <td th:text="${rv.stationAddress}"></td>
-                <td th:text="${#temporals.format(rv.reservedStart, 'HH:mm dd/MM/yyyy')}"></td>
+                <td>
+                    <span th:if="${rv.stationName != null}" th:text="${rv.stationName}"></span>
+                    <span th:if="${rv.stationName == null}">Đang cập nhật</span>
+                </td>
+                <td>
+                    <span th:if="${rv.stationAddress != null}" th:text="${rv.stationAddress}"></span>
+                    <span th:if="${rv.stationAddress == null}">Đang cập nhật</span>
+                </td>
+                <td>
+                    <span th:if="${rv.reservedStart != null}" th:text="${#temporals.format(rv.reservedStart, 'HH:mm dd/MM/yyyy')}"></span>
+                    <span th:if="${rv.reservedStart == null}">Chưa đặt thời gian</span>
+                </td>
                 <td>
                     <span class="status-badge" th:text="${rv.status != null ? rv.status : 'pending'}"></span>
                 </td>
