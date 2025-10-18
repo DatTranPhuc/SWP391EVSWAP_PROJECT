@@ -108,6 +108,7 @@
                 <td th:text="${station.status}"></td>
                 <td>
                     <a class="btn ghost" th:href="@{|/stations/${station.stationId}|}">Xem</a>
+                    <a class="btn primary" th:href="@{|/reservations/new?stationId=${station.stationId}|}">Đặt lịch</a>
                     <form th:action="@{|/stations/delete/${station.stationId}|}" method="post" style="display:inline;">
                         <button class="btn outline" type="submit" onclick="return confirm('Bạn chắc chắn muốn xoá trạm này?')">Xoá</button>
                     </form>
@@ -146,6 +147,7 @@
                 <th>Tên trạm</th>
                 <th>Khoảng cách (km)</th>
                 <th>Địa chỉ</th>
+                <th>Đặt lịch</th>
             </tr>
             </thead>
             <tbody>
@@ -153,6 +155,9 @@
                 <td th:text="${st.name}"></td>
                 <td th:text="${#numbers.formatDecimal(st.distance, 1, 2)}"></td>
                 <td th:text="${st.address}"></td>
+                <td>
+                    <a class="btn primary" th:href="@{|/reservations/new?stationId=${st.stationId}|}">Chọn</a>
+                </td>
             </tr>
             </tbody>
         </table>
