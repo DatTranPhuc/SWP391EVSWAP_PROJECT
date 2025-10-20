@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm Nhân viên - EV SWAP</title>
+    <title>Sửa Nhân viên - EV SWAP</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -30,39 +30,42 @@
 
 <main class="container">
     <div class="admin-form-card">
-        <h2>Thêm Nhân viên mới</h2>
+        <h2>Sửa thông tin Nhân viên</h2>
 
         <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
-        <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
 
-        <form th:action="@{/admin/staff/add}" th:object="${staff}" method="post">
+        <form th:action="@{/admin/staff/edit/{id}(id=${staff.staffId})}" th:object="${staff}" method="post">
+
+            <input type="hidden" th:field="*{staffId}" />
 
             <div class="form-group">
                 <label for="fullName">Họ tên</label>
-                <input type="text" id="fullName" th:field="*{fullName}" placeholder="Nguyễn Văn A">
+                <input type="text" id="fullName" th:field="*{fullName}">
                 <div class="form-error" th:if="${fullNameError}" th:text="${fullNameError}"></div>
             </div>
 
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" th:field="*{email}" placeholder="staff@example.com">
+                <input type="email" id="email" th:field="*{email}">
                 <div class="form-error" th:if="${emailError}" th:text="${emailError}"></div>
             </div>
 
             <div class="form-group">
-                <label for="password">Mật khẩu</label>
-                <input type="password" id="password" th:field="*{password}" placeholder="••••••••">
-                <p class="form-note">Để trống để tự động tạo mật khẩu ngẫu nhiên.</p>
-                <div class="form-error" th:if="${passwordError}" th:text="${passwordError}"></div>
+                <label for="stationId">Station ID (Tùy chọn)</label>
+                <input type="number" id="stationId" th:field="*{stationId}" placeholder="Bỏ trống nếu không thuộc trạm nào">
             </div>
 
             <div class="form-group">
-                <label for="stationId">Station ID</label> <input type="number" id="stationId" th:field="*{stationId}" placeholder="1" required min="1"> <div class="form-error" th:if="${stationIdError}" th:text="${stationIdError}"></div>
+                <label>Trạng thái</label>
+                <div>
+                    <input type="checkbox" id="isActive" th:field="*{isActive}" />
+                    <label for="isActive" style="display: inline; font-weight: normal;">Kích hoạt (Active)</label>
+                </div>
             </div>
 
             <div class="form-actions">
                 <a th:href="@{/admin/staff}" class="btn ghost">Hủy</a>
-                <button type="submit" class="btn primary">Tạo nhân viên</button>
+                <button type="submit" class="btn primary">Cập nhật</button>
             </div>
         </form>
     </div>
