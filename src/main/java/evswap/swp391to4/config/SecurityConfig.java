@@ -11,27 +11,48 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@RequiredArgsConstructor // Thêm annotation này
 public class SecurityConfig {
+
+    // [THÊM MỚI] Inject success handler của chúng ta vào
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tắt CSRF (chỉ dùng cho API, nếu có frontend cần bật lại)
                 .csrf(csrf -> csrf.disable())
-
-                // Cho phép tất cả request mà không cần login
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        // ... các quy tắc authorizeHttpRequests giữ nguyên ...
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/dashboard", "/login", "/register").permitAll()
+                        .requestMatchers("/vehicles/register", "/api/drivers/**").permitAll()
+                        .requestMatchers("/api/payment/webhook/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                // ===== [ĐÃ SỬA] CẬP NHẬT CẤU HÌNH LOGIN =====
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .usernameParameter("email")
+                        // Thay thế defaultSuccessUrl bằng successHandler của chúng ta
+                        .successHandler(customAuthenticationSuccessHandler)
+                        .failureUrl("/login?error=true")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        // ... cấu hình logout giữ nguyên ...
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
                 );
 
         return http.build();
     }
 
-    // Bean mã hóa mật khẩu
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
-

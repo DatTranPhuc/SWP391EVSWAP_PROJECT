@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tài khoản & Thanh toán</title>
+    <link rel="stylesheet" th:href="@{/css/station.css}">
+    <style>
+        .account-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 32px;
+            align-items: flex-start;
+        }
+        .stat-card .stat-value { font-size: 2.5rem; }
+        @media (max-width: 960px) {
+            .account-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar">💰</div>
+        <div class="driver-intro">
+            <span class="subtitle">Tài khoản & Thanh toán</span>
+            <h1 class="page-title">Ví EV SWAP</h1>
+            <p class="page-hint" th:text="'Tài khoản: ' + ${accountDetails.driverName}"></p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${accountSuccess}" th:text="${accountSuccess}"></div>
+    <div class="alert error" th:if="${accountError}" th:text="${accountError}"></div>
+
+    <div class="account-layout">
+        <aside class="left-column">
+            <div class="stat-card" style="margin-bottom: 24px;">
+                <div class="stat-label">Số dư hiện tại</div>
+                <div class="stat-value" th:text="${accountDetails.formattedBalance}" style="color: #2ecc71;"></div>
+                <div class="stat-caption" th:text="'Email: ' + ${accountDetails.email}"></div>
+            </div>
+
+            <h2>Nạp tiền vào ví</h2>
+            <form id="depositForm" th:object="${depositForm}" style="max-width: 100%;">
+                <label for="amount">Nhập số tiền cần nạp (VND)</label>
+                <input type="number" id="amount" th:field="*{amount}" min="10000" step="1000" placeholder="Ví dụ: 50000" required
+                       style="font-size: 1.2rem; padding: 12px 14px; margin-bottom: 0;">
+
+                <div th:if="${#fields.hasErrors('amount')}"
+                     th:errors="*{amount}"
+                     class="alert error"
+                     style="padding: 10px; margin-top: 8px; margin-bottom: 8px; font-size: 0.9em;">
+                    Validation Error Message
+                </div>
+
+                <button class="btn primary" type="button" onclick="handleQrPayment()" style="width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 16px;">
+                    Tạo mã QR Nạp tiền
+                </button>
+            </form>
+        </aside>
+
+        <section class="right-column">
+            <h2>Lịch sử nạp tiền</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Thời gian</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${paymentHistory.isEmpty()}">
+                    <td colspan="4" style="text-align: center; padding: 32px;">Chưa có giao dịch nạp tiền nào.</td>
+                </tr>
+                <tr th:each="item : ${paymentHistory}">
+                    <td th:text="${item.date}"></td>
+                    <td th:text="${item.time}"></td>
+                    <td th:text="${item.formattedAmount}" style="font-weight: 600; color: #27ae60;"></td>
+                    <td>
+                        <span th:text="${item.status}"
+                              style="background: #2ecc7130; color: #27ae60; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.85em;">
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+</main>
+
+<div class="station-modal" id="qrModal" aria-hidden="true" role="dialog">
+    <div class="modal-backdrop" onclick="closeQrModal()"></div>
+    <div class="modal-content" role="document">
+        <button class="modal-close" type="button" aria-label="Đóng" onclick="closeQrModal()">×</button>
+        <h2>Quét mã QR để nạp tiền</h2>
+        <p style="text-align: center; color: var(--text-secondary);">Dùng ứng dụng ngân hàng hoặc ví điện tử của bạn để quét mã.</p>
+        <div id="qrCodeContainer" style="text-align: center; margin: 20px 0; min-height: 200px; display: grid; place-items: center;">
+            <p>Đang tạo mã QR, vui lòng chờ...</p>
+        </div>
+        <p id="qrError" style="text-align: center; color: #e74c3c; font-weight: 500;"></p>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const qrModal = document.getElementById('qrModal');
+
+    function openQrModal() {
+        if (qrModal) {
+            qrModal.classList.add('is-open');
+            document.body.classList.add('modal-open');
+        }
+    }
+    function closeQrModal() {
+        if (qrModal) {
+            qrModal.classList.remove('is-open');
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    async function handleQrPayment() {
+        const amountInput = document.getElementById('amount');
+        const amount = amountInput.value;
+        const qrContainer = document.getElementById('qrCodeContainer');
+        const qrError = document.getElementById('qrError');
+
+        qrError.textContent = '';
+        qrContainer.innerHTML = '<p>Đang tạo mã QR, vui lòng chờ...</p>';
+        openQrModal();
+
+        if (!amount || amount < 10000) {
+            qrContainer.innerHTML = '';
+            qrError.textContent = 'Vui lòng nhập số tiền hợp lệ (tối thiểu 10,000đ).';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/payment/qr/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: amount })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Có lỗi xảy ra, vui lòng thử lại.');
+            }
+
+            const data = await response.json();
+
+            qrContainer.innerHTML = `<img src="${data.qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 100%; height: auto; border: 1px solid var(--border-soft); border-radius: 12px;">`;
+
+        } catch (error) {
+            console.error('Error creating QR payment:', error);
+            qrContainer.innerHTML = '';
+            qrError.textContent = `Lỗi: ${error.message}`;
+        }
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>
