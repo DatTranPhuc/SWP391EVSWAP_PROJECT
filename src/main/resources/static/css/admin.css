@@ -9,24 +9,25 @@
 ------------------------------------------ */
 :root {
     --font-family: 'Montserrat', 'Segoe UI', sans-serif;
-    --bg-gradient: linear-gradient(140deg, rgba(15, 22, 40, 0.96) 0%, rgba(36, 52, 88, 0.88) 46%, rgba(83, 105, 160, 0.88) 100%);
-    --bg-image: url("../images/hero.jpg");
-    --bg-light-gray: rgba(227, 235, 248, 0.6);
-    --bg-white: rgba(227, 235, 248, 0.82);
-    --bg-white-strong: rgba(239, 244, 255, 0.94);
-    --accent-primary: #5f7ad6;
-    --accent-secondary: #8aa5ff;
-    --accent-gradient: linear-gradient(135deg, #5365a8, #8aa5ff);
-    --accent-soft: rgba(95, 122, 214, 0.16);
-    --accent-soft-strong: rgba(95, 122, 214, 0.26);
-    --text-dark: #101a2e;
-    --text-light: rgba(16, 26, 46, 0.64);
-    --border-color: rgba(16, 26, 46, 0.14);
-    --border-strong: rgba(16, 26, 46, 0.22);
-    --success-green: #36c48b;
-    --error-red: #f46ba3;
-    --shadow-sm: 0 12px 30px rgba(12, 20, 38, 0.18);
-    --shadow-md: 0 28px 60px rgba(12, 20, 38, 0.24);
+    --bg-gradient: linear-gradient(135deg, rgba(0, 210, 255, 0.82) 0%, rgba(146, 254, 157, 0.78) 45%, rgba(0, 70, 220, 0.75) 100%);
+    --bg-image: url("https://images.unsplash.com/photo-1617817071585-7192c8dbd75b?auto=format&fit=crop&w=1920&q=80");
+    --bg-light-gray: rgba(255, 255, 255, 0.6);
+    --bg-white: rgba(255, 255, 255, 0.78);
+    --bg-white-strong: rgba(255, 255, 255, 0.9);
+    --accent-primary: #0085ff;
+    --accent-secondary: #00bcd4;
+    --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    --accent-soft: rgba(0, 133, 255, 0.12);
+    --accent-soft-strong: rgba(0, 133, 255, 0.22);
+    --text-dark: #0a1f33;
+    --text-light: rgba(10, 31, 51, 0.64);
+    --text-secondary: rgba(10, 31, 51, 0.58);
+    --border-color: rgba(10, 31, 51, 0.12);
+    --border-strong: rgba(10, 31, 51, 0.18);
+    --success-green: #2ecc71;
+    --error-red: #ff5c8a;
+    --shadow-sm: 0 18px 40px rgba(10, 31, 51, 0.16);
+    --shadow-md: 0 30px 70px rgba(10, 31, 51, 0.22);
 }
 
 /* 2. Thiết lập Body và Nền
@@ -57,16 +58,16 @@
 }
 
 .admin-body::before {
-    background: linear-gradient(180deg, rgba(227, 235, 248, 0.78) 0%, rgba(227, 235, 248, 0.38) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.38) 100%);
     backdrop-filter: blur(18px);
 }
 
 .admin-body::after {
     z-index: -3;
     background:
-        radial-gradient(circle at 20% 20%, rgba(95, 122, 214, 0.24), transparent 62%),
-        radial-gradient(circle at 78% 12%, rgba(138, 165, 255, 0.26), transparent 68%),
-        radial-gradient(circle at 50% 115%, rgba(35, 49, 82, 0.35), transparent 74%);
+        radial-gradient(circle at 20% 20%, rgba(0, 133, 255, 0.24), transparent 62%),
+        radial-gradient(circle at 78% 12%, rgba(0, 210, 255, 0.2), transparent 68%),
+        radial-gradient(circle at 50% 115%, rgba(146, 254, 157, 0.28), transparent 74%);
 }
 
 /* 3. Layout chung
@@ -83,9 +84,9 @@
 /* 4. Header (Thanh điều hướng top)
 ------------------------------------------ */
 .admin-top-nav {
-    background: rgba(23, 33, 56, 0.72);
-    border-bottom: 1px solid rgba(227, 235, 248, 0.22);
-    box-shadow: 0 16px 36px rgba(12, 20, 38, 0.22);
+    background: rgba(255, 255, 255, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.62);
+    box-shadow: 0 16px 36px rgba(10, 31, 51, 0.12);
     backdrop-filter: blur(18px);
     padding: 1rem 0;
     position: sticky;
@@ -102,53 +103,54 @@
     align-items: center;
     font-size: 1.5rem;
     font-weight: 700;
-    color: rgba(227, 235, 248, 0.94);
+    color: var(--text-dark);
 }
 .brand-icon {
     font-size: 1.8rem;
     margin-right: 0.5rem;
-    background: rgba(227, 235, 248, 0.12);
-    color: #b7c6ff;
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--accent-primary);
     width: 46px;
     height: 46px;
     border-radius: 16px;
     display: grid;
     place-items: center;
-    box-shadow: inset 0 0 0 1px rgba(227, 235, 248, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(0, 133, 255, 0.18);
 }
 .admin-badge {
     font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(227, 235, 248, 0.9);
-    background: rgba(95, 122, 214, 0.32);
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.7);
     padding: 0.2rem 0.6rem;
     border-radius: 12px;
     margin-left: 0.75rem;
+    border: 1px solid rgba(0, 133, 255, 0.24);
 }
 .nav-links { display: flex; gap: 0.5rem; }
 .nav-link-button {
     font-family: var(--font-family);
     font-weight: 600;
     font-size: 0.9rem;
-    color: rgba(227, 235, 248, 0.76);
+    color: var(--text-secondary);
     padding: 0.6rem 1rem;
-    border-radius: 8px;
+    border-radius: 999px;
     text-decoration: none;
     transition: all 0.2s ease-in-out;
 }
 .nav-link-button:hover {
-    background: rgba(227, 235, 248, 0.12);
-    color: #f0f4ff;
-    box-shadow: inset 0 0 0 1px rgba(227, 235, 248, 0.26);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--accent-primary);
+    box-shadow: 0 12px 24px rgba(0, 133, 255, 0.18);
 }
 .nav-link-button.active {
-    background: rgba(95, 122, 214, 0.24);
-    color: #f7f9ff;
-    box-shadow: inset 0 0 0 1px rgba(143, 165, 255, 0.4);
+    background: rgba(0, 133, 255, 0.16);
+    color: var(--accent-primary);
+    box-shadow: inset 0 0 0 1px rgba(0, 133, 255, 0.24);
 }
 .auth-area { display: flex; align-items: center; gap: 1rem; }
-.auth-area .welcome { font-weight: 500; color: rgba(227, 235, 248, 0.72); font-size: 0.9rem; }
-.auth-area strong { font-weight: 700; color: #f0f4ff; }
+.auth-area .welcome { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
+.auth-area strong { font-weight: 700; color: var(--accent-primary); }
 
 /* 5. Nút bấm (Buttons)
 ------------------------------------------ */
@@ -165,25 +167,25 @@
     font-family: var(--font-family);
 }
 .btn.ghost {
-    background-color: rgba(95, 122, 214, 0.12);
+    background-color: rgba(255, 255, 255, 0.72);
     color: var(--accent-primary);
-    border-color: rgba(95, 122, 214, 0.22);
+    border-color: rgba(0, 133, 255, 0.18);
 }
 .btn.ghost:hover {
-    background-color: rgba(95, 122, 214, 0.2);
+    background-color: rgba(255, 255, 255, 0.88);
     color: var(--accent-secondary);
-    border-color: rgba(95, 122, 214, 0.32);
-    box-shadow: 0 10px 26px rgba(12, 20, 38, 0.2);
+    border-color: rgba(0, 133, 255, 0.3);
+    box-shadow: 0 10px 26px rgba(0, 133, 255, 0.18);
 }
 .btn.primary {
     background: var(--accent-gradient);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 18px 38px rgba(83, 101, 168, 0.38);
+    box-shadow: 0 18px 38px rgba(0, 133, 255, 0.32);
 }
 .btn.primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 24px 50px rgba(83, 101, 168, 0.46);
+    box-shadow: 0 24px 50px rgba(0, 133, 255, 0.4);
 }
 
 /* 6. Nội dung chính (Main Content)
@@ -205,8 +207,8 @@ main.container {
     border-radius: 16px;
     font-weight: 500;
     border: 1px solid transparent;
-    background: rgba(227, 235, 248, 0.78);
-    box-shadow: 0 12px 28px rgba(12, 20, 38, 0.18);
+    background: var(--bg-white);
+    box-shadow: 0 12px 28px rgba(10, 31, 51, 0.16);
 }
 .admin-alert.success { background-color: rgba(46, 204, 113, 0.18); border-color: rgba(46, 204, 113, 0.35); color: #0f5132; }
 .admin-alert.error { background-color: rgba(255, 92, 138, 0.18); border-color: rgba(255, 92, 138, 0.35); color: #8a1d44; }
@@ -220,7 +222,7 @@ main.container {
     border-radius: 18px;
     padding: 2rem;
     box-shadow: var(--shadow-sm);
-    border: 1px solid rgba(227, 235, 248, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.62);
     transition: all 0.25s ease-in-out;
     text-decoration: none;
     color: var(--text-dark);
@@ -229,7 +231,7 @@ main.container {
 .admin-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-md);
-    border-color: rgba(95, 122, 214, 0.42);
+    border-color: rgba(0, 133, 255, 0.3);
 }
 .card-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-primary); }
 .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -240,10 +242,10 @@ main.container {
 ------------------------------------------ */
 .admin-footer {
     background-color: transparent;
-    border-top: 1px solid rgba(227, 235, 248, 0.28);
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
     padding: 1.5rem 0;
     text-align: center;
-    color: rgba(227, 235, 248, 0.72);
+    color: var(--text-secondary);
     font-size: 0.9rem;
     margin-top: auto;
 }
@@ -262,7 +264,7 @@ main.container {
     box-shadow: var(--shadow-sm);
     max-width: 800px;
     margin: 0 auto; /* Căn giữa form */
-    border: 1px solid rgba(227, 235, 248, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.68);
     backdrop-filter: blur(10px);
 }
 .admin-form-card h2 {
@@ -290,13 +292,13 @@ main.container {
     font-family: var(--font-family);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    background: rgba(239, 244, 255, 0.92);
+    background: rgba(255, 255, 255, 0.88);
     box-sizing: border-box; /* Quan trọng */
     transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 .form-group input:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(95, 122, 214, 0.2);
+    box-shadow: 0 0 0 3px rgba(0, 133, 255, 0.2);
     outline: none;
 }
 .form-note {
@@ -323,7 +325,7 @@ main.container {
     padding: 2.5rem;
     box-shadow: var(--shadow-sm);
     overflow-x: auto; /* Cho phép cuộn ngang trên mobile */
-    border: 1px solid rgba(227, 235, 248, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.68);
     backdrop-filter: blur(10px);
 }
 .content-header {
@@ -349,7 +351,7 @@ main.container {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     width: 250px;
-    background: rgba(239, 244, 255, 0.92);
+    background: rgba(255, 255, 255, 0.88);
 }
 .admin-search .btn {
     padding: 0.6rem 1.2rem; /* Nút nhỏ hơn */
@@ -372,13 +374,13 @@ main.container {
 .admin-table th {
     font-weight: 600;
     color: var(--text-dark);
-    background-color: rgba(95, 122, 214, 0.12);
+    background-color: rgba(0, 133, 255, 0.12);
 }
 .admin-table tr:last-child td {
     border-bottom: none;
 }
 .admin-table tr:hover {
-    background-color: rgba(227, 235, 248, 0.55);
+    background-color: rgba(0, 133, 255, 0.08);
 }
 .status-badge {
     padding: 0.25rem 0.6rem;
