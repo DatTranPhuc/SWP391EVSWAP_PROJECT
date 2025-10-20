@@ -54,8 +54,8 @@ body.dashboard-body {
     inset: 0;
     pointer-events: none;
     background: radial-gradient(circle at 20% 20%, rgba(0, 133, 255, 0.22), transparent 55%),
-                radial-gradient(circle at 80% 10%, rgba(0, 210, 255, 0.18), transparent 60%),
-                radial-gradient(circle at 50% 120%, rgba(146, 254, 157, 0.22), transparent 70%);
+    radial-gradient(circle at 80% 10%, rgba(0, 210, 255, 0.18), transparent 60%),
+    radial-gradient(circle at 50% 120%, rgba(146, 254, 157, 0.22), transparent 70%);
     z-index: -2;
 }
 
@@ -85,12 +85,33 @@ body.dashboard-body {
 .brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px; /* gọn hơn */
     font-weight: 700;
     font-size: 1.2rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-primary);
+}
+
+/* ===== Logo ảnh: nhỏ gọn, không méo ===== */
+.brand-logo {
+    width: clamp(22px, 2.4vw, 28px);
+    height: clamp(22px, 2.4vw, 28px);
+    object-fit: contain;   /* giữ tỉ lệ, không cắt */
+    display: block;
+}
+
+.brand-logo--showcase {
+    width: clamp(26px, 3vw, 34px);
+    height: clamp(26px, 3vw, 34px);
+    object-fit: contain;
+}
+
+/* Nếu logo xuất hiện trong preview header, đồng bộ kích thước */
+.preview-header .brand-logo {
+    width: clamp(22px, 2.4vw, 28px);
+    height: clamp(22px, 2.4vw, 28px);
+    object-fit: contain;
 }
 
 .brand-icon {
