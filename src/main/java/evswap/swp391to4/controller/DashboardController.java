@@ -53,7 +53,7 @@ public class DashboardController {
         }
 
         if ("Phương tiện".equalsIgnoreCase(normalizedFeature)) {
-            return "redirect:/vehicles/manage";
+            return "redirect:/vehicles";
         }
 
         if ("Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
