@@ -52,39 +52,8 @@
         <p class="alert" th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
     </div>
 
-    <section id="overview" class="hero-section container">
-        <div class="hero-content">
-            <p class="hero-subtitle">Tương lai xanh cho Việt Nam</p>
-            <h1 class="hero-title">Đổi pin xe điện <span>chỉ trong 3 phút</span></h1>
-            <p class="hero-description">Hệ thống đổi pin thông minh với công nghệ tiên tiến, trạm rộng khắp và đội ngũ hỗ trợ nhanh chóng. Trải nghiệm tương lai di chuyển xanh ngay hôm nay.</p>
-            <div class="hero-cta">
-                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
-                <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
-            </div>
-            <dl class="hero-stats">
-                <div class="hero-stat">
-                    <dt>Trạm hoạt động</dt>
-                    <dd>156+</dd>
-                </div>
-                <div class="hero-stat">
-                    <dt>Khoảng cách trung bình</dt>
-                    <dd>2.3 km</dd>
-                </div>
-                <div class="hero-stat">
-                    <dt>Đánh giá người dùng</dt>
-                    <dd>4.9/5.0</dd>
-                </div>
-            </dl>
-        </div>
-        <div class="hero-visual">
-            <div class="hero-image-wrapper">
-                <img src="https://i.imgur.com/KRsyFsL.jpeg" alt="Hình ảnh phương tiện điện hiện đại" class="hero-image" loading="lazy">
-            </div>
-            <div class="hero-image-caption">
-                <span class="caption-badge">The Future of Transportation</span>
-                <p>Khám phá hệ sinh thái xe điện cùng EV SWAP với công nghệ đổi pin tiên tiến nhất.</p>
-            </div>
-        </div>
+    <section id="overview" class="hero-banner">
+        <img src="https://i.imgur.com/KRsyFsL.jpeg" alt="Hình ảnh phương tiện điện hiện đại" class="hero-banner__image" loading="lazy">
     </section>
 
     <section class="stats-section container">
