@@ -16,7 +16,8 @@
 <header class="top-nav">
     <div class="container nav-inner">
         <div class="brand">
-            <span class="brand-icon">🚗</span>
+            <!-- Logo thay cho emoji -->
+            <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
             <span class="brand-name">EV SWAP</span>
         </div>
         <nav class="nav-links" aria-label="Điều hướng chính">
@@ -146,7 +147,8 @@
     <section id="stations" class="preview-section container">
         <div class="preview-card">
             <div class="preview-header">
-                <span class="brand-icon">🚗</span>
+                <!-- Dùng logo ở thẻ preview luôn cho đồng bộ -->
+                <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
                 <h3>EV SWAP</h3>
                 <p>Hệ thống đổi pin xe máy điện thông minh nhất Việt Nam.</p>
             </div>
@@ -181,7 +183,8 @@
         <button type="button" class="login-modal__close" aria-label="Đóng" onclick="closeLoginModal()">×</button>
         <div class="login-modal__content">
             <div class="login-showcase">
-                <span class="brand-icon">🚗</span>
+                <!-- Logo trong modal -->
+                <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo brand-logo--showcase">
                 <h3 id="login-modal-title">EV SWAP</h3>
                 <p>Đăng nhập để truy cập đầy đủ các chức năng đổi pin thông minh.</p>
                 <ul>
@@ -211,4 +214,39 @@
 </div>
 
 <script>
-    const loginM
+    const loginModal = document.getElementById('login-modal');
+    const modalEmailInput = document.getElementById('modal-email');
+
+    function openLoginModal() {
+        if (loginModal) {
+            loginModal.removeAttribute('hidden');
+            document.body.classList.add('modal-open');
+            if (modalEmailInput) {
+                modalEmailInput.focus();
+            }
+        }
+    }
+
+    function closeLoginModal() {
+        if (loginModal) {
+            loginModal.setAttribute('hidden', '');
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    // Gắn mở modal cho các nút bị khóa khi chưa đăng nhập
+    document.querySelectorAll('.nav-link-button--locked').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            openLoginModal();
+        });
+    });
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
+            closeLoginModal();
+        }
+    });
+</script>
+</body>
+</html>
