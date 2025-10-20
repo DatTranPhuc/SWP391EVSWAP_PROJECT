@@ -1,6 +1,8 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.AdminService;
 import evswap.swp391to4.service.DriverService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final DriverService driverService;
+    private final AdminService adminService;
 
     // ===== LOGIN =====
     @GetMapping("/login")
@@ -26,13 +29,27 @@ public class AuthController {
                         HttpSession session,
                         RedirectAttributes redirect) {
         try {
+            // Bước 1: Thử đăng nhập với tư cách DRIVER
             Driver driver = driverService.login(email, password);
-            session.setAttribute("loggedInDriver", driver);
+            session.setAttribute("loggedInDriver", driver); // Lưu driver vào session
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
-            return "redirect:/dashboard"; // Thay bằng trang sau login
-        } catch (Exception e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
+            return "redirect:/dashboard"; // Tới trang dashboard của DRIVER
+
+        } catch (Exception driverException) {
+            // Nếu đăng nhập Driver thất bại...
+            try {
+                // Bước 2: Thử đăng nhập với tư cách ADMIN
+                Admin admin = adminService.login(email, password);
+                session.setAttribute("loggedInAdmin", admin); // Lưu admin vào session
+                redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
+                return "redirect:/admin/dashboard"; // Tới trang dashboard của ADMIN
+
+            } catch (Exception adminException) {
+                // Nếu cả Driver và Admin đều thất bại...
+                // Hiển thị thông báo lỗi (có thể lấy từ adminException hoặc driverException)
+                redirect.addFlashAttribute("loginError", adminException.getMessage());
+                return "redirect:/login";
+            }
         }
     }
 
