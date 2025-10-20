@@ -14,9 +14,7 @@
 <header class="admin-top-nav">
     <div class="container nav-inner">
         <div class="brand">
-            <span class="brand-icon">🚗</span>
-            <span class="brand-name">EV SWAP</span>
-            <span class="admin-badge">Admin Panel</span>
+            <span class="brand-icon">🚗</span> <span class="brand-name">EV SWAP</span> <span class="admin-badge">Admin Panel</span>
         </div>
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
@@ -44,15 +42,14 @@
             <a th:href="@{/admin/staff/add}" class="btn primary">Thêm Staff ⁺</a>
         </div>
 
+        <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
+
         <table class="admin-table">
             <thead>
             <tr>
-                <th>Staff ID</th>
-                <th>Email</th>
-                <th>Họ tên</th>
-                <th>Trạng thái</th>
-                <th>Station ID</th>
-                <th>Hành động</th>
+                <th>Staff ID</th> <th>Email</th> <th>Họ tên</th>
+                <th>Trạng thái</th> <th>Station ID</th> <th>Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -66,11 +63,12 @@
                 </td>
                 <td th:text="${staff.stationId}">101</td>
                 <td class="action-links">
-                    <a href="#" class="edit-link">Sửa</a>
-                    <a href="#" class="delete-link">Xóa</a>
+                    <a th:href="@{/admin/staff/edit/{id}(id=${staff.staffId})}" class="edit-link">Sửa</a>
+                    <a th:href="@{/admin/staff/delete/{id}(id=${staff.staffId})}"
+                       class="delete-link"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên này?');">Xóa</a>
                 </td>
             </tr>
-
             <tr th:if="${#lists.isEmpty(staffList)}">
                 <td colspan="6" class="empty-state">Không tìm thấy nhân viên nào.</td>
             </tr>

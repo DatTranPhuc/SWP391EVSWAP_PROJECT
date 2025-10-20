@@ -14,9 +14,7 @@
 <header class="admin-top-nav">
     <div class="container nav-inner">
         <div class="brand">
-            <span class="brand-icon">🚗</span>
-            <span class="brand-name">EV SWAP</span>
-            <span class="admin-badge">Admin Panel</span>
+            <span class="brand-icon">🚗</span> <span class="brand-name">EV SWAP</span> <span class="admin-badge">Admin Panel</span>
         </div>
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
@@ -44,15 +42,14 @@
             <a th:href="@{/admin/station/add}" class="btn primary">Thêm Trạm ⁺</a>
         </div>
 
+        <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
+
         <table class="admin-table">
             <thead>
             <tr>
-                <th>Station ID</th>
-                <th>Tên trạm</th>
-                <th>Địa chỉ</th>
-                <th>Trạng thái</th>
-                <th>Tọa độ (Lat, Lng)</th>
-                <th>Hành động</th>
+                <th>ID</th> <th>Tên trạm</th> <th>Địa chỉ</th>
+                <th>Trạng thái</th> <th>Tọa độ (Lat, Lng)</th> <th>Hành động</th>
             </tr>
             </thead>
             <tbody>
@@ -60,25 +57,18 @@
                 <td th:text="${station.stationId}">1</td>
                 <td th:text="${station.name}">Trạm 1</td>
                 <td th:text="${station.address}">123 Đường ABC</td>
-
                 <td>
                     <span th:if="${station.status == 'active'}" class="status-badge active">Active</span>
-                    <span th:unless="${station.status == 'active'}"
-                          class="status-badge inactive"
-                          th:text="${station.status ?: 'Unknown'}">
-                          </span>
+                    <span th:unless="${station.status == 'active'}" class="status-badge inactive" th:text="${station.status ?: 'Unknown'}">Closed</span>
                 </td>
-
-                <td th:text="${station.latitude != null and station.longitude != null} ? |${station.latitude}, ${station.longitude}| : 'Chưa có'">
-                    10.123, 106.456
-                </td>
-
+                <td th:text="${station.latitude != null and station.longitude != null} ? |${station.latitude}, ${station.longitude}| : 'Chưa có'">10.123, 106.456</td>
                 <td class="action-links">
-                    <a href="#" class="edit-link">Sửa</a>
-                    <a href="#" class="delete-link">Xóa</a>
+                    <a th:href="@{/admin/station/edit/{id}(id=${station.stationId})}" class="edit-link">Sửa</a>
+                    <a th:href="@{/admin/station/delete/{id}(id=${station.stationId})}"
+                       class="delete-link"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa trạm này? (Kiểm tra xem còn nhân viên nào ở trạm không)');">Xóa</a>
                 </td>
             </tr>
-
             <tr th:if="${stationList == null or #lists.isEmpty(stationList)}">
                 <td colspan="6" class="empty-state">Không tìm thấy trạm nào.</td>
             </tr>

@@ -2,179 +2,217 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
+import evswap.swp391to4.dto.StaffUpdateRequest; // <-- Import DTO Sửa Staff
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
-import jakarta.validation.Valid; // Import cho @Valid
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult; // Import để hứng lỗi
-import org.springframework.validation.FieldError; // Import để lấy thông tin lỗi
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // <-- Import RedirectAttributes
 
-import java.util.List; // Import cho List
+import java.util.List;
 
-/**
- * Lớp Controller (Người Phục Vụ 🧑‍✈️)
- * "Bắt" tất cả các URL bắt đầu bằng /admin
- * và ra lệnh cho các Service (Bộ não) tương ứng.
- */
 @Controller
-@RequestMapping("/admin") // Tất cả URL trong file này đều bắt đầu bằng /admin
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
-    // Controller "ra lệnh" cho 2 Service này
     private final StaffService staffService;
     private final StationService stationService;
 
     // ====================== VIEW DASHBOARD ======================
-    /**
-     * Hiển thị trang Dashboard chính của Admin.
-     * Bắt URL: GET /admin/dashboard
-     */
     @GetMapping("/dashboard")
     public String dashboard() {
-        return "admin/dashboard"; // Trả về file admin/dashboard.html
+        return "admin/dashboard";
     }
 
-    // ====================== STAFF ======================
+    // ====================== STAFF (XEM VÀ TẠO) ======================
 
-    /**
-     * CHỨC NĂNG MỚI: Xử lý xem danh sách VÀ tìm kiếm nhân viên.
-     * Bắt URL: GET /admin/staff
-     * (hoặc GET /admin/staff?search=tên_cần_tìm)
-     */
     @GetMapping("/staff")
     public String listStaff(@RequestParam(value = "search", required = false) String search, Model model) {
-
-        // 1. Ra lệnh cho Service: "Lấy danh sách nhân viên (có tìm kiếm)"
         List<StaffResponse> staffList = staffService.getAllStaff(search);
-
-        // 2. Bỏ danh sách vào "túi" (Model) để gửi cho HTML
         model.addAttribute("staffList", staffList);
-        // 3. Bỏ từ khóa tìm kiếm vào "túi" (để hiển thị lại trên ô search)
         model.addAttribute("search", search);
-
-        // 4. Trả về file admin/list-staff.html
         return "admin/list-staff";
     }
 
-    /**
-     * Hiển thị form "Thêm nhân viên".
-     * Bắt URL: GET /admin/staff/add
-     */
     @GetMapping("/staff/add")
     public String addStaffForm(Model model) {
-        // Đưa 1 đối tượng rỗng ra form
         model.addAttribute("staff", new StaffCreateRequest());
-        return "admin/add-staff"; // Trả về file admin/add-staff.html
+        return "admin/add-staff";
     }
 
-    /**
-     * CHỨC NĂNG CẬP NHẬT: Xử lý khi bấm nút "Submit" trên form thêm Staff.
-     * Đã thêm @Valid và BindingResult để kiểm tra lỗi.
-     * Bắt URL: POST /admin/staff/add
-     */
     @PostMapping("/staff/add")
     public String addStaffSubmit(
-            @Valid @ModelAttribute("staff") StaffCreateRequest staff, // Bật @Valid
-            BindingResult bindingResult, // Hứng lỗi (nếu có)
+            @Valid @ModelAttribute("staff") StaffCreateRequest staff,
+            BindingResult bindingResult,
             Model model
     ) {
-
-        // 1. KIỂM TRA LỖI VALIDATION TRƯỚC (lỗi @NotBlank, @Email...)
         if (bindingResult.hasErrors()) {
-            // Nếu có lỗi -> Gửi lỗi về lại form HTML
             for (FieldError error : bindingResult.getFieldErrors()) {
                 model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
             }
-            model.addAttribute("staff", staff); // Giữ lại dữ liệu người dùng đã gõ
-            return "admin/add-staff"; // Trả về lại trang form, KHÔNG gọi Service
+            model.addAttribute("staff", staff);
+            return "admin/add-staff";
         }
-
-        // 2. NẾU KHÔNG CÓ LỖI VALIDATION -> MỚI GỌI SERVICE
         try {
-            // Ra lệnh cho Service: "Tạo nhân viên mới"
             staffService.createStaff(staff);
             model.addAttribute("success", "Tạo nhân viên thành công!");
-            model.addAttribute("staff", new StaffCreateRequest()); // Xóa form
+            model.addAttribute("staff", new StaffCreateRequest());
         } catch (Exception e) {
-            // Đây là lỗi từ Service (ví dụ: "Email đã tồn tại")
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("staff", staff); // Giữ lại dữ liệu
+            model.addAttribute("staff", staff);
         }
-
-        return "admin/add-staff"; // Trả về lại trang form (để hiển thị success/error)
+        return "admin/add-staff";
     }
 
-    // ====================== STATION ======================
+    // ====================== STAFF (SỬA VÀ XÓA) ======================
+
+    @GetMapping("/staff/edit/{id}")
+    public String editStaffForm(@PathVariable Integer id, Model model) {
+        try {
+            StaffUpdateRequest staff = staffService.getStaffDetails(id);
+            model.addAttribute("staff", staff);
+            return "admin/edit-staff"; // Trả về trang edit-staff.html
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/admin/staff";
+        }
+    }
+
+    @PostMapping("/staff/edit/{id}")
+    public String editStaffSubmit(@PathVariable Integer id,
+                                  @Valid @ModelAttribute("staff") StaffUpdateRequest staff,
+                                  BindingResult bindingResult,
+                                  Model model,
+                                  RedirectAttributes redirect) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
+            }
+            model.addAttribute("staff", staff);
+            return "admin/edit-staff"; // Trả về trang edit nếu lỗi validation
+        }
+        try {
+            staffService.updateStaff(id, staff);
+            redirect.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
+            return "redirect:/admin/staff"; // Về trang danh sách
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("staff", staff);
+            return "admin/edit-staff"; // Ở lại trang edit
+        }
+    }
+
+    @GetMapping("/staff/delete/{id}")
+    public String deleteStaff(@PathVariable Integer id, RedirectAttributes redirect) {
+        try {
+            staffService.deleteStaff(id);
+            redirect.addFlashAttribute("success", "Xóa nhân viên thành công!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/staff"; // Về trang danh sách
+    }
+
+
+    // ====================== STATION (XEM VÀ TẠO) ======================
 
     @GetMapping("/station")
     public String listStations(@RequestParam(value = "search", required = false) String search, Model model) {
-
         List<StationResponse> stationList;
-
-        // Logic tìm kiếm (dùng các hàm bạn đã có)
         if (search == null || search.isBlank()) {
-            // Nếu không tìm -> Lấy tất cả
             stationList = stationService.getAllStations();
         } else {
-            // Nếu có tìm -> Gọi hàm searchByName
             stationList = stationService.searchByName(search);
         }
-
         model.addAttribute("stationList", stationList);
         model.addAttribute("search", search);
-
-        return "admin/list-station"; // Trả về file admin/list-station.html
+        return "admin/list-station";
     }
 
-    /**
-     * Hiển thị form "Thêm trạm".
-     * Bắt URL: GET /admin/station/add
-     */
     @GetMapping("/station/add")
     public String addStationForm(Model model) {
         model.addAttribute("station", new StationCreateRequest());
         return "admin/add-station";
     }
 
-    /**
-     * CHỨC NĂNG CẬP NHẬT: Xử lý khi bấm nút "Submit" trên form thêm Station.
-     * Đã thêm @Valid và BindingResult để kiểm tra lỗi.
-     * Bắt URL: POST /admin/station/add
-     */
     @PostMapping("/station/add")
     public String addStationSubmit(
-            @Valid @ModelAttribute("station") StationCreateRequest station, // Bật @Valid
-            BindingResult bindingResult, // Hứng lỗi
+            @Valid @ModelAttribute("station") StationCreateRequest station,
+            BindingResult bindingResult,
             Model model
     ) {
-
-        // 1. KIỂM TRA LỖI VALIDATION TRƯỚC (tên trống, tọa độ sai...)
         if (bindingResult.hasErrors()) {
-            // Nếu có lỗi -> Gửi lỗi về lại form HTML
             for (FieldError error : bindingResult.getFieldErrors()) {
                 model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
             }
-            model.addAttribute("station", station); // Giữ lại dữ liệu đã gõ
-            return "admin/add-station"; // Trả về lại trang form, KHÔNG gọi Service
+            model.addAttribute("station", station);
+            return "admin/add-station";
         }
-
-        // 2. NẾU KHÔNG CÓ LỖI -> MỚI GỌI SERVICE
         try {
             stationService.createStation(station);
             model.addAttribute("success", "Tạo trạm thành công!");
-            model.addAttribute("station", new StationCreateRequest()); // Xóa form
+            model.addAttribute("station", new StationCreateRequest());
         } catch (Exception e) {
-            // Lỗi từ Service (ví dụ: tên trạm đã tồn tại)
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("station", station); // Giữ lại dữ liệu
+            model.addAttribute("station", station);
         }
+        return "admin/add-station";
+    }
 
-        return "admin/add-station"; // Trả về lại trang form (để hiển thị success/error)
+    // ====================== STATION (SỬA VÀ XÓA) ======================
+
+    @GetMapping("/station/edit/{id}")
+    public String editStationForm(@PathVariable Integer id, Model model) {
+        try {
+            StationResponse station = stationService.findById(id);
+            model.addAttribute("station", station);
+            return "admin/edit-station"; // Trả về trang edit-station.html
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/admin/station";
+        }
+    }
+
+    @PostMapping("/station/edit/{id}")
+    public String editStationSubmit(@PathVariable Integer id,
+                                    @Valid @ModelAttribute("station") StationCreateRequest station,
+                                    BindingResult bindingResult,
+                                    Model model,
+                                    RedirectAttributes redirect) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
+            }
+            model.addAttribute("station", station);
+            return "admin/edit-station";
+        }
+        try {
+            stationService.updateStation(id, station);
+            redirect.addFlashAttribute("success", "Cập nhật trạm thành công!");
+            return "redirect:/admin/station"; // Về trang danh sách
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("station", station);
+            return "admin/edit-station"; // Ở lại trang edit
+        }
+    }
+
+    @GetMapping("/station/delete/{id}")
+    public String deleteStation(@PathVariable Integer id, RedirectAttributes redirect) {
+        try {
+            stationService.deleteStation(id);
+            redirect.addFlashAttribute("success", "Xóa trạm thành công!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/station"; // Về trang danh sách
     }
 }
