@@ -52,46 +52,37 @@
         <p class="alert" th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
     </div>
 
-    <section id="overview" class="hero-section container">
-        <div class="hero-content">
-            <p class="hero-subtitle">Tương lai xanh cho Việt Nam</p>
-            <h1 class="hero-title">Đổi pin xe điện <span>chỉ trong 3 phút</span></h1>
-            <p class="hero-description">Hệ thống đổi pin thông minh với công nghệ tiên tiến, trạm rộng khắp và đội ngũ hỗ trợ nhanh chóng. Trải nghiệm tương lai di chuyển xanh ngay hôm nay.</p>
-            <div class="hero-cta">
-                <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
-                <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
-            </div>
-        </div>
-        <div class="hero-card">
-            <div class="card-icon">🚗</div>
-            <div class="card-metric">
-                <span class="metric-label">Số điểm đổi pin</span>
-                <span class="metric-value">156 trạm</span>
-            </div>
-            <div class="card-metric">
-                <span class="metric-label">Khoảng cách gần nhất</span>
-                <span class="metric-value">2.3 km</span>
-            </div>
-            <div class="card-rating">
-                <span class="metric-label">Đánh giá</span>
-                <div class="rating-value">⭐ 4.9/5.0</div>
-            </div>
-        </div>
+    <!-- Hero: dùng ảnh local /images/hero.jpg -->
+    <section id="overview" class="hero-banner">
+        <img th:src="@{/images/hero.jpg}"
+             src="/images/hero.jpg"
+             alt="Hình ảnh phương tiện điện hiện đại"
+             class="hero-banner__image"
+             loading="lazy">
     </section>
 
     <section class="stats-section container">
-        <div class="stat-card">
-            <div class="stat-value">50+</div>
-            <div class="stat-label">Trạm đổi pin</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">3 phút</div>
-            <div class="stat-label">Thời gian đổi</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">24/7</div>
-            <div class="stat-label">Dịch vụ</div>
-        </div>
+        <article class="stat-card">
+            <header>
+                <h3>50+</h3>
+                <p>Trạm đổi pin</p>
+            </header>
+            <p>Phủ sóng khắp các thành phố lớn, luôn sẵn sàng phục vụ bạn mọi lúc.</p>
+        </article>
+        <article class="stat-card">
+            <header>
+                <h3>3 phút</h3>
+                <p>Thời gian đổi</p>
+            </header>
+            <p>Quy trình tự động và an toàn, rút ngắn tối đa thời gian chờ đợi.</p>
+        </article>
+        <article class="stat-card">
+            <header>
+                <h3>24/7</h3>
+                <p>Dịch vụ</p>
+            </header>
+            <p>Đội ngũ hỗ trợ tận tâm, đảm bảo hành trình của bạn không bị gián đoạn.</p>
+        </article>
     </section>
 
     <section id="benefits" class="feature-section container">
@@ -220,40 +211,4 @@
 </div>
 
 <script>
-    const loginModal = document.getElementById('login-modal');
-    const modalEmailInput = document.getElementById('modal-email');
-
-    function openLoginModal() {
-        if (loginModal) {
-            loginModal.removeAttribute('hidden');
-            document.body.classList.add('modal-open');
-            if (modalEmailInput) {
-                modalEmailInput.focus();
-            }
-        }
-    }
-
-    function closeLoginModal() {
-        if (loginModal) {
-            loginModal.setAttribute('hidden', '');
-            document.body.classList.remove('modal-open');
-        }
-    }
-
-    // Script này tìm tất cả các nút có class '--locked' và gắn sự kiện click
-    // Khi bấm vào, nó sẽ gọi hàm mở modal đăng nhập
-    document.querySelectorAll('.nav-link-button--locked').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault(); // Ngăn chặn hành vi mặc định (nếu có)
-            openLoginModal();
-        });
-    });
-
-    window.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
-            closeLoginModal();
-        }
-    });
-</script>
-</body>
-</html>
+    const loginM
