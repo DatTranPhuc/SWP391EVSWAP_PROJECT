@@ -2,19 +2,19 @@
 
 /* ========== BIẾN MÀU SẮC & PHONG CÁCH ========== */
 :root {
-    --bg-gradient: linear-gradient(140deg, rgba(10, 18, 48, 0.96) 0%, rgba(20, 44, 102, 0.9) 45%, rgba(84, 150, 255, 0.86) 100%);
-    --bg-image: url("https://images.unsplash.com/photo-1617817071585-7192c8dbd75b?auto=format&fit=crop&w=1920&q=80");
-    --surface: rgba(16, 40, 96, 0.7);
-    --surface-strong: rgba(20, 50, 114, 0.82);
-    --surface-soft: rgba(14, 36, 90, 0.58);
-    --accent-primary: #79c4ff;
-    --accent-secondary: #45d6ff;
+    --bg-gradient: linear-gradient(145deg, rgba(42, 82, 155, 0.88) 0%, rgba(74, 142, 208, 0.86) 45%, rgba(190, 234, 255, 0.88) 100%);
+    --bg-image: url("https://images.unsplash.com/photo-1529429617124-aee7fc5cfcf0?auto=format&fit=crop&w=1920&q=80");
+    --surface: rgba(255, 255, 255, 0.32);
+    --surface-strong: rgba(255, 255, 255, 0.5);
+    --surface-soft: rgba(255, 255, 255, 0.24);
+    --accent-primary: #8fd7ff;
+    --accent-secondary: #62f1d3;
     --accent-success: #63f5c4;
-    --text-primary: #f2f6ff;
-    --text-secondary: rgba(242, 246, 255, 0.76);
-    --text-muted: rgba(242, 246, 255, 0.6);
-    --border-soft: rgba(121, 196, 255, 0.3);
-    --shadow-soft: 0 26px 64px rgba(3, 16, 52, 0.5);
+    --text-primary: #f8fbff;
+    --text-secondary: rgba(248, 251, 255, 0.82);
+    --text-muted: rgba(248, 251, 255, 0.66);
+    --border-soft: rgba(143, 215, 255, 0.4);
+    --shadow-soft: 0 26px 64px rgba(24, 62, 124, 0.32);
     --font-main: 'Montserrat', 'Segoe UI', sans-serif;
     --radius-md: 22px;
     --radius-sm: 12px;
@@ -42,7 +42,7 @@ body.dashboard-body {
 .background-gradient {
     position: fixed;
     inset: 0;
-    background: rgba(12, 30, 76, 0.78);
+    background: rgba(74, 126, 196, 0.42);
     backdrop-filter: blur(20px);
     pointer-events: none;
     z-index: -2;
@@ -51,8 +51,8 @@ body.dashboard-body {
 .background-glow {
     position: fixed;
     inset: 0;
-    background: radial-gradient(720px at 12% 10%, rgba(121, 196, 255, 0.28), transparent 62%),
-    radial-gradient(680px at 82% 18%, rgba(69, 214, 255, 0.24), transparent 68%);
+    background: radial-gradient(720px at 12% 10%, rgba(165, 226, 255, 0.34), transparent 62%),
+    radial-gradient(680px at 82% 18%, rgba(120, 243, 214, 0.3), transparent 68%);
     pointer-events: none;
     z-index: -1;
 }
@@ -134,23 +134,23 @@ body.dashboard-body {
 
 .btn.primary {
     background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
-    color: #031034;
-    box-shadow: 0 16px 36px rgba(3, 16, 52, 0.5);
+    color: #04364f;
+    box-shadow: 0 16px 36px rgba(24, 62, 124, 0.3);
 }
 
 .btn.primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 22px 48px rgba(3, 16, 52, 0.58);
+    box-shadow: 0 22px 48px rgba(24, 62, 124, 0.38);
 }
 
 .btn.ghost {
-    background: rgba(18, 44, 100, 0.62);
+    background: rgba(255, 255, 255, 0.22);
     color: var(--accent-secondary);
     border: 1px solid var(--border-soft);
 }
 
 .btn.ghost:hover {
-    background: rgba(21, 54, 118, 0.82);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .btn.outline {
@@ -279,16 +279,16 @@ input, select {
     border: 1px solid var(--border-soft);
     width: 100%;
     font-size: 1rem;
-    background: rgba(11, 30, 74, 0.58);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.2);
+    color: #0f2a4c;
     outline: none;
     transition: all .2s ease;
 }
 
 input:focus, select:focus {
     border-color: var(--accent-secondary);
-    background: rgba(12, 32, 78, 0.68);
-    box-shadow: 0 0 0 3px rgba(121, 196, 255, 0.26);
+    background: rgba(255, 255, 255, 0.32);
+    box-shadow: 0 0 0 3px rgba(143, 215, 255, 0.3);
 }
 
 /* ========== CHI TIẾT TRẠM ========== */
@@ -339,7 +339,7 @@ input:focus, select:focus {
 .modal-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(3, 16, 52, 0.58);
+    background: rgba(24, 62, 124, 0.46);
     backdrop-filter: blur(18px);
 }
 
@@ -350,7 +350,7 @@ input:focus, select:focus {
     padding: 32px;
     width: min(540px, 92vw);
     border: 1px solid var(--border-soft);
-    box-shadow: 0 30px 72px rgba(3, 16, 52, 0.55);
+    box-shadow: 0 30px 72px rgba(24, 62, 124, 0.34);
     display: grid;
     gap: 18px;
     z-index: 1;
@@ -366,14 +366,14 @@ input:focus, select:focus {
     height: 36px;
     border-radius: var(--radius-sm);
     border: none;
-    background: rgba(18, 44, 100, 0.72);
+    background: rgba(255, 255, 255, 0.28);
     color: var(--accent-secondary);
     font-size: 24px;
     cursor: pointer;
     line-height: 36px;
 }
 
-.modal-close:hover { background: rgba(21, 54, 118, 0.86); }
+.modal-close:hover { background: rgba(255, 255, 255, 0.36); }
 
 .modal-form {
     display: grid;
