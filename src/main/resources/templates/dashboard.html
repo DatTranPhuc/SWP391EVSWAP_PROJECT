@@ -61,37 +61,54 @@
                 <a th:href="@{/register}" class="btn primary">Đăng ký ngay</a>
                 <a th:href="@{/login}" class="btn outline">Đã có tài khoản</a>
             </div>
+            <dl class="hero-stats">
+                <div class="hero-stat">
+                    <dt>Trạm hoạt động</dt>
+                    <dd>156+</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt>Khoảng cách trung bình</dt>
+                    <dd>2.3 km</dd>
+                </div>
+                <div class="hero-stat">
+                    <dt>Đánh giá người dùng</dt>
+                    <dd>4.9/5.0</dd>
+                </div>
+            </dl>
         </div>
-        <div class="hero-card">
-            <div class="card-icon">🚗</div>
-            <div class="card-metric">
-                <span class="metric-label">Số điểm đổi pin</span>
-                <span class="metric-value">156 trạm</span>
+        <div class="hero-visual">
+            <div class="hero-image-wrapper">
+                <img src="https://i.imgur.com/KRsyFsL.jpeg" alt="Hình ảnh phương tiện điện hiện đại" class="hero-image" loading="lazy">
             </div>
-            <div class="card-metric">
-                <span class="metric-label">Khoảng cách gần nhất</span>
-                <span class="metric-value">2.3 km</span>
-            </div>
-            <div class="card-rating">
-                <span class="metric-label">Đánh giá</span>
-                <div class="rating-value">⭐ 4.9/5.0</div>
+            <div class="hero-image-caption">
+                <span class="caption-badge">The Future of Transportation</span>
+                <p>Khám phá hệ sinh thái xe điện cùng EV SWAP với công nghệ đổi pin tiên tiến nhất.</p>
             </div>
         </div>
     </section>
 
     <section class="stats-section container">
-        <div class="stat-card">
-            <div class="stat-value">50+</div>
-            <div class="stat-label">Trạm đổi pin</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">3 phút</div>
-            <div class="stat-label">Thời gian đổi</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">24/7</div>
-            <div class="stat-label">Dịch vụ</div>
-        </div>
+        <article class="stat-card">
+            <header>
+                <h3>50+</h3>
+                <p>Trạm đổi pin</p>
+            </header>
+            <p>Phủ sóng khắp các thành phố lớn, luôn sẵn sàng phục vụ bạn mọi lúc.</p>
+        </article>
+        <article class="stat-card">
+            <header>
+                <h3>3 phút</h3>
+                <p>Thời gian đổi</p>
+            </header>
+            <p>Quy trình tự động và an toàn, rút ngắn tối đa thời gian chờ đợi.</p>
+        </article>
+        <article class="stat-card">
+            <header>
+                <h3>24/7</h3>
+                <p>Dịch vụ</p>
+            </header>
+            <p>Đội ngũ hỗ trợ tận tâm, đảm bảo hành trình của bạn không bị gián đoạn.</p>
+        </article>
     </section>
 
     <section id="benefits" class="feature-section container">
