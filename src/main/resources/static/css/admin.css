@@ -1,0 +1,334 @@
+/*
+ * =========================================
+ * FILE CSS RIÊNG CHO TRANG ADMIN (CẬP NHẬT)
+ * (admin.css)
+ * =========================================
+ */
+
+/* 1. Imports và Biến toàn cục (Variables)
+------------------------------------------ */
+:root {
+    --font-family: 'Montserrat', sans-serif;
+    --primary-blue: #007bff;
+    --primary-cyan-light: #e0f7fa;
+    --bg-light-gray: #f8f9fa;
+    --bg-light-gradient: linear-gradient(120deg, var(--primary-cyan-light) 0%, var(--bg-light-gray) 100%);
+    --bg-white: #ffffff;
+    --text-dark: #212529;
+    --text-light: #555;
+    --border-color: #dee2e6;
+    --success-green: #198754;
+    --error-red: #dc3545;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* 2. Thiết lập Body và Nền
+------------------------------------------ */
+.admin-body {
+    font-family: var(--font-family);
+    margin: 0;
+    background: var(--bg-light-gradient);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 3. Layout chung
+------------------------------------------ */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+/* 4. Header (Thanh điều hướng top)
+------------------------------------------ */
+.admin-top-nav {
+    background: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+.brand-icon { font-size: 1.8rem; margin-right: 0.5rem; }
+.admin-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    background-color: #e7f3ff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    margin-left: 0.75rem;
+}
+.nav-links { display: flex; gap: 0.5rem; }
+.nav-link-button {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+.nav-link-button:hover { background-color: #f1f3f5; color: var(--text-dark); }
+.nav-link-button.active { background-color: #e7f3ff; color: var(--primary-blue); }
+.auth-area { display: flex; align-items: center; gap: 1rem; }
+.auth-area .welcome { font-weight: 500; color: var(--text-light); font-size: 0.9rem; }
+.auth-area strong { font-weight: 700; color: var(--text-dark); }
+
+/* 5. Nút bấm (Buttons)
+------------------------------------------ */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    display: inline-block;
+    font-family: var(--font-family);
+}
+.btn.ghost {
+    background-color: transparent;
+    color: var(--text-light);
+    border-color: #ccc;
+}
+.btn.ghost:hover { background-color: var(--bg-light-gray); color: var(--text-dark); border-color: #aaa; }
+.btn.primary {
+    background-color: var(--primary-blue);
+    color: var(--bg-white);
+    border-color: var(--primary-blue);
+}
+.btn.primary:hover { background-color: #0069d9; border-color: #0062cc; }
+
+/* 6. Nội dung chính (Main Content)
+------------------------------------------ */
+main.container {
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+    flex-grow: 1;
+}
+.admin-header { margin-bottom: 2.5rem; text-align: center; }
+.admin-title { font-size: 2.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 0.5rem; }
+.admin-subtitle { font-size: 1.1rem; color: var(--text-light); margin-top: 0; }
+
+/* 7. Thông báo (Alerts)
+------------------------------------------ */
+.admin-alert {
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+.admin-alert.success { background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; }
+.admin-alert.error { background-color: #f8d7da; border-color: #f5c2c7; color: #842029; }
+
+/* 8. Lưới Thẻ Card (Dashboard)
+------------------------------------------ */
+.admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.admin-card {
+    display: block;
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    color: var(--text-dark);
+}
+.admin-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--primary-blue); }
+.card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.card-description { font-size: 0.95rem; color: var(--text-light); line-height: 1.5; min-height: 60px; }
+.card-link { display: inline-block; margin-top: 1rem; font-weight: 600; color: var(--primary-blue); }
+
+/* 9. Footer
+------------------------------------------ */
+.admin-footer {
+    background-color: var(--bg-light-gray);
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+/* * =========================================
+ * CSS MỚI CHO FORM VÀ TABLE
+ * =========================================
+ */
+
+/* 10. Card cho Form
+------------------------------------------ */
+.admin-form-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+    max-width: 800px;
+    margin: 0 auto; /* Căn giữa form */
+}
+.admin-form-card h2 {
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.form-group {
+    margin-bottom: 1.25rem;
+}
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box; /* Quan trọng */
+}
+.form-group input:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0,123,255,.25);
+    outline: none;
+}
+.form-note {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+.form-error {
+    font-size: 0.85rem;
+    color: var(--error-red);
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+.form-actions {
+    margin-top: 2rem;
+    text-align: right;
+}
+
+/* 11. Card cho Table (List)
+------------------------------------------ */
+.admin-content-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto; /* Cho phép cuộn ngang trên mobile */
+}
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap; /* Rớt dòng trên mobile */
+    gap: 1rem;
+}
+.content-header h2 {
+    margin: 0;
+    font-weight: 700;
+}
+.admin-search {
+    display: flex;
+    gap: 0.5rem;
+}
+.admin-search input {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 250px;
+}
+.admin-search .btn {
+    padding: 0.6rem 1.2rem; /* Nút nhỏ hơn */
+}
+
+/* 12. Table Styling
+------------------------------------------ */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    vertical-align: middle;
+}
+.admin-table th {
+    font-weight: 600;
+    color: var(--text-light);
+    background-color: var(--bg-light-gray);
+}
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+.admin-table tr:hover {
+    background-color: #fcfcfc;
+}
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+.status-badge.active {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+.status-badge.inactive {
+    background-color: #f8d7da;
+    color: #842029;
+}
+.action-links a {
+    font-weight: 600;
+    text-decoration: none;
+    margin-right: 1rem;
+}
+.action-links a:hover {
+    text-decoration: underline;
+}
+.action-links .edit-link { color: var(--primary-blue); }
+.action-links .delete-link { color: var(--error-red); }
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}
