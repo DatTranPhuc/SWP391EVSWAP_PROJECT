@@ -52,8 +52,13 @@
         <p class="alert" th:if="${loginSuccess}" th:text="${loginSuccess}"></p>
     </div>
 
+    <!-- Hero: dùng ảnh local /images/hero.jpg -->
     <section id="overview" class="hero-banner">
-        <img src="https://i.imgur.com/KRsyFsL.jpeg" alt="Hình ảnh phương tiện điện hiện đại" class="hero-banner__image" loading="lazy">
+        <img th:src="@{/images/hero.jpg}"
+             src="/images/hero.jpg"
+             alt="Hình ảnh phương tiện điện hiện đại"
+             class="hero-banner__image"
+             loading="lazy">
     </section>
 
     <section class="stats-section container">
@@ -206,40 +211,4 @@
 </div>
 
 <script>
-    const loginModal = document.getElementById('login-modal');
-    const modalEmailInput = document.getElementById('modal-email');
-
-    function openLoginModal() {
-        if (loginModal) {
-            loginModal.removeAttribute('hidden');
-            document.body.classList.add('modal-open');
-            if (modalEmailInput) {
-                modalEmailInput.focus();
-            }
-        }
-    }
-
-    function closeLoginModal() {
-        if (loginModal) {
-            loginModal.setAttribute('hidden', '');
-            document.body.classList.remove('modal-open');
-        }
-    }
-
-    // Script này tìm tất cả các nút có class '--locked' và gắn sự kiện click
-    // Khi bấm vào, nó sẽ gọi hàm mở modal đăng nhập
-    document.querySelectorAll('.nav-link-button--locked').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault(); // Ngăn chặn hành vi mặc định (nếu có)
-            openLoginModal();
-        });
-    });
-
-    window.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
-            closeLoginModal();
-        }
-    });
-</script>
-</body>
-</html>
+    const loginM
