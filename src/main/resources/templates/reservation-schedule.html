@@ -36,11 +36,14 @@
 
     <section class="reservation-form-section">
         <h2>Thông tin đặt lịch</h2>
+        <div class="alert" th:if="${hasStations == false}">
+            Hiện chưa có trạm nào khả dụng để đặt lịch. Vui lòng thử lại sau hoặc liên hệ quản trị viên.
+        </div>
         <form th:action="@{/reservations}" th:object="${reservationForm}" method="post" class="reservation-form">
             <div class="form-grid">
                 <label>
                     <span>Trạm đổi pin</span>
-                    <select th:field="*{stationId}" required>
+                    <select th:field="*{stationId}" required th:attr="disabled=${hasStations == false}">
                         <option value="" disabled th:selected="${reservationForm.stationId == null}">-- Chọn trạm --</option>
                         <option th:each="st : ${stations}"
                                 th:value="${st.stationId}"
@@ -62,7 +65,7 @@
             </div>
             <div class="form-actions">
                 <button class="btn ghost" type="reset">Xoá</button>
-                <button class="btn primary" type="submit">Đặt lịch</button>
+                <button class="btn primary" type="submit" th:attr="disabled=${hasStations == false}">Đặt lịch</button>
             </div>
         </form>
     </section>
@@ -90,8 +93,8 @@
                     <span th:if="${rv.stationAddress == null}">Đang cập nhật</span>
                 </td>
                 <td>
-                    <span th:if="${rv.reservedStart != null}" th:text="${#temporals.format(rv.reservedStart, 'HH:mm dd/MM/yyyy')}"></span>
-                    <span th:if="${rv.reservedStart == null}">Chưa đặt thời gian</span>
+                    <span th:if="${rv.reservedStartLabel != null}" th:text="${rv.reservedStartLabel}"></span>
+                    <span th:if="${rv.reservedStartLabel == null}">Chưa đặt thời gian</span>
                 </td>
                 <td>
                     <span class="status-badge" th:text="${rv.status != null ? rv.status : 'pending'}"></span>

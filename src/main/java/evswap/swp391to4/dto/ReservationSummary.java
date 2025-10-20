@@ -11,6 +11,7 @@ public record ReservationSummary(
         String stationName,
         String stationAddress,
         Instant reservedStart,
+        String reservedStartLabel,
         String status
 ) {
 }

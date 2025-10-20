@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,8 +26,14 @@ public class ReservationService {
     private final DriverRepository driverRepository;
     private final StationRepository stationRepository;
 
+    private static final DateTimeFormatter RESERVATION_LABEL_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                    .withZone(ZoneId.systemDefault());
+
     @Transactional
     public Reservation createReservation(Integer driverId, Integer stationId, Instant reservedStart) {
+        Objects.requireNonNull(reservedStart, "Thời gian đặt lịch không hợp lệ");
+
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy tài xế với ID: " + driverId));
 
@@ -52,12 +61,19 @@ public class ReservationService {
 
     private ReservationSummary toSummary(Reservation reservation) {
         Station station = reservation.getStation();
+        Instant reservedStart = reservation.getReservedStart();
+        String reservedStartLabel = null;
+        if (reservedStart != null) {
+            reservedStartLabel = RESERVATION_LABEL_FORMATTER.format(reservedStart);
+        }
+
         return new ReservationSummary(
                 reservation.getReservationId(),
                 station != null ? station.getStationId() : null,
                 station != null ? station.getName() : null,
                 station != null ? station.getAddress() : null,
-                reservation.getReservedStart(),
+                reservedStart,
+                reservedStartLabel,
                 reservation.getStatus()
         );
     }

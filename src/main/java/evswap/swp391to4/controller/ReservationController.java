@@ -2,6 +2,7 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.ReservationSummary;
 import evswap.swp391to4.dto.SessionDriver;
+import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.ReservationService;
 import evswap.swp391to4.service.StationService;
 import jakarta.servlet.http.HttpSession;
@@ -60,7 +61,18 @@ public class ReservationController {
 
         model.addAttribute("driverName", driver.fullName());
         model.addAttribute("driverInitial", extractInitial(driver.fullName()));
-        model.addAttribute("stations", stationService.getAllStations());
+
+        List<StationResponse> stations = Collections.emptyList();
+        try {
+            stations = stationService.getAllStations();
+        } catch (RuntimeException ex) {
+            log.error("Không thể tải danh sách trạm cho tài xế {}", driver.driverId(), ex);
+            if (!model.containsAttribute("reservationError")) {
+                model.addAttribute("reservationError", "Không thể tải danh sách trạm. Vui lòng thử lại sau.");
+            }
+        }
+        model.addAttribute("stations", stations);
+        model.addAttribute("hasStations", !stations.isEmpty());
 
         List<ReservationSummary> reservations = Collections.emptyList();
         try {
