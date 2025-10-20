@@ -1,7 +1,10 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.NotificationDto;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,8 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
+@RequiredArgsConstructor
 public class DashboardController {
+
+    private final NotificationService notificationService;
 
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
@@ -18,6 +26,9 @@ public class DashboardController {
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("loggedIn", true);
+            List<NotificationDto> notifications = notificationService.getRecentNotifications(driver.getDriverId());
+            model.addAttribute("notifications", notifications);
+            model.addAttribute("notificationCount", notificationService.countUnread(driver.getDriverId()));
         } else {
             model.addAttribute("loggedIn", false);
         }

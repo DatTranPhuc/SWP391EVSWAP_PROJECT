@@ -35,6 +35,52 @@
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tài khoản">Tài khoản</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Hỗ trợ">Hỗ trợ</button>
         </nav>
+        <div class="notification-area" th:if="${loggedIn}">
+            <button type="button"
+                    class="notification-bell"
+                    id="notificationToggle"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="notificationDropdown">
+                <span class="bell-icon" aria-hidden="true">🔔</span>
+                <span class="notification-badge"
+                      id="notificationCount"
+                      th:text="${notificationCount != null ? notificationCount : 0}"
+                      th:classappend="${notificationCount == null || notificationCount == 0} ? ' is-hidden' : ''"></span>
+                <span class="sr-only">Thông báo</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown" hidden>
+                <div class="notification-dropdown__header">
+                    <h4>Thông báo</h4>
+                    <button type="button"
+                            class="mark-all"
+                            id="markAllNotifications"
+                            th:classappend="${notificationCount == null || notificationCount == 0} ? ' is-hidden' : ''">Đánh dấu tất cả đã đọc</button>
+                </div>
+                <ul class="notification-list" id="notificationList">
+                    <li class="notification-empty"
+                        th:if="${notifications == null || notifications.isEmpty()}">Chưa có thông báo mới.</li>
+                    <li class="notification-item"
+                        th:each="notification : ${notifications}"
+                        th:classappend="${notification.read()} ? ' is-read'">
+                        <div class="notification-item__content">
+                            <h5 th:text="${notification.title()}">Bạn có thông báo mới</h5>
+                            <p>
+                                <span class="notification-item__type"
+                                      th:text="${notification.type() != null ? notification.type() : 'Hệ thống'}">Hệ thống</span>
+                                ·
+                                <span class="notification-item__time"
+                                      th:text="${#temporals.format(notification.sentAt(), 'HH:mm dd/MM/yyyy')}">10:00 01/01/2024</span>
+                            </p>
+                        </div>
+                        <button type="button"
+                                class="mark-read"
+                                th:if="${!notification.read()}"
+                                th:attr="data-notification-id=${notification.id()}">Đánh dấu đã đọc</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
         <div class="auth-area" th:if="${loggedIn}">
             <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
             <form th:action="@{/logout}" method="post">
@@ -243,10 +289,223 @@
     });
 
     window.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !loginModal.hasAttribute('hidden')) {
+        if (event.key === 'Escape' && loginModal && !loginModal.hasAttribute('hidden')) {
             closeLoginModal();
         }
     });
+
+    const notificationToggle = document.getElementById('notificationToggle');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationList = document.getElementById('notificationList');
+    const notificationCountBadge = document.getElementById('notificationCount');
+    const markAllNotificationsButton = document.getElementById('markAllNotifications');
+    const notificationArea = document.querySelector('.notification-area');
+    let unreadCount = notificationCountBadge ? Number(notificationCountBadge.textContent) || 0 : 0;
+
+    function updateBadge(value) {
+        if (!notificationCountBadge) {
+            return;
+        }
+        unreadCount = value;
+        notificationCountBadge.textContent = value;
+        if (value > 0) {
+            notificationCountBadge.classList.remove('is-hidden');
+        } else {
+            notificationCountBadge.classList.add('is-hidden');
+        }
+    }
+
+    function toggleMarkAllButton(visible) {
+        if (!markAllNotificationsButton) {
+            return;
+        }
+        markAllNotificationsButton.classList.toggle('is-hidden', !visible);
+    }
+
+    function formatInstant(instant) {
+        if (!instant) {
+            return '';
+        }
+        const date = new Date(instant);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+        return date.toLocaleString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        return String(value).replace(/[&<>"']/g, function (char) {
+            switch (char) {
+                case '&':
+                    return '&amp;';
+                case '<':
+                    return '&lt;';
+                case '>':
+                    return '&gt;';
+                case '"':
+                    return '&quot;';
+                case '\'':
+                    return '&#39;';
+                default:
+                    return char;
+            }
+        });
+    }
+
+    function renderNotifications(notifications) {
+        if (!notificationList) {
+            return;
+        }
+
+        if (!notifications || notifications.length === 0) {
+            notificationList.innerHTML = '<li class="notification-empty">Chưa có thông báo mới.</li>';
+            return;
+        }
+
+        const items = notifications.map(function (notification) {
+            const readClass = notification.read ? ' is-read' : '';
+            const markButton = notification.read
+                ? ''
+                : '<button type="button" class="mark-read" data-notification-id="' + notification.id + '">Đánh dấu đã đọc</button>';
+
+            return '<li class="notification-item' + readClass + '" data-notification-id="' + notification.id + '">'
+                + '<div class="notification-item__content">'
+                + '<h5>' + escapeHtml(notification.title) + '</h5>'
+                + '<p>'
+                + '<span class="notification-item__type">' + escapeHtml(notification.type || 'Hệ thống') + '</span>'
+                + ' · '
+                + '<span class="notification-item__time">' + escapeHtml(formatInstant(notification.sentAt)) + '</span>'
+                + '</p>'
+                + '</div>'
+                + markButton
+                + '</li>';
+        }).join('');
+
+        notificationList.innerHTML = items;
+    }
+
+    async function loadNotifications() {
+        if (!notificationDropdown) {
+            return;
+        }
+        try {
+            const response = await fetch('/api/notifications');
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            renderNotifications(data.notifications);
+            updateBadge(Number(data.unreadCount) || 0);
+            toggleMarkAllButton((Number(data.unreadCount) || 0) > 0);
+        } catch (error) {
+            console.error('Không thể tải thông báo', error);
+        }
+    }
+
+    async function markNotificationAsRead(notificationId) {
+        try {
+            const response = await fetch('/api/notifications/' + notificationId + '/read', {
+                method: 'POST'
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Không thể cập nhật thông báo', error);
+            return false;
+        }
+    }
+
+    async function markAllAsRead() {
+        try {
+            const response = await fetch('/api/notifications/read-all', {
+                method: 'POST'
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Không thể cập nhật tất cả thông báo', error);
+            return false;
+        }
+    }
+
+    if (notificationToggle && notificationDropdown) {
+        notificationToggle.addEventListener('click', function () {
+            const isHidden = notificationDropdown.hasAttribute('hidden');
+            if (isHidden) {
+                notificationDropdown.removeAttribute('hidden');
+                notificationToggle.setAttribute('aria-expanded', 'true');
+                loadNotifications();
+            } else {
+                notificationDropdown.setAttribute('hidden', '');
+                notificationToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!notificationArea) {
+                return;
+            }
+            if (!notificationArea.contains(event.target)) {
+                notificationDropdown.setAttribute('hidden', '');
+                notificationToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    if (notificationList) {
+        notificationList.addEventListener('click', function (event) {
+            const button = event.target.closest('.mark-read');
+            if (!button) {
+                return;
+            }
+            const notificationId = button.getAttribute('data-notification-id');
+            if (!notificationId) {
+                return;
+            }
+
+            markNotificationAsRead(notificationId).then(function (success) {
+                if (!success) {
+                    return;
+                }
+                const listItem = button.closest('.notification-item');
+                if (listItem) {
+                    listItem.classList.add('is-read');
+                }
+                button.remove();
+                const nextValue = Math.max(0, unreadCount - 1);
+                updateBadge(nextValue);
+                toggleMarkAllButton(nextValue > 0);
+            });
+        });
+    }
+
+    if (markAllNotificationsButton) {
+        markAllNotificationsButton.addEventListener('click', function () {
+            markAllAsRead().then(function (success) {
+                if (!success) {
+                    return;
+                }
+                if (notificationDropdown) {
+                    notificationDropdown.querySelectorAll('.notification-item').forEach(function (item) {
+                        item.classList.add('is-read');
+                        const actionButton = item.querySelector('.mark-read');
+                        if (actionButton) {
+                            actionButton.remove();
+                        }
+                    });
+                }
+                updateBadge(0);
+                toggleMarkAllButton(false);
+            });
+        });
+    }
 </script>
 </body>
 </html>
