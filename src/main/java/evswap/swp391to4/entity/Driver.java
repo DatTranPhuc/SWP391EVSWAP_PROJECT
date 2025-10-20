@@ -1,20 +1,23 @@
 package evswap.swp391to4.entity;
 
-
-
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity @Table(name = "driver")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "driver")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @ToString(exclude = "vehicles")
 @EqualsAndHashCode(exclude = "vehicles")
 public class Driver {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "driver_id")
     private Integer driverId;
 
@@ -33,11 +36,10 @@ public class Driver {
     @Column(name = "email_verified")
     private Boolean emailVerified;
 
-    // Mã OTP gửi qua Gmail
+    // 🟢 Thêm cho chức năng quên mật khẩu
     @Column(name = "email_otp")
     private String emailOtp;
 
-    // Thời gian hết hạn OTP
     @Column(name = "otp_expiry")
     private Instant otpExpiry;
 
