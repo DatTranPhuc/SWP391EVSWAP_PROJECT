@@ -1,109 +1,94 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.dto.StationCreateRequest;
+import evswap.swp391to4.dto.StationCreateRequest; // Vẫn cần cho form rỗng
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
 @Controller
-@RequestMapping("/stations")
+@RequestMapping("/stations") // Bắt buộc là "/stations" để Driver truy cập
 @RequiredArgsConstructor
 public class StationController {
 
     private final StationService stationService;
 
     /**
-     * Hiển thị trang quản lý trạm chính.
-     * Luôn cung cấp danh sách tất cả trạm và một form trống cho modal.
+     * SỬA LẠI: Gộp listStations và searchByName
+     * Hiển thị trang tìm trạm chính, xử lý cả tìm kiếm theo tên.
      */
     @GetMapping
-    public String listStations(Model model) {
-        model.addAttribute("stations", stationService.getAllStations());
-        model.addAttribute("stationForm", new StationCreateRequest());
-        // Thêm một danh sách rỗng để Thymeleaf không báo lỗi khi render lần đầu
-        model.addAttribute("nearbyStations", Collections.emptyList());
-        return "station-manage";
-    }
-
-    /**
-     * Xử lý yêu cầu thêm một trạm mới từ modal.
-     */
-    @PostMapping("/add")
-    public String addStation(@ModelAttribute("stationForm") StationCreateRequest req, RedirectAttributes redirect) {
-        try {
-            stationService.createStation(req);
-            redirect.addFlashAttribute("stationSuccess", "Thêm trạm mới thành công!");
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("stationError", e.getMessage());
+    public String listStations(
+            @RequestParam(value = "name", required = false) String name,
+            Model model
+    ) {
+        List<StationResponse> stationList;
+        if (name == null || name.isBlank()) {
+            stationList = stationService.getAllStations();
+        } else {
+            stationList = stationService.searchByName(name);
         }
-        return "redirect:/stations";
+
+        // SỬA: Luôn thêm TẤT CẢ các thuộc tính mà trang cần
+        model.addAttribute("stations", stationList); // Cho bảng danh sách
+        model.addAttribute("searchName", name);     // Giữ lại từ khóa tìm kiếm
+        model.addAttribute("nearbyStations", Collections.emptyList()); // Cho phần nearby
+        model.addAttribute("stationForm", new StationCreateRequest()); // Cho JS (nếu có)
+        // model.addAttribute("station", null); // Không cần, vì th:if="${station != null}"
+
+        return "station-manage"; // Trả về file station-manage.html
     }
 
     /**
-     * Xử lý yêu cầu xóa một trạm.
-     */
-    @PostMapping("/delete/{id}")
-    public String deleteStation(@PathVariable Integer id, RedirectAttributes redirect) {
-        try {
-            stationService.deleteStation(id);
-            redirect.addFlashAttribute("stationSuccess", "Đã xoá trạm thành công!");
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("stationError", e.getMessage());
-        }
-        return "redirect:/stations";
-    }
-
-    /**
-     * Hiển thị trang chi tiết một trạm.
+     * Xử lý yêu cầu XEM chi tiết một trạm.
      */
     @GetMapping("/{id}")
     public String viewStation(@PathVariable Integer id, Model model) {
-        model.addAttribute("station", stationService.findById(id));
-        // Cần thêm các thuộc tính này để các phần khác của trang không bị lỗi
-        model.addAttribute("stations", stationService.getAllStations());
-        model.addAttribute("stationForm", new StationCreateRequest());
-        return "station-manage";
+        try {
+            // 1. Lấy thông tin trạm chi tiết
+            StationResponse station = stationService.findById(id);
+            model.addAttribute("station", station); // {station} dùng cho phần "Chi tiết"
+
+            // 2. SỬA: Thêm TẤT CẢ các thuộc tính phụ để trang không lỗi
+            model.addAttribute("stations", stationService.getAllStations()); // {stations} cho danh sách chính
+            model.addAttribute("searchName", "");
+            model.addAttribute("nearbyStations", Collections.emptyList());
+            model.addAttribute("stationForm", new StationCreateRequest());
+
+            return "station-manage";
+        } catch (Exception e) {
+            return "redirect:/stations?error=notFound";
+        }
     }
 
     /**
-     * Xử lý yêu cầu tìm kiếm trạm theo tên.
-     */
-    @GetMapping("/search")
-    public String searchByName(@RequestParam(name = "name", required = false) String name, Model model) {
-        model.addAttribute("stations", stationService.searchByName(name));
-        model.addAttribute("stationForm", new StationCreateRequest());
-        return "station-manage";
-    }
-
-    /**
-     * Xử lý yêu cầu tìm các trạm gần một vị trí tọa độ cho trước.
-     * Đây là phương thức quan trọng nhất cần kiểm tra.
+     * Xử lý yêu cầu tìm trạm gần đây.
      */
     @GetMapping("/nearby")
     public String findNearby(@RequestParam BigDecimal lat,
                              @RequestParam BigDecimal lng,
                              @RequestParam(defaultValue = "5") double radiusKm,
                              Model model) {
-        // 1. Gọi service để lấy danh sách các trạm gần đó
+        // 1. Lấy danh sách trạm gần đó
         List<StationResponse> nearbyStations = stationService.findNearby(lat, lng, radiusKm);
-
-        // 2. Thêm danh sách kết quả tìm kiếm vào model
         model.addAttribute("nearbyStations", nearbyStations);
 
-        // 3. Thêm tọa độ người dùng vào model để JavaScript có thể vẽ bản đồ
+        // 2. Thêm tọa độ người dùng để vẽ bản đồ
         model.addAttribute("userLat", lat);
         model.addAttribute("userLng", lng);
 
-        // 4. Thêm các thuộc tính phụ để các phần khác của trang (danh sách chính, modal) không bị lỗi
-        model.addAttribute("stations", stationService.getAllStations());
+        // 3. SỬA: Thêm TẤT CẢ các thuộc tính phụ để trang không lỗi
+        model.addAttribute("stations", stationService.getAllStations()); // {stations} cho danh sách chính
+        model.addAttribute("searchName", "");
         model.addAttribute("stationForm", new StationCreateRequest());
 
         return "station-manage";

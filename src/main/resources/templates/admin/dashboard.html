@@ -24,7 +24,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button active">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button">Quản lý Trạm</a>
         </nav>
 
         <div class="auth-area" th:if="${session.loggedInAdmin}">
@@ -58,7 +58,7 @@
             <span class="card-link">Đi tới Quản lý Staff →</span>
         </a>
 
-        <a th:href="@{/admin/station}" class="admin-card">
+        <a th:href="@{/admin/stations}" class="admin-card">
             <div class="card-icon">📍</div>
             <h3 class="card-title">Quản lý Trạm</h3>
             <p class="card-description">Xem danh sách, cập nhật trạng thái và vị trí các trạm đổi pin.</p>
@@ -72,7 +72,7 @@
             <span class="card-link">Thêm Staff →</span>
         </a>
 
-        <a th:href="@{/admin/station/add}" class="admin-card">
+        <a th:href="@{/admin/stations/add}" class="admin-card">
             <div class="card-icon">➕</div>
             <h3 class="card-title">Thêm Trạm mới</h3>
             <p class="card-description">Đăng ký một trạm sạc pin mới vào hệ thống quản lý.</p>

@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Trạm - EV SWAP</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
 <body class="admin-body">
@@ -19,7 +21,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button active">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button active">Quản lý Trạm</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInAdmin}">
             <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>
@@ -33,13 +35,15 @@
 
         <div class="content-header">
             <h2>Quản lý Trạm</h2>
+
             <div class="admin-search">
-                <form th:action="@{/admin/station}" method="get" class="admin-search">
-                    <input type="text" name="search" placeholder="Tìm kiếm theo tên trạm..." th:value="${search}" />
+                <form th:action="@{/admin/stations}" method="get" class="admin-search">
+                    <input type="text" name="search" placeholder="Tìm kiếm theo tên..." th:value="${search}" />
                     <button class="btn primary" type="submit">Tìm</button>
                 </form>
             </div>
-            <a th:href="@{/admin/station/add}" class="btn primary">Thêm Trạm ⁺</a>
+
+            <a th:href="@{/admin/stations/add}" class="btn primary">Thêm Trạm ⁺</a>
         </div>
 
         <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
@@ -48,34 +52,46 @@
         <table class="admin-table">
             <thead>
             <tr>
-                <th>ID</th> <th>Tên trạm</th> <th>Địa chỉ</th>
-                <th>Trạng thái</th> <th>Tọa độ (Lat, Lng)</th> <th>Hành động</th>
+                <th>ID</th>
+                <th>Tên trạm</th>
+                <th>Địa chỉ</th>
+                <th>Vĩ độ (Lat)</th>
+                <th>Kinh độ (Lng)</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="station : ${stationList}">
                 <td th:text="${station.stationId}">1</td>
-                <td th:text="${station.name}">Trạm 1</td>
-                <td th:text="${station.address}">123 Đường ABC</td>
+                <td th:text="${station.name}">EVSWAP1</td>
+                <td th:text="${station.address}">123 Đồng Nai</td>
+                <td th:text="${station.latitude}">10.123</td>
+                <td th:text="${station.longitude}">106.456</td>
                 <td>
-                    <span th:if="${station.status == 'active'}" class="status-badge active">Active</span>
-                    <span th:unless="${station.status == 'active'}" class="status-badge inactive" th:text="${station.status ?: 'Unknown'}">Closed</span>
+                    <span th:text="${station.status}"
+                          th:classappend="${station.status == 'active' ? 'status-badge active' : 'status-badge inactive'}">
+                        active
+                    </span>
                 </td>
-                <td th:text="${station.latitude != null and station.longitude != null} ? |${station.latitude}, ${station.longitude}| : 'Chưa có'">10.123, 106.456</td>
                 <td class="action-links">
-                    <a th:href="@{/admin/station/edit/{id}(id=${station.stationId})}" class="edit-link">Sửa</a>
-                    <a th:href="@{/admin/station/delete/{id}(id=${station.stationId})}"
-                       class="delete-link"
-                       onclick="return confirm('Bạn có chắc chắn muốn xóa trạm này? (Kiểm tra xem còn nhân viên nào ở trạm không)');">Xóa</a>
+                    <a th:href="@{/admin/stations/edit/{id}(id=${station.stationId})}" class="edit-link">Sửa</a>
+
+                    <form th:action="@{/admin/stations/delete/{id}(id=${station.stationId})}" method="post" style="display: inline; margin: 0; padding: 0;">
+                        <button type="submit" class="delete-link"
+                                style="border: none; background: none; padding: 0; font-family: inherit; font-size: inherit; cursor: pointer;"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa trạm này?');">
+                            Xóa
+                        </button>
+                    </form>
                 </td>
             </tr>
-            <tr th:if="${stationList == null or #lists.isEmpty(stationList)}">
-                <td colspan="6" class="empty-state">Không tìm thấy trạm nào.</td>
+            <tr th:if="${#lists.isEmpty(stationList)}">
+                <td colspan="7" class="empty-state">Không tìm thấy trạm nào.</td>
             </tr>
             </tbody>
         </table>
-    </div>
-</main>
+    </div> </main>
 
 <footer class="admin-footer">
     <div class="container"><p>© 2025 EV SWAP - Admin Control Panel.</p></div>
