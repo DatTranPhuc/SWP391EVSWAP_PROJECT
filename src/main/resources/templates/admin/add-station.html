@@ -21,7 +21,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button active">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button active">Quản lý Trạm</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInAdmin}">
             <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>
@@ -37,7 +37,7 @@
         <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
         <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
 
-        <form th:action="@{/admin/station/add}" th:object="${station}" method="post">
+        <form th:action="@{/admin/stations/add}" th:object="${station}" method="post">
 
             <div class="form-group">
                 <label for="name">Tên trạm</label>
@@ -64,7 +64,7 @@
             </div>
 
             <div class="form-actions">
-                <a th:href="@{/admin/station}" class="btn ghost">Hủy</a>
+                <a th:href="@{/admin/stations}" class="btn ghost">Hủy</a>
                 <button type="submit" class="btn primary">Tạo trạm</button>
             </div>
         </form>

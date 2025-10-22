@@ -19,7 +19,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button active">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button">Quản lý Trạm</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInAdmin}">
             <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>
@@ -64,9 +64,14 @@
                 <td th:text="${staff.stationId}">101</td>
                 <td class="action-links">
                     <a th:href="@{/admin/staff/edit/{id}(id=${staff.staffId})}" class="edit-link">Sửa</a>
-                    <a th:href="@{/admin/staff/delete/{id}(id=${staff.staffId})}"
-                       class="delete-link"
-                       onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên này?');">Xóa</a>
+
+                    <form th:action="@{/admin/staff/delete/{id}(id=${staff.staffId})}" method="post" style="display: inline; margin: 0; padding: 0;">
+                        <button type="submit" class="delete-link"
+                                style="border: none; background: none; padding: 0; font-family: inherit; font-size: inherit; cursor: pointer;"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên này?');">
+                            Xóa
+                        </button>
+                    </form>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(staffList)}">

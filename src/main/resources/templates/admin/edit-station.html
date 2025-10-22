@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sửa Trạm - EV SWAP</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
 <body class="admin-body">
@@ -19,7 +21,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button active">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button active">Quản lý Trạm</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInAdmin}">
             <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>
@@ -34,7 +36,7 @@
 
         <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
 
-        <form th:action="@{/admin/station/edit/{id}(id=${station.stationId})}" th:object="${station}" method="post">
+        <form th:action="@{/admin/stations/edit/{stationId}(stationId=${id})}" th:object="${station}" method="post">
 
             <div class="form-group">
                 <label for="name">Tên trạm</label>
@@ -62,7 +64,8 @@
 
             <div class="form-group">
                 <label for="status">Trạng thái</label>
-                <select id="status" th:field="*{status}" class="form-group input[type='text']">
+                <select id="status" th:field="*{status}"
+                        style="width: 100%; padding: 0.75rem 1rem; font-size: 1rem; font-family: var(--font-family); border: 1px solid var(--border-color); border-radius: 12px; background: rgba(15, 20, 30, 0.72); color: var(--text-dark); box-sizing: border-box;">
                     <option value="active">Active (Hoạt động)</option>
                     <option value="closed">Closed (Đóng cửa)</option>
                     <option value="maintenance">Maintenance (Bảo trì)</option>
@@ -70,12 +73,11 @@
             </div>
 
             <div class="form-actions">
-                <a th:href="@{/admin/station}" class="btn ghost">Hủy</a>
+                <a th:href="@{/admin/stations}" class="btn ghost">Hủy</a>
                 <button type="submit" class="btn primary">Cập nhật</button>
             </div>
         </form>
-    </div>
-</main>
+    </div> </main>
 
 <footer class="admin-footer">
     <div class="container"><p>© 2025 EV SWAP - Admin Control Panel.</p></div>

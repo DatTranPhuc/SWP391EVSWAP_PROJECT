@@ -19,7 +19,7 @@
         <nav class="nav-links">
             <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:href="@{/admin/staff}" class="nav-link-button active">Quản lý Staff</a>
-            <a th:href="@{/admin/station}" class="nav-link-button">Quản lý Trạm</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button">Quản lý Trạm</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInAdmin}">
             <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>

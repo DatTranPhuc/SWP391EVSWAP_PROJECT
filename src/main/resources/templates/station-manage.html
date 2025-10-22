@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý trạm - EV SWAP</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Tìm trạm - EV SWAP</title>
+
     <link rel="stylesheet" th:href="@{/css/station.css}">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         #map {
             height: 450px;
             width: 100%;
-            border-radius: 22px;
-            margin-top: 24px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px; /* Thêm margin dưới */
             border: 1px solid var(--border-soft);
             box-shadow: var(--shadow-soft);
             z-index: 5;
         }
+        .search-form {
+            display: flex; gap: 12px;
+            margin-bottom: 24px; align-items: center;
+        }
+        .search-form input[type="text"] { flex-grow: 1; }
     </style>
 </head>
+
 <body class="dashboard-body">
 
 <div class="background-gradient"></div>
@@ -37,108 +37,39 @@
     <div class="driver-identity">
         <div class="driver-avatar">📍</div>
         <div class="driver-intro">
-            <span class="subtitle">Quản lý trạm</span>
+            <span class="subtitle">Tìm kiếm trạm</span>
             <h1 class="page-title">EV SWAP Stations</h1>
             <p class="page-hint">
-                Theo dõi thông tin trạm, vị trí và bán kính hoạt động – quản lý thông minh cho hệ sinh thái xanh.
+                Tìm kiếm trạm đổi pin gần bạn một cách nhanh chóng.
             </p>
         </div>
     </div>
     <div class="header-actions">
         <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
-        <button class="btn primary" type="button" onclick="openStationModal()">+ Thêm trạm</button>
     </div>
 </header>
 
 <main class="manage-main container">
-    <div class="alert success" th:if="${stationSuccess}" th:text="${stationSuccess}"></div>
-    <div class="alert error" th:if="${stationError}" th:text="${stationError}"></div>
 
-    <div class="station-modal" id="stationModal" aria-hidden="true" role="dialog">
-        <div class="modal-backdrop" onclick="closeStationModal()"></div>
-        <div class="modal-content" role="document">
-            <button class="modal-close" type="button" aria-label="Đóng" onclick="closeStationModal()">×</button>
-            <h2>Thêm trạm mới</h2>
-            <form th:action="@{/stations/add}" th:object="${stationForm}" method="post" class="modal-form">
-                <div class="form-grid">
-                    <label>
-                        <span>Tên trạm</span>
-                        <input type="text" th:field="*{name}" placeholder="Ví dụ: EV Swap Quận 1" required>
-                    </label>
-                    <label>
-                        <span>Địa chỉ</span>
-                        <input type="text" th:field="*{address}" placeholder="Ví dụ: 123 Nguyễn Huệ, P. Bến Nghé, Q.1" required>
-                    </label>
-                    <label>
-                        <span>Trạng thái</span>
-                        <select th:field="*{status}">
-                            <option value="active">Hoạt động</option>
-                            <option value="closed">Đã đóng</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn ghost" type="button" onclick="closeStationModal()">Huỷ</button>
-                    <button class="btn primary" type="submit">Lưu trạm</button>
-                </div>
-            </form>
-        </div>
+    <div class="alert error" th:if="${param.error}">
+        Không tìm thấy trạm bạn yêu cầu.
     </div>
 
-    <section class="station-list-section">
-        <h2>Danh sách trạm</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tên trạm</th>
-                <th>Địa chỉ</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:if="${stations == null or stations.isEmpty()}">
-                <td colspan="5" style="text-align: center; padding: 32px;">Chưa có trạm nào. Hãy thêm trạm mới!</td>
-            </tr>
-            <tr th:each="station : ${stations}">
-                <td th:text="${station.stationId}"></td>
-                <td th:text="${station.name}"></td>
-                <td th:text="${station.address}"></td>
-                <td th:text="${station.status}"></td>
-                <td>
-                    <a class="btn ghost" th:href="@{|/stations/${station.stationId}|}">Xem</a>
-                    <form th:action="@{|/stations/delete/${station.stationId}|}" method="post" style="display:inline;">
-                        <button class="btn outline" type="submit" onclick="return confirm('Bạn chắc chắn muốn xoá trạm này?')">Xoá</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </section>
-
-    <section class="station-detail-section" th:if="${station != null}">
-        <h2>Chi tiết trạm</h2>
-        <ul>
-            <li><b>ID:</b> <span th:text="${station.stationId}"></span></li>
-            <li><b>Tên trạm:</b> <span th:text="${station.name}"></span></li>
-            <li><b>Địa chỉ:</b> <span th:text="${station.address}"></span></li>
-            <li><b>Trạng thái:</b> <span th:text="${station.status}"></span></li>
-        </ul>
-        <a class="btn ghost" href="/stations">Quay lại danh sách</a>
+    <section class="station-map-section">
+        <h2>Bản đồ trạm</h2>
+        <div id="map"></div>
     </section>
 
     <section class="station-nearby-section">
         <h2>Tìm trạm gần vị trí của bạn</h2>
-        <form id="nearby-form" method="get" action="/stations/nearby">
+
+        <form id="nearby-form" method="get" th:action="@{/stations/nearby}">
             <input type="hidden" name="lat" id="latitude">
             <input type="hidden" name="lng" id="longitude">
             <label for="radius-km">Bán kính (km):</label>
             <input type="number" step="any" name="radiusKm" id="radius-km" value="5">
             <button type="button" class="btn primary" onclick="getLocation()">Tìm trạm gần vị trí của tôi</button>
         </form>
-
-        <div id="map" th:if="${userLat != null}"></div>
 
         <table th:if="${nearbyStations != null and not nearbyStations.isEmpty()}">
             <thead>
@@ -160,28 +91,71 @@
             Không tìm thấy trạm nào trong bán kính đã chọn.
         </div>
     </section>
+
+    <section class="station-list-section">
+        <h2>Danh sách tất cả trạm</h2>
+
+        <form th:action="@{/stations}" method="get" class="search-form">
+            <input type="text" name="name" placeholder="Tìm theo tên trạm hoặc địa chỉ..." th:value="${searchName}" />
+            <button class="btn primary" type="submit">Tìm kiếm</button>
+            <a th:href="@{/stations}" class="btn ghost">Xem tất cả</a>
+        </form>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên trạm</th>
+                <th>Địa chỉ</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${stations == null or stations.isEmpty()}">
+                <td colspan="5" style="text-align: center; padding: 32px;">Không tìm thấy trạm nào.</td>
+            </tr>
+            <tr th:each="station : ${stations}">
+                <td th:text="${station.stationId}"></td>
+                <td th:text="${station.name}"></td>
+                <td th:text="${station.address}"></td>
+                <td>
+                    <span th:text="${station.status == 'active' ? 'Hoạt động' : 'Đã đóng'}"
+                          th:style="${station.status == 'active' ? 'color: var(--accent-success)' : 'color: var(--text-muted)'}">
+                    </span>
+                </td>
+                <td>
+                    <a class="btn ghost" th:href="@{|/stations/${station.stationId}|}">Xem chi tiết</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="station-detail-section" th:if="${station != null}">
+        <h2>Chi tiết trạm</h2>
+        <ul>
+            <li><b>ID:</b> <span th:text="${station.stationId}"></span></li>
+            <li><b>Tên trạm:</b> <span th:text="${station.name}"></span></li>
+            <li><b>Địa chỉ:</b> <span th:text="${station.address}"></span></li>
+            <li><b>Trạng thái:</b>
+                <span th:text="${station.status == 'active' ? 'Hoạt động' : 'Đã đóng'}"
+                      th:style="${station.status == 'active' ? 'color: var(--accent-success)' : 'color: var(--text-muted)'}">
+                </span>
+            </li>
+            <li><b>Toạ độ:</b>
+                <span th:text="${station.latitude}"></span>,
+                <span th:text="${station.longitude}"></span>
+            </li>
+        </ul>
+        <a class="btn ghost" th:href="@{/stations}">Quay lại danh sách</a>
+    </section>
 </main>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    function openStationModal() {
-        const modal = document.getElementById('stationModal');
-        if (modal) {
-            modal.setAttribute('aria-hidden', 'false');
-            modal.classList.add('is-open');
-            document.body.classList.add('modal-open');
-        }
-    }
 
-    function closeStationModal() {
-        const modal = document.getElementById('stationModal');
-        if (modal) {
-            modal.setAttribute('aria-hidden', 'true');
-            modal.classList.remove('is-open');
-            document.body.classList.remove('modal-open');
-        }
-    }
-
+    // === PHẦN TÌM VỊ TRÍ ===
     function getLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function (position) {
@@ -190,52 +164,79 @@
                 document.getElementById('nearby-form').submit();
             }, function (error) {
                 alert('Bạn cần cho phép truy cập vị trí để sử dụng chức năng này!');
-                console.error("Geolocation error: ", error);
             });
         } else {
             alert('Trình duyệt của bạn không hỗ trợ định vị!');
         }
     }
 
-    const nearbyStations = /*[[${nearbyStations}]]*/ [];
+    // === PHẦN BẢN ĐỒ (ĐÃ SỬA LẠI HOÀN CHỈNH) ===
+
+    // 1. Lấy dữ liệu TẤT CẢ trạm (từ ModelAttribute "stations")
+    const allStations = /*[[${stations}]]*/ [];
+
+    // 2. Lấy vị trí user (sẽ là null nếu chưa tìm "nearby")
     const userLat = /*[[${userLat}]]*/ null;
     const userLng = /*[[${userLng}]]*/ null;
+
+    // 3. Khai báo biến map
     let map = null;
 
+    // Hàm khởi tạo bản đồ
     function initializeMap() {
-        if (userLat != null && userLng != null) {
-            if (map != null) {
-                map.remove();
-            }
-            map = L.map('map').setView([userLat, userLng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+        if (map != null) {
+            map.remove(); // Xóa map cũ nếu có
+        }
 
+        let mapCenter;
+        let mapZoom;
+
+        // 4. KIỂM TRA: Nếu user VỪA TÌM "Nearby"
+        if (userLat != null && userLng != null) {
+            // Thì zoom vào vị trí user
+            mapCenter = [userLat, userLng];
+            mapZoom = 14; // Zoom gần
+        } else {
+            // 5. NẾU KHÔNG (mới tải trang)
+            // Thì zoom mặc định (ví dụ: thấy rõ TP.HCM)
+            mapCenter = [10.7769, 106.7009]; // (Tọa độ trung tâm TP.HCM)
+            mapZoom = 12; // Zoom vừa phải
+        }
+
+        // 6. Tạo map
+        map = L.map('map').setView(mapCenter, mapZoom);
+
+        // Thêm lớp nền OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 7. SỬA QUAN TRỌNG: Lặp qua TẤT CẢ trạm và vẽ marker
+        if (allStations && allStations.length > 0) {
+            allStations.forEach(station => {
+                // Đảm bảo trạm có tọa độ hợp lệ
+                if (station.latitude && station.longitude) {
+                    L.marker([station.latitude, station.longitude]).addTo(map)
+                        .bindPopup(`<b>${station.name}</b><br>${station.address}`);
+                }
+            });
+        }
+
+        // 8. KIỂM TRA: Nếu user VỪA TÌM "Nearby", vẽ thêm marker ĐỎ (vị trí user)
+        if (userLat != null && userLng != null) {
             const userIcon = L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
             });
 
             L.marker([userLat, userLng], {icon: userIcon}).addTo(map)
                 .bindPopup('<b>Vị trí của bạn</b>')
                 .openPopup();
-
-            if (nearbyStations && nearbyStations.length > 0) {
-                nearbyStations.forEach(station => {
-                    if (station.latitude && station.longitude) {
-                        L.marker([station.latitude, station.longitude]).addTo(map)
-                            .bindPopup(`<b>${station.name}</b><br>${station.address}`);
-                    }
-                });
-            }
         }
     }
 
+    // 9. Chạy hàm map NGAY KHI trang được tải xong
     document.addEventListener('DOMContentLoaded', (event) => {
         initializeMap();
     });

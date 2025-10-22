@@ -2,7 +2,7 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
-import evswap.swp391to4.dto.StaffUpdateRequest; // <-- Import DTO Sửa Staff
+import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.service.StaffService;
@@ -14,7 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // <-- Import RedirectAttributes
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -79,7 +79,7 @@ public class AdminController {
         try {
             StaffUpdateRequest staff = staffService.getStaffDetails(id);
             model.addAttribute("staff", staff);
-            return "admin/edit-staff"; // Trả về trang edit-staff.html
+            return "admin/edit-staff";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "redirect:/admin/staff";
@@ -97,20 +97,21 @@ public class AdminController {
                 model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
             }
             model.addAttribute("staff", staff);
-            return "admin/edit-staff"; // Trả về trang edit nếu lỗi validation
+            return "admin/edit-staff";
         }
         try {
             staffService.updateStaff(id, staff);
             redirect.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
-            return "redirect:/admin/staff"; // Về trang danh sách
+            return "redirect:/admin/staff";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("staff", staff);
-            return "admin/edit-staff"; // Ở lại trang edit
+            return "admin/edit-staff";
         }
     }
 
-    @GetMapping("/staff/delete/{id}")
+    // SỬA: Đổi sang @PostMapping cho an toàn
+    @PostMapping("/staff/delete/{id}")
     public String deleteStaff(@PathVariable Integer id, RedirectAttributes redirect) {
         try {
             staffService.deleteStaff(id);
@@ -118,13 +119,16 @@ public class AdminController {
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
-        return "redirect:/admin/staff"; // Về trang danh sách
+        return "redirect:/admin/staff";
     }
 
 
-    // ====================== STATION (XEM VÀ TẠO) ======================
+    // ==========================================================
+    // ====================== PHẦN QUẢN LÝ STATION ==================
+    // ==========================================================
 
-    @GetMapping("/station")
+    // SỬA: Đổi sang "/stations" (số nhiều)
+    @GetMapping("/stations")
     public String listStations(@RequestParam(value = "search", required = false) String search, Model model) {
         List<StationResponse> stationList;
         if (search == null || search.isBlank()) {
@@ -137,13 +141,15 @@ public class AdminController {
         return "admin/list-station";
     }
 
-    @GetMapping("/station/add")
+    // SỬA: Đổi sang "/stations/add"
+    @GetMapping("/stations/add")
     public String addStationForm(Model model) {
         model.addAttribute("station", new StationCreateRequest());
         return "admin/add-station";
     }
 
-    @PostMapping("/station/add")
+    // SỬA: Đổi sang "/stations/add"
+    @PostMapping("/stations/add")
     public String addStationSubmit(
             @Valid @ModelAttribute("station") StationCreateRequest station,
             BindingResult bindingResult,
@@ -169,43 +175,57 @@ public class AdminController {
 
     // ====================== STATION (SỬA VÀ XÓA) ======================
 
-    @GetMapping("/station/edit/{id}")
+    // SỬA: Đổi sang "/stations/edit/{id}"
+    @GetMapping("/stations/edit/{id}")
     public String editStationForm(@PathVariable Integer id, Model model) {
         try {
             StationResponse station = stationService.findById(id);
             model.addAttribute("station", station);
-            return "admin/edit-station"; // Trả về trang edit-station.html
+            return "admin/edit-station";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "redirect:/admin/station";
+            // SỬA: Redirect về "/admin/stations"
+            return "redirect:/admin/stations";
         }
     }
 
-    @PostMapping("/station/edit/{id}")
-    public String editStationSubmit(@PathVariable Integer id,
-                                    @Valid @ModelAttribute("station") StationCreateRequest station,
+    /**
+     * SỬA LỖI QUAN TRỌNG:
+     * Đã sửa lỗi crash khi validation (nhập sai) lúc edit.
+     */
+    @PostMapping("/stations/edit/{id}") // Keep path variable name as "id"
+    public String editStationSubmit(@PathVariable Integer id, // This 'id' is used by the HTML now
+                                    @Valid @ModelAttribute("station") StationCreateRequest stationRequest,
                                     BindingResult bindingResult,
                                     Model model,
                                     RedirectAttributes redirect) {
+
+        // Exactly like editStaffSubmit: Check for validation errors
         if (bindingResult.hasErrors()) {
             for (FieldError error : bindingResult.getFieldErrors()) {
                 model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
             }
-            model.addAttribute("station", station);
-            return "admin/edit-station";
+            // Return the DTO with errors - HTML no longer crashes!
+            model.addAttribute("station", stationRequest);
+            return "admin/edit-station"; // Stay on the edit page
         }
+
+        // Exactly like editStaffSubmit: Try to update
         try {
-            stationService.updateStation(id, station);
+            stationService.updateStation(id, stationRequest);
             redirect.addFlashAttribute("success", "Cập nhật trạm thành công!");
-            return "redirect:/admin/station"; // Về trang danh sách
+            return "redirect:/admin/stations"; // Go back to the list
+
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("station", station);
-            return "admin/edit-station"; // Ở lại trang edit
+            // Return the DTO with errors
+            model.addAttribute("station", stationRequest);
+            return "admin/edit-station"; // Stay on the edit page
         }
     }
 
-    @GetMapping("/station/delete/{id}")
+    // SỬA: Đổi sang @PostMapping cho an toàn
+    @PostMapping("/stations/delete/{id}")
     public String deleteStation(@PathVariable Integer id, RedirectAttributes redirect) {
         try {
             stationService.deleteStation(id);
@@ -213,6 +233,7 @@ public class AdminController {
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
-        return "redirect:/admin/station"; // Về trang danh sách
+        // SỬA: Redirect về "/admin/stations"
+        return "redirect:/admin/stations";
     }
 }
