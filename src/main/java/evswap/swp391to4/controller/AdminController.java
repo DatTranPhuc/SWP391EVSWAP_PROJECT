@@ -1,22 +1,30 @@
 package evswap.swp391to4.controller;
 
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import evswap.swp391to4.dto.FeedbackResponse;
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
+import evswap.swp391to4.service.FeedbackService;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
@@ -25,6 +33,7 @@ public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
+    private final FeedbackService feedbackService;
 
     // ====================== VIEW DASHBOARD ======================
     @GetMapping("/dashboard")
@@ -235,5 +244,24 @@ public class AdminController {
         }
         // SỬA: Redirect về "/admin/stations"
         return "redirect:/admin/stations";
+    }
+
+    // ====================== FEEDBACK (XEM VÀ TẠO) ======================
+
+    @GetMapping("/feedback")
+    public String listFeedback(Model model) {
+        List<FeedbackResponse> feedbackList = feedbackService.getAllFeedback();
+        model.addAttribute("feedbackList", feedbackList);
+        return "admin/list-feedback";
+    }
+
+    @GetMapping("/feedback/station/{stationId}")
+    public String listFeedbackByStation(@PathVariable Long stationId, Model model) {
+        List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByStationId(stationId);
+        String stationName = stationService.findById(stationId.intValue()).getName();
+        model.addAttribute("feedbackList", feedbackList);
+        model.addAttribute("stationName", stationName);
+        model.addAttribute("stationId", stationId);
+        return "admin/list-feedback";
     }
 }

@@ -411,10 +411,90 @@ main.container {
     text-decoration: underline;
 }
 .action-links .edit-link { color: var(--accent-primary); }
+.action-links .feedback-link { color: var(--accent-secondary); }
 .action-links .delete-link { color: var(--error-red); }
 
 .empty-state {
     text-align: center;
     padding: 2rem;
     color: var(--text-light);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.back-link {
+    margin-top: 0;
+}
+
+.back-link a {
+    color: var(--accent-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.back-link a:hover {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+/* Nút Xem tất cả feedback - giống hoàn toàn với nút ghost */
+.header-actions .btn.primary {
+    background: none !important;
+    background-color: var(--surface-soft) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+.header-actions .btn.primary:hover {
+    background: none !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--accent-secondary) !important;
+    border-color: var(--border-strong) !important;
+    box-shadow: 0 12px 28px rgba(2, 6, 16, 0.45) !important;
+    transform: none !important;
+}
+
+/* Nút Tìm và Thêm - giống hoàn toàn với nút ghost */
+.content-header .btn.primary,
+.admin-search .btn.primary {
+    background: none !important;
+    background-color: var(--surface-soft) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+.content-header .btn.primary:hover,
+.admin-search .btn.primary:hover {
+    background: none !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--accent-secondary) !important;
+    border-color: var(--border-strong) !important;
+    box-shadow: 0 12px 28px rgba(2, 6, 16, 0.45) !important;
+    transform: none !important;
+}
+
+/* Nút Tạo trạm và Tạo nhân viên - giống hoàn toàn với nút ghost */
+.form-actions .btn.primary {
+    background: none !important;
+    background-color: var(--surface-soft) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+.form-actions .btn.primary:hover {
+    background: none !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--accent-secondary) !important;
+    border-color: var(--border-strong) !important;
+    box-shadow: 0 12px 28px rgba(2, 6, 16, 0.45) !important;
+    transform: none !important;
 }

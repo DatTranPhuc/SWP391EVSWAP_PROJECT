@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng chính">
+            <a th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/vehicles}" class="nav-link-button">Phương tiện</a>
+            <a th:href="@{/stations}" class="nav-link-button">Tìm trạm</a>
+            <a th:href="@{/feedback}" class="nav-link-button">Báo cáo</a>
+            <a th:href="@{/account}" class="nav-link-button">Tài khoản</a>
+            <a th:href="@{/support}" class="nav-link-button">Hỗ trợ</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${session.loggedInDriver.fullName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <div class="feedback-content">
+            
+            <!-- Alert Messages -->
+            <div th:if="${success}" class="alert success auto-dismiss">
+                <div class="alert-content" th:text="${success}"></div>
+                <div class="progress-bar"></div>
+            </div>
+            <div th:if="${error}" class="alert error auto-dismiss">
+                <div class="alert-content" th:text="${error}"></div>
+                <div class="progress-bar"></div>
+            </div>
+
+            <!-- Feedback Form -->
+            <section class="feedback-form-section">
+                <h2>Gửi báo cáo mới</h2>
+                <form th:action="@{/feedback}" th:object="${feedback}" method="post" class="feedback-form">
+                    
+                    <div class="form-group">
+                        <label for="stationId">Chọn trạm</label>
+                        <div class="custom-select-wrapper">
+                            <div class="custom-select" id="station-select">
+                                <div class="custom-select-trigger">
+                                    <span class="selected-value">-- Chọn trạm --</span>
+                                    <div class="arrow">▼</div>
+                                </div>
+                                <div class="custom-options">
+                                    <div class="custom-option" data-value="">
+                                        <span class="text">-- Chọn trạm --</span>
+                                    </div>
+                                    <div th:each="station : ${stations}" 
+                                         class="custom-option" 
+                                         th:data-value="${station.stationId}">
+                                        <span class="text" th:text="${station.name + ' - ' + station.address}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="stationId" name="stationId" th:field="*{stationId}" required>
+                        </div>
+                        <div class="form-error" th:if="${stationIdError}" th:text="${stationIdError}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rating">Đánh giá</label>
+                        <div class="custom-select-wrapper">
+                            <div class="custom-select" id="rating-select">
+                                <div class="custom-select-trigger">
+                                    <span class="selected-value">-- Chọn đánh giá --</span>
+                                    <div class="arrow">▼</div>
+                                </div>
+                                <div class="custom-options">
+                                    <div class="custom-option" data-value="">
+                                        <span class="text">-- Chọn đánh giá --</span>
+                                    </div>
+                                    <div class="custom-option" data-value="1">
+                                        <span class="stars">⭐</span>
+                                        <span class="text">(1 sao) - Rất tệ</span>
+                                    </div>
+                                    <div class="custom-option" data-value="2">
+                                        <span class="stars">⭐⭐</span>
+                                        <span class="text">(2 sao) - Tệ</span>
+                                    </div>
+                                    <div class="custom-option" data-value="3">
+                                        <span class="stars">⭐⭐⭐</span>
+                                        <span class="text">(3 sao) - Bình thường</span>
+                                    </div>
+                                    <div class="custom-option" data-value="4">
+                                        <span class="stars">⭐⭐⭐⭐</span>
+                                        <span class="text">(4 sao) - Tốt</span>
+                                    </div>
+                                    <div class="custom-option" data-value="5">
+                                        <span class="stars">⭐⭐⭐⭐⭐</span>
+                                        <span class="text">(5 sao) - Rất tốt</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="rating" name="rating" th:field="*{rating}" required>
+                        </div>
+                        <div class="form-error" th:if="${ratingError}" th:text="${ratingError}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Nhận xét</label>
+                        <textarea id="comment" th:field="*{comment}" 
+                                  placeholder="Chia sẻ trải nghiệm của bạn về trạm này..." 
+                                  rows="4" maxlength="500"></textarea>
+                        <div class="form-error" th:if="${commentError}" th:text="${commentError}"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary">Gửi báo cáo</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Feedback History -->
+            <section class="feedback-history-section">
+                <h2>Lịch sử báo cáo của bạn</h2>
+                
+                <div th:if="${#lists.isEmpty(feedbackList)}" class="empty-state">
+                    <p>Bạn chưa gửi báo cáo nào.</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(feedbackList)}" class="feedback-list">
+                    <div th:each="feedback : ${feedbackList}" class="feedback-item">
+                        <div class="feedback-header">
+                            <h3 th:text="${feedback.stationName}">Tên trạm</h3>
+                            <div class="feedback-rating">
+                                <span th:each="i : ${#numbers.sequence(1, feedback.rating)}">⭐</span>
+                                <span th:if="${feedback.rating < 5}" 
+                                      th:each="i : ${#numbers.sequence(feedback.rating + 1, 5)}" 
+                                      class="rating-empty"></span>
+                            </div>
+                        </div>
+                        <div class="feedback-content">
+                            <p th:text="${feedback.comment}">Nội dung báo cáo</p>
+                        </div>
+                        <div class="feedback-footer">
+                            <span class="feedback-date" th:text="${#temporals.format(feedback.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày tạo</span>
+                            <form th:action="@{/feedback/delete/{id}(id=${feedback.feedbackId})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn ghost small" 
+                                        onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');">
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p class="footer-note">© 2025 EV SWAP. Mạng lưới đổi pin xe máy điện thông minh đầu tiên tại Việt Nam.</p>
+    </div>
+</footer>
+
+<style>
+/* 
+ * ========================================
+ * CSS VARIABLES - HỆ THỐNG QUẢN LÝ MÀU SẮC
+ * ========================================
+ * 
+ * Mục đích: Tập trung tất cả thuộc tính styling vào một nơi
+ * Lợi ích: Dễ điều chỉnh, maintain, và đảm bảo tính nhất quán
+ * 
+ * Cách sử dụng: Chỉ cần thay đổi giá trị các biến dưới đây
+ * để điều chỉnh toàn bộ giao diện options
+ */
+:root {
+    /* 
+     * ========== MÀU NỀN OPTIONS - HÀI HÒA VÀ DỄ NHÌN ==========
+     * Sử dụng màu sắc nhẹ nhàng, không quá đậm
+     */
+    --option-bg-base:     rgba(255, 255, 255, 0.08);   /* Nền mặc định - trắng trong suốt */
+    --option-bg-hover:    rgba(34, 197, 94, 0.12);     /* Nền khi hover - xanh lá nhẹ */
+    --option-bg-checked:  rgba(34, 197, 94, 0.18);      /* Nền khi được chọn - xanh lá vừa */
+    
+    /* 
+     * ========== MÀU CHỮ - TƯƠNG PHẢN TỐT ==========
+     * Màu chữ dễ đọc trên mọi nền
+     */
+    --option-color-base:  #f3f4f6;                      /* Chữ mặc định - xám nhạt */
+    --option-color-hover: #ffffff;                     /* Chữ khi hover - trắng */
+    
+    /* 
+     * ========== MÀU VIỀN TRÁI - ACCENT NHẸ NHÀNG ==========
+     * Viền trái tinh tế, không quá nổi bật
+     */
+    --option-border-base:  rgba(34, 197, 94, 0.15);    /* Viền mặc định - xanh lá rất nhạt */
+    --option-border-hover: rgba(34, 197, 94, 0.3);     /* Viền khi hover - xanh lá nhạt */
+    --option-border-checked: rgba(34, 197, 94, 0.5);  /* Viền khi chọn - xanh lá vừa */
+    
+    /* 
+     * ========== LAYOUT & SPACING - BO GÓC MỀM MẠI ==========
+     * Bo góc lớn hơn để mềm mại và hiện đại
+     */
+    --option-radius:      12px;                        /* Bo góc lớn hơn - mềm mại */
+    --option-padding:      10px 16px;                   /* Khoảng cách trong rộng hơn */
+    --option-margin:      3px 0;                       /* Khoảng cách ngoài lớn hơn */
+    --option-transition:  all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* Animation mượt mà hơn */
+}
+
+/* 
+ * ========================================
+ * LAYOUT CONTAINER - KHUNG CHÍNH
+ * ========================================
+ */
+.feedback-content {
+    max-width: 800px;                    /* Giới hạn chiều rộng tối đa */
+    margin: 0 auto;                      /* Căn giữa trang */
+    padding: 2rem 0;                        /* Khoảng cách trên/dưới */
+}
+
+/* 
+ * ========================================
+ * FORM SECTIONS - CÁC PHẦN FORM
+ * ========================================
+ * Áp dụng cho cả form gửi feedback và lịch sử feedback
+ */
+.feedback-form-section, 
+.feedback-history-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    backdrop-filter: blur(20px);         /* Hiệu ứng kính mờ */
+    border-radius: 20px;                 /* Bo góc lớn - mềm mại */
+    padding: 2rem;                       /* Khoảng cách trong */
+    margin-bottom: 2rem;                  /* Khoảng cách giữa các sections */
+    border: 1px solid rgba(255, 255, 255, 0.15);  /* Viền trong suốt */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);   /* Bóng đổ nhẹ */
+}
+
+/* 
+ * ========================================
+ * HEADINGS - TIÊU ĐỀ CÁC PHẦN
+ * ========================================
+ */
+.feedback-form-section h2, 
+.feedback-history-section h2 {
+    color: #f3f4f6;                      /* Màu trắng nhạt */
+    margin-bottom: 1.5rem;                /* Khoảng cách dưới */
+    font-size: 1.5rem;                   /* Kích thước chữ */
+    font-weight: 600;                     /* Độ đậm vừa phải */
+}
+
+/* 
+ * ========================================
+ * FORM GROUPS - NHÓM CÁC TRƯỜNG INPUT
+ * ========================================
+ */
+.feedback-form .form-group {
+    margin-bottom: 1.5rem;                /* Khoảng cách giữa các nhóm */
+}
+
+/* 
+ * ========================================
+ * FORM LABELS - NHÃN CÁC TRƯỜNG
+ * ========================================
+ */
+.feedback-form label {
+    display: block;                        /* Hiển thị dạng block */
+    color: #f3f4f6;                       /* Màu trắng nhạt */
+    margin-bottom: 0.5rem;                /* Khoảng cách dưới */
+    font-weight: 500;                     /* Độ đậm vừa phải */
+}
+
+/* 
+ * ========================================
+ * FORM INPUTS - CÁC TRƯỜNG NHẬP LIỆU
+ * ========================================
+ * Áp dụng cho cả select dropdown và textarea
+ */
+.feedback-form select, 
+.feedback-form textarea {
+    width: 100%;                          /* Chiều rộng đầy đủ */
+    padding: 0.875rem;                    /* Khoảng cách trong lớn hơn */
+    border: 1px solid rgba(255, 255, 255, 0.15);  /* Viền trong suốt nhẹ hơn */
+    border-radius: 16px;                   /* Bo góc lớn hơn - mềm mại */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    color: #f3f4f6;                       /* Màu chữ trắng nhạt */
+    font-size: 1rem;                      /* Kích thước chữ chuẩn */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* Animation mượt mà */
+    backdrop-filter: blur(15px);          /* Hiệu ứng kính mờ mạnh hơn */
+}
+
+/* 
+ * ========================================
+ * FOCUS STATES - TRẠNG THÁI KHI FOCUS
+ * ========================================
+ * Khi người dùng click vào input hoặc sử dụng keyboard navigation
+ */
+.feedback-form select:focus, 
+.feedback-form textarea:focus {
+    outline: none;                         /* Bỏ outline mặc định */
+    border-color: rgba(34, 197, 94, 0.4); /* Viền xanh lá nhẹ khi focus */
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08), 0 6px 20px rgba(34, 197, 94, 0.12);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+    transform: translateY(-2px);          /* Hiệu ứng nổi lên rõ hơn */
+}
+
+/* 
+ * ========================================
+ * SELECT OPTIONS - ĐỊNH DẠNG CHUNG TỔNG THỂ
+ * ========================================
+ * Áp dụng cho tất cả options trong dropdown
+ * Sử dụng CSS variables để dễ điều chỉnh
+ */
+.feedback-form select option {
+    /* Base properties từ CSS variables */
+    background: var(--option-bg-base);        /* Nền từ biến CSS */
+    color: var(--option-color-base);          /* Màu chữ từ biến CSS */
+    padding: var(--option-padding);           /* Khoảng cách từ biến CSS */
+    border: none;                             /* Bỏ viền mặc định */
+    border-radius: var(--option-radius);      /* Bo góc từ biến CSS */
+    margin: var(--option-margin);             /* Khoảng cách ngoài từ biến CSS */
+    border-left: 3px solid var(--option-border-base);  /* Viền trái từ biến CSS */
+    transition: var(--option-transition);     /* Animation từ biến CSS */
+    font-size: 0.95rem;                      /* Kích thước chữ nhỏ hơn */
+    line-height: 1.4;                        /* Chiều cao dòng */
+}
+
+/* Hover effect cho tất cả options */
+.feedback-form select option:hover {
+    background: linear-gradient(135deg, var(--option-bg-hover), rgba(79, 70, 229, 0.08));
+    color: var(--option-color-hover);         /* Chữ trắng khi hover */
+    border-left-color: var(--option-border-hover);  /* Viền trái đậm hơn */
+    transform: translateY(-1px);             /* Hiệu ứng nổi lên */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);  /* Bóng đổ nhẹ */
+}
+
+/* Checked state cho tất cả options */
+.feedback-form select option:checked {
+    background: linear-gradient(135deg, var(--option-bg-checked), rgba(79, 70, 229, 0.15));
+    color: var(--option-color-hover);         /* Chữ trắng khi chọn */
+    font-weight: 500;                        /* Chữ đậm hơn */
+    border-left-color: var(--option-border-checked);  /* Viền trái đậm nhất */
+}
+
+/* 
+ * ========================================
+ * CUSTOM SELECT COMPONENT - KIỂM SOÁT HOÀN TOÀN
+ * ========================================
+ * Tạo custom select để có thể styling options
+ */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.5) 0%,    /* Tím-xanh dương tối */
+        rgba(15, 50, 30, 0.5) 100%  /* Xanh lá tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.5);
+    border-radius: 16px;
+    color: #f3f4f6;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+}
+
+.custom-select-trigger:hover {
+    border-color: rgba(67, 56, 202, 0.7);
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.7) 0%,    /* Tím-xanh dương tối đậm hơn */
+        rgba(15, 50, 30, 0.7) 100%  /* Xanh lá tối đậm hơn */
+    );
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.custom-select-trigger.active {
+    border-color: rgba(67, 56, 202, 0.8);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.25), 0 6px 20px rgba(67, 56, 202, 0.3);
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.9) 0%,    /* Tím-xanh dương tối đậm nhất */
+        rgba(15, 50, 30, 0.9) 100%  /* Xanh lá tối đậm nhất */
+    );
+    transform: translateY(-2px);
+}
+
+.arrow {
+    transition: transform 0.3s ease;
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.8) 0%,    /* Tím-xanh dương */
+        rgba(34, 197, 94, 0.8) 100%  /* Xanh lá */
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 0.8rem;
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.98) 0%,    /* Tím-xanh dương rất tối */
+        rgba(15, 50, 30, 0.98) 100%  /* Xanh lá rất tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.6);
+    border-radius: 12px;
+    margin-top: 4px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.custom-options.open {
+    max-height: 240px; /* Giới hạn chiều cao cho 6 options */
+    opacity: 1;
+    transform: translateY(0);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar cho options */
+.custom-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-options::-webkit-scrollbar-track {
+    background: rgba(67, 56, 202, 0.1);
+    border-radius: 3px;
+}
+
+.custom-options::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.6) 0%,    /* Tím-xanh dương */
+        rgba(34, 197, 94, 0.6) 100%  /* Xanh lá */
+    );
+    border-radius: 3px;
+}
+
+.custom-options::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.8) 0%,    /* Tím-xanh dương đậm hơn */
+        rgba(34, 197, 94, 0.8) 100%  /* Xanh lá đậm hơn */
+    );
+}
+
+.custom-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid rgba(67, 56, 202, 0.6);
+    margin: 4px 8px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.4) 0%,    /* Tím-xanh dương tối */
+        rgba(15, 50, 30, 0.4) 100%  /* Xanh lá tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.3);
+}
+
+.custom-option:hover {
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.6) 0%,    /* Tím-xanh dương tối đậm hơn */
+        rgba(15, 50, 30, 0.6) 100%  /* Xanh lá tối đậm hơn */
+    );
+    border-left-color: rgba(67, 56, 202, 0.8);
+    border-color: rgba(67, 56, 202, 0.6);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-option.selected {
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.8) 0%,    /* Tím-xanh dương tối đậm nhất */
+        rgba(15, 50, 30, 0.8) 100%  /* Xanh lá tối đậm nhất */
+    );
+    border-left-color: rgba(67, 56, 202, 1);
+    border-color: rgba(67, 56, 202, 0.7);
+    color: #ffffff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.custom-option .text {
+    color: #f3f4f6;
+    font-size: 0.95rem;
+}
+
+.custom-option:hover .text,
+.custom-option.selected .text {
+    color: #ffffff;
+}
+
+.custom-option .stars {
+    margin-right: 8px;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.3));
+}
+
+
+/* Alert Messages */
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    backdrop-filter: blur(15px);
+    border: 1px solid;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.alert.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(21, 128, 61, 0.1));
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #10b981;
+}
+
+.alert.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+/* Auto-dismiss Alert */
+.alert.auto-dismiss {
+    animation: slideInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.alert.auto-dismiss.fade-out {
+    animation: slideOutUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Alert Content */
+.alert-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Progress Bar */
+.progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        rgba(34, 197, 94, 0.8) 0%, 
+        rgba(21, 128, 61, 0.8) 100%
+    );
+    border-radius: 0 0 12px 12px;
+    animation: progressBar 3s linear forwards;
+    z-index: 1;
+}
+
+.alert.error .progress-bar {
+    background: linear-gradient(90deg, 
+        rgba(239, 68, 68, 0.8) 0%, 
+        rgba(185, 28, 28, 0.8) 100%
+    );
+}
+
+/* Animations */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOutUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes progressBar {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* Styling cho form group */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #f3f4f6;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* Cải thiện placeholder cho textarea */
+.feedback-form textarea::placeholder {
+    color: rgba(243, 244, 246, 0.6);
+    font-style: italic;
+}
+
+/* Animation cho form elements - nhẹ nhàng và tinh tế */
+.feedback-form select:hover, .feedback-form textarea:hover {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.feedback-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-error {
+    color: #f87171;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    margin-top: 1.5rem;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.feedback-item {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+}
+
+.feedback-item:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.feedback-header h3 {
+    color: #f3f4f6;
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.feedback-rating {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.feedback-rating span {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.2));
+    font-size: 1.1rem;
+}
+
+.rating-empty {
+    color: rgba(255, 255, 255, 0.3);
+    filter: none;
+}
+
+.rating-empty::before {
+    content: "☆";
+}
+
+.feedback-content p {
+    color: rgba(243, 244, 246, 0.8);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.feedback-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: rgba(243, 244, 246, 0.6);
+}
+
+.btn.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(243, 244, 246, 0.6);
+}
+
+.empty-state p {
+    font-size: 1.125rem;
+    margin: 0;
+}
+</style>
+
+<script>
+// Custom Select JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize both custom selects
+    initializeCustomSelect('station-select', 'stationId');
+    initializeCustomSelect('rating-select', 'rating');
+    
+    function initializeCustomSelect(selectId, inputId) {
+        const customSelect = document.getElementById(selectId);
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const options = customSelect.querySelector('.custom-options');
+        const customOptions = customSelect.querySelectorAll('.custom-option');
+        const hiddenInput = document.getElementById(inputId);
+        const selectedValue = trigger.querySelector('.selected-value');
+
+        // Toggle dropdown
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Close other open dropdowns first
+            const allCustomSelects = document.querySelectorAll('.custom-select');
+            allCustomSelects.forEach(select => {
+                if (select !== customSelect && select.classList.contains('active')) {
+                    const otherOptions = select.querySelector('.custom-options');
+                    select.classList.remove('active');
+                    otherOptions.classList.remove('open');
+                    
+                    // Add closing animation for other dropdowns
+                    otherOptions.style.transform = 'translateY(-10px)';
+                    otherOptions.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        otherOptions.style.transform = '';
+                        otherOptions.style.opacity = '';
+                    }, 300);
+                }
+            });
+            
+            customSelect.classList.toggle('active');
+            options.classList.toggle('open');
+            
+            // Add opening animation
+            if (options.classList.contains('open')) {
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Trigger opening animation
+                setTimeout(() => {
+                    options.style.transform = 'translateY(0)';
+                    options.style.opacity = '1';
+                }, 10);
+            }
+        });
+
+        // Handle option selection
+        customOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                const text = this.querySelector('.text').textContent;
+                const stars = this.querySelector('.stars');
+                
+                // Update selected value display
+                if (stars) {
+                    selectedValue.textContent = stars.textContent + ' ' + text;
+                } else {
+                    selectedValue.textContent = text;
+                }
+                
+                // Update hidden input
+                hiddenInput.value = value;
+                
+                // Update visual state
+                customOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // Close dropdown with animation
+                customSelect.classList.remove('active');
+                options.classList.remove('open');
+                
+                // Add closing animation
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Reset animation after transition
+                setTimeout(() => {
+                    options.style.transform = '';
+                    options.style.opacity = '';
+                }, 300);
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('active');
+                options.classList.remove('open');
+                
+                // Add closing animation
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Reset animation after transition
+                setTimeout(() => {
+                    options.style.transform = '';
+                    options.style.opacity = '';
+                }, 300);
+            }
+        });
+
+        // Handle keyboard navigation
+        trigger.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                customSelect.classList.toggle('active');
+                options.classList.toggle('open');
+            }
+        });
+
+        // Set initial value if form is pre-filled
+        const initialValue = hiddenInput.value;
+        if (initialValue) {
+            const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
+            if (selectedOption) {
+                const text = selectedOption.querySelector('.text').textContent;
+                const stars = selectedOption.querySelector('.stars');
+                
+                if (stars) {
+                    selectedValue.textContent = stars.textContent + ' ' + text;
+                } else {
+                    selectedValue.textContent = text;
+                }
+                selectedOption.classList.add('selected');
+            }
+        }
+    }
+});
+
+// Auto-dismiss alerts after 3 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert.auto-dismiss');
+    
+    alerts.forEach(alert => {
+        // Add fade-out class after 3 seconds
+        setTimeout(() => {
+            alert.classList.add('fade-out');
+            
+            // Remove element after animation completes
+            setTimeout(() => {
+                alert.remove();
+            }, 500); // 0.5s animation duration
+        }, 3000); // 3 seconds
+    });
+});
+</script>
+
+</body>
+</html>

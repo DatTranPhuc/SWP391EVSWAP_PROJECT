@@ -1,13 +1,14 @@
 package evswap.swp391to4.controller;
 
-import evswap.swp391to4.entity.Driver;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import evswap.swp391to4.entity.Driver;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class DashboardController {
@@ -51,8 +52,7 @@ public class DashboardController {
         }
 
         if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
-            return "redirect:/dashboard";
+            return "redirect:/feedback";
         }
 
         if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {

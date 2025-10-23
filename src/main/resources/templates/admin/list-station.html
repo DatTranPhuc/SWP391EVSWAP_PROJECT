@@ -76,6 +76,7 @@
                 </td>
                 <td class="action-links">
                     <a th:href="@{/admin/stations/edit/{id}(id=${station.stationId})}" class="edit-link">Sửa</a>
+                    <a th:href="@{/admin/feedback/station/{id}(id=${station.stationId})}" class="feedback-link">Xem Feedback</a>
 
                     <form th:action="@{/admin/stations/delete/{id}(id=${station.stationId})}" method="post" style="display: inline; margin: 0; padding: 0;">
                         <button type="submit" class="delete-link"
