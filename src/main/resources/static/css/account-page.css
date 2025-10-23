@@ -1,0 +1,363 @@
+/* ---- account-page.css ---- */
+/* Import font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+/* ===== 1. Biến màu sắc & Font (Copy từ dashboard.css) ===== */
+:root {
+    --bg-gradient: linear-gradient(145deg, #05070c 0%, #121826 45%, #1e293b 100%);
+    --bg-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80"); /* Có thể đổi ảnh nền khác nếu muốn */
+    --surface: rgba(18, 23, 34, 0.72);
+    --surface-strong: rgba(22, 30, 42, 0.86);
+    --surface-soft: rgba(255, 255, 255, 0.08);
+    --surface-ghost: rgba(255, 255, 255, 0.05);
+    --accent-primary: #6366f1; /* Màu tím Indigo */
+    --accent-secondary: #22d3ee; /* Màu xanh Cyan */
+    --accent-success: #22c55e; /* Màu xanh lá cây cho số dư */
+    --accent-error: #ef4444; /* Màu đỏ cho lỗi */
+    --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    --accent-soft: rgba(99, 102, 241, 0.18);
+    --accent-strong-soft: rgba(34, 211, 238, 0.22);
+    --text-primary: #f3f4f6; /* Màu chữ chính (trắng xám) */
+    --text-secondary: rgba(226, 232, 240, 0.78); /* Màu chữ phụ */
+    --text-tertiary: rgba(148, 163, 184, 0.68); /* Màu chữ mờ hơn */
+    --border-color: rgba(99, 102, 241, 0.32); /* Viền màu tím nhạt */
+    --border-strong: rgba(34, 211, 238, 0.4); /* Viền màu xanh nhạt */
+    --shadow-soft: 0 28px 60px rgba(2, 6, 16, 0.6);
+    --radius-lg: 30px;
+    --radius-md: 24px;
+    --radius-sm: 18px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* ===== 2. Body Style (Copy từ dashboard.css) ===== */
+body.dashboard-body {
+    margin: 0;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    background: var(--bg-gradient), var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Hiệu ứng nền (Copy từ dashboard.css) */
+.background-gradient {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, rgba(6, 10, 18, 0.94) 0%, rgba(12, 18, 28, 0.72) 100%);
+    backdrop-filter: blur(22px);
+    z-index: -3;
+}
+.background-glow {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(circle at 22% 20%, rgba(99, 102, 241, 0.28), transparent 58%),
+    radial-gradient(circle at 76% 16%, rgba(34, 211, 238, 0.22), transparent 64%),
+    radial-gradient(circle at 48% 110%, rgba(79, 70, 229, 0.18), transparent 74%);
+    z-index: -2;
+}
+
+/* ===== 3. Container & Layout Chung (Copy/Adapt từ dashboard.css) ===== */
+.container {
+    width: min(1080px, 92vw); /* Giảm chiều rộng một chút cho trang quản lý */
+    margin: 0 auto;
+}
+.manage-main {
+    padding-bottom: 64px;
+}
+
+/* ===== 4. Header Style (Adapt từ station.css cũ + dashboard.css vars) ===== */
+.manage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 0 20px; /* Điều chỉnh padding */
+    gap: 24px;
+    border-bottom: 1px solid var(--border-strong);
+    margin-bottom: 30px;
+}
+.driver-identity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.driver-avatar { /* Style avatar tiền tệ */
+    font-size: 1.8rem;
+    background: var(--surface-soft);
+    color: var(--accent-secondary);
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 0 0 1px var(--border-color);
+}
+.driver-intro { /* ... */ }
+.subtitle {
+    display: inline-block;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+}
+.page-title {
+    margin: 0;
+    font-size: clamp(1.8rem, 3vw, 2.2rem); /* Responsive font size */
+    font-weight: 700;
+}
+.page-hint {
+    margin: 8px 0 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+.header-actions { /* ... */ }
+
+/* ===== 5. Button Style (Copy từ dashboard.css) ===== */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 0.95rem;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border 0.2s ease;
+}
+.btn.primary { /* ... */ }
+.btn.ghost { /* ... */ }
+.btn.outline { /* ... */ }
+/* Thêm hover effects nếu cần */
+.btn.primary:hover { transform: translateY(-1px); }
+.btn.ghost:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.12); }
+.btn.outline:hover { color: var(--text-primary); border-color: var(--accent-secondary); transform: translateY(-1px); }
+
+/* ===== 6. Alert Style (Copy/Adapt từ dashboard.css) ===== */
+.alert {
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    border: 1px solid transparent;
+    text-align: left; /* Canh lề trái cho alert */
+}
+.alert.success {
+    background: rgba(34, 197, 94, 0.18); /* Màu xanh lá cây từ Tailwind */
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+}
+.alert.error {
+    background: rgba(239, 68, 68, 0.18); /* Màu đỏ */
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+/* ===== 7. Stat Card Style (Copy/Adapt từ dashboard.css) ===== */
+.stat-card {
+    background: var(--surface-strong);
+    border-radius: var(--radius-md);
+    padding: 24px; /* Giảm padding chút */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    display: grid;
+    gap: 8px; /* Giảm gap */
+    backdrop-filter: blur(14px);
+}
+.stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-tertiary);
+}
+.stat-value { /* Style riêng cho số dư */
+    font-size: clamp(2rem, 5vw, 2.5rem); /* Responsive */
+    font-weight: 700;
+    margin: 4px 0;
+    color: var(--accent-success); /* Màu xanh lá */
+    line-height: 1.2;
+}
+.stat-caption {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* ===== 8. Table Style (Adapt từ station.css cũ + dashboard.css vars) ===== */
+h2 {
+    margin-top: 32px;
+    margin-bottom: 18px;
+    font-size: 1.6rem; /* Giảm cỡ chữ h2 */
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 10px;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    margin-top: 10px; /* Giảm margin top */
+}
+th, td {
+    padding: 14px 18px; /* Điều chỉnh padding */
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    vertical-align: middle;
+    color: var(--text-secondary);
+}
+th {
+    background: var(--surface-soft);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem; /* Chữ nhỏ hơn */
+    letter-spacing: 1px;
+}
+tr:last-child td {
+    border-bottom: none;
+}
+tr:hover {
+    background: var(--surface-ghost);
+}
+/* Style cho cột trạng thái */
+td span[style*="background"] {
+    padding: 4px 10px; /* Tăng padding ngang */
+    border-radius: 999px; /* Bo tròn */
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-block;
+    border: 1px solid currentColor; /* Thêm viền nhẹ */
+}
+
+/* ===== 9. Form Style (Adapt từ dashboard.css login modal) ===== */
+form#depositForm { /* Target cụ thể form nạp tiền */
+    margin-top: 16px;
+    display: grid; /* Dùng grid cho dễ canh */
+    gap: 12px; /* Khoảng cách giữa label và input */
+}
+label[for="amount"] {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem; /* Chữ nhỏ hơn */
+}
+input[type="number"]#amount {
+    font-family: inherit;
+    font-size: 1.1rem; /* Cỡ chữ vừa phải */
+    padding: 12px 16px;
+    border-radius: var(--radius-sm); /* Bo góc nhiều hơn */
+    border: 1px solid var(--border-color);
+    background: rgba(15, 20, 30, 0.72); /* Nền tối giống login */
+    color: var(--text-primary);
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input[type="number"]#amount:focus {
+    outline: none;
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.3); /* Hiệu ứng focus giống login */
+}
+/* Style cho nút submit trong form */
+form#depositForm button[type="button"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem; /* Cỡ chữ vừa phải */
+    margin-top: 8px; /* Giảm margin top */
+}
+/* Style cho div báo lỗi validation */
+form#depositForm .alert.error {
+    padding: 10px;
+    margin: 0; /* Bỏ margin mặc định */
+    font-size: 0.85em;
+    text-align: left;
+}
+
+/* ===== 10. Modal Style (Adapt từ dashboard.css login modal) ===== */
+.station-modal { /* Đổi tên class nếu cần, hoặc giữ nguyên */
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: clamp(24px, 6vw, 48px); z-index: 120;
+}
+.station-modal[aria-hidden="true"] { display: none !important; } /* Ẩn modal */
+.modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(4, 8, 16, 0.72);
+    backdrop-filter: blur(18px);
+}
+.modal-content {
+    background: var(--surface-strong);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-soft);
+    width: min(500px, 90vw); /* Giảm chiều rộng modal */
+    overflow: hidden;
+    position: relative; z-index: 1;
+    padding: 2.5rem; /* Thêm padding */
+    display: grid; /* Dùng grid để dễ canh */
+    gap: 1rem;
+}
+.modal-close {
+    position: absolute; top: 18px; right: 20px;
+    width: 36px; height: 36px; /* Giảm kích thước nút close */
+    border-radius: 50%; border: none; background: var(--surface-soft); color: var(--text-primary);
+    font-size: 1.2rem; /* Giảm cỡ chữ */ font-weight: 600; line-height: 1; cursor: pointer;
+    box-shadow: 0 10px 25px rgba(2, 6, 16, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.modal-close:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 16px 38px rgba(99, 102, 241, 0.2);
+    background: var(--surface-ghost);
+}
+.modal-content h2 { /* Style tiêu đề modal */
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem; /* Bỏ border bottom, giảm margin */
+    text-align: center;
+    color: var(--text-primary);
+    border: none; padding: 0;
+}
+.modal-content p { /* Style text trong modal */
+    text-align: center;
+    color: var(--text-secondary);
+    margin: 0;
+}
+#qrCodeContainer { /* Style khu vực QR */
+    text-align: center; margin: 15px 0; min-height: 180px; /* Giảm min-height */
+    display: grid; place-items: center;
+}
+#qrCodeContainer img { /* Style ảnh QR */
+    max-width: 90%; /* Thu nhỏ ảnh QR chút */ height: auto; border: none; /* Bỏ border */
+    border-radius: var(--radius-md); padding: 8px; background: white;
+}
+#qrErrorDisplay { /* Style lỗi QR */
+    text-align: center; color: var(--accent-error); font-weight: 500;
+    min-height: 1.2em; font-size: 0.9em;
+}
+
+/* ===== 11. Bố cục trang tài khoản ===== */
+.account-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr; /* Cột trái cố định */
+    gap: 32px;
+    align-items: flex-start;
+    margin-top: 30px;
+}
+
+/* ===== 12. Responsive ===== */
+@media (max-width: 960px) {
+    .account-layout {
+        grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+    }
+    .manage-header { flex-direction: column; align-items: flex-start; }
+    .header-actions { margin-top: 16px; }
+}
+@media (max-width: 680px) {
+    th, td { padding: 12px 10px; font-size: 0.9em; } /* Điều chỉnh padding bảng */
+    input[type="number"]#amount { font-size: 1rem; padding: 10px 14px;}
+    form#depositForm button { font-size: 1rem; }
+    .modal-content { padding: 2rem 1.5rem; } /* Giảm padding modal */
+    .modal-close { top: 12px; right: 12px; width: 32px; height: 32px; font-size: 1rem;}
+    .modal-content h2 { font-size: 1.3rem; }
+}
