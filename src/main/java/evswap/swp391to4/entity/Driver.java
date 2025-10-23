@@ -6,18 +6,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "driver")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@ToString(exclude = "vehicles")
-@EqualsAndHashCode(exclude = "vehicles")
+@Entity @Table(name = "driver")
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@ToString(exclude = "vehicles") @EqualsAndHashCode(exclude = "vehicles")
 public class Driver {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "driver_id")
     private Integer driverId;
 
@@ -33,20 +26,26 @@ public class Driver {
     @Column(unique = true)
     private String phone;
 
-    @Column(name = "email_verified")
-    private Boolean emailVerified;
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private Boolean emailVerified = false;
 
-    // 🟢 Thêm cho chức năng quên mật khẩu
     @Column(name = "email_otp")
     private String emailOtp;
 
     @Column(name = "otp_expiry")
     private Instant otpExpiry;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
+
+    @PrePersist
+    void prePersist(){
+        if (createdAt == null) createdAt = Instant.now();
+        if (emailVerified == null) emailVerified = false;
+    }
 }
