@@ -15,6 +15,7 @@ public interface StationRepository extends JpaRepository<Station, Integer> {
     Optional<Station> findByNameIgnoreCase(String name);
     List<Station> findByNameContainingIgnoreCase(String keyword);
     List<Station> findByStatus(String status);
+    boolean existsByName(String name);
 
     @Query(value =
             // Bắt đầu một Common Table Expression (CTE) tên là StationWithDistance

@@ -3,6 +3,7 @@ package evswap.swp391to4.service;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.repository.StaffRepository;
 import evswap.swp391to4.repository.StationDistance;
 import evswap.swp391to4.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.List;
 public class StationService {
 
     private final StationRepository stationRepo;
+    private final StaffRepository staffRepo;
 
     /**
      * Tạo một trạm mới dựa trên yêu cầu.
@@ -109,15 +111,30 @@ public class StationService {
      * @param req Đối tượng chứa thông tin cập nhật.
      * @return DTO của trạm sau khi đã cập nhật.
      */
+
     @Transactional
     public StationResponse updateStation(Integer stationId, StationCreateRequest req) {
+        // 1. Tìm trạm
         Station s = stationRepo.findById(stationId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy trạm với ID: " + stationId));
+
+        // 2. KIỂM TRA TÊN TRÙNG (LOGIC BỊ THIẾU)
+        // Kiểm tra xem tên mới (req.getName()) có tồn tại không
+        stationRepo.findByNameIgnoreCase(req.getName())
+                .ifPresent(existingStation -> {
+                    // Nếu tên này đã tồn tại VÀ nó thuộc về một trạm KHÁC
+                    if (!existingStation.getStationId().equals(stationId)) {
+                        throw new IllegalStateException("Tên trạm '" + req.getName() + "' đã bị trạm khác sử dụng.");
+                    }
+                });
+
+        // 3. Cập nhật thông tin
         s.setName(req.getName());
         s.setAddress(req.getAddress());
         s.setLatitude(req.getLatitude());
         s.setLongitude(req.getLongitude());
         s.setStatus(req.getStatus() != null ? req.getStatus() : s.getStatus());
+
         Station saved = stationRepo.save(s);
         return toResponse(saved);
     }
@@ -128,9 +145,18 @@ public class StationService {
      */
     @Transactional
     public void deleteStation(Integer stationId) {
+        // 1. Kiểm tra trạm có tồn tại không
         if (!stationRepo.existsById(stationId)) {
             throw new IllegalStateException("Không tìm thấy trạm với ID: " + stationId);
         }
+
+        // 2. !!! KIỂM TRA MỚI !!!
+        // Kiểm tra xem có Staff nào đang được gán cho trạm này không
+        if (staffRepo.existsByStationStationId(stationId)) {
+            throw new IllegalStateException("Không thể xóa trạm. Vẫn còn nhân viên được gán cho trạm này.");
+        }
+
+        // 3. Nếu an toàn, tiến hành xóa
         stationRepo.deleteById(stationId);
     }
 

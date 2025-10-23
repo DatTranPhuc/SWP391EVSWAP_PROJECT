@@ -26,34 +26,30 @@
         <div class="showcase-header">
             <p class="section-badge">Hệ sinh thái pin thông minh</p>
             <h1>EV SWAP - <span>Hệ thống đổi pin xe máy điện</span> thông minh nhất Việt Nam</h1>
-            <p>Trạm đổi pin phủ khắp, quy trình nhanh chóng và quản lý phương tiện tiện lợi. Sẵn sàng đồng hành trên mọi hành trình xanh của bạn.</p>
+            <p>Trạm đổi pin phủ khắp, quy trình nhanh chóng và quản lý phương tiện tiện lợi.</p>
         </div>
         <div class="showcase-highlights">
             <article class="highlight-card">
                 <div class="highlight-icon">⚡</div>
                 <div class="highlight-content">
                     <h3>Đổi pin siêu tốc</h3>
-                    <p>Hoàn tất đổi pin chỉ trong 3 phút với hệ thống tự động hóa và hỗ trợ 24/7.</p>
+                    <p>Hoàn tất đổi pin chỉ trong 3 phút.</p>
                 </div>
             </article>
             <article class="highlight-card">
                 <div class="highlight-icon">📍</div>
                 <div class="highlight-content">
                     <h3>Mạng lưới toàn quốc</h3>
-                    <p>Hơn 150 trạm phủ rộng, luôn tìm được địa điểm gần nhất ngay trên ứng dụng.</p>
+                    <p>150+ trạm phủ rộng khắp.</p>
                 </div>
             </article>
             <article class="highlight-card">
                 <div class="highlight-icon">🔒</div>
                 <div class="highlight-content">
-                    <h3>An tâm tuyệt đối</h3>
-                    <p>Quản lý tài khoản và phương tiện bảo mật cao, thông báo theo thời gian thực.</p>
+                    <h3>Bảo mật cao</h3>
+                    <p>Thông báo và xác thực an toàn.</p>
                 </div>
             </article>
-        </div>
-        <div class="auth-meta">
-            <span class="status-dot"></span>
-            <span>Hỗ trợ khách hàng 24/7 · Hotline 1900 636 900</span>
         </div>
     </section>
 
@@ -69,7 +65,6 @@
 
         <div th:if="${loginError}" class="alert-message alert-error" th:text="${loginError}"></div>
         <div th:if="${loginSuccess}" class="alert-message alert-success" th:text="${loginSuccess}"></div>
-        <div th:if="${loginRequired}" class="alert-message alert-error" th:text="${loginRequired}"></div>
         <div th:if="${logoutMessage}" class="alert-message alert-success" th:text="${logoutMessage}"></div>
 
         <form class="auth-form" th:action="@{/login}" method="post">
@@ -87,6 +82,8 @@
         </form>
 
         <div class="form-footer">
+            <a th:href="@{/forgot-password}" class="forgot-link">Quên mật khẩu?</a>
+            <br>
             Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
         </div>
     </section>
