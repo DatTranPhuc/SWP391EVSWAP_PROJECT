@@ -24,7 +24,7 @@ public class Feedback {
 
     private Integer rating; // 1..5
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "nvarchar(255)")
     private String comment;
 
     @Column(name = "created_at")

@@ -22,7 +22,7 @@ public class TicketSupport {
     private Staff staff;
 
     private String category; // station/battery/payment
-    @Column(columnDefinition = "text")
+    @Column( columnDefinition = "nvarchar(255)")
     private String comment;
 
     private String status; // open/in_progress/resolved/closed
@@ -33,6 +33,6 @@ public class TicketSupport {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
-    @Column(columnDefinition = "text")
+    @Column( columnDefinition = "nvarchar(255)")
     private String note;
 }
