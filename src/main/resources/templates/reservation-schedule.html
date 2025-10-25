@@ -43,6 +43,88 @@
         </ul>
     </section>
 
+    <section class="progress-panels" id="progressPanels">
+        <article class="progress-panel"
+                 data-step="search"
+                 th:classappend="${currentStep == null or currentStep == 'search'} ? ' is-active'">
+            <header class="progress-panel__header">
+                <span class="progress-panel__step">Bước 1</span>
+                <h2>Tìm trạm phù hợp</h2>
+            </header>
+            <p>Khám phá các trạm quanh bạn trên bản đồ, sử dụng bộ lọc theo tên hoặc địa chỉ để chọn trạm thuận tiện nhất.</p>
+            <ul>
+                <li>Phóng to/thu nhỏ bản đồ để xem rõ khu vực mong muốn.</li>
+                <li>Di chuột vào trạm để xem tình trạng hoạt động và địa chỉ chi tiết.</li>
+                <li>Nhấn <strong>"Đặt lịch"</strong> ở trạm bạn muốn đến.</li>
+            </ul>
+        </article>
+
+        <article class="progress-panel"
+                 data-step="schedule"
+                 th:classappend="${currentStep == 'schedule'} ? ' is-active'">
+            <header class="progress-panel__header">
+                <span class="progress-panel__step">Bước 2</span>
+                <h2>Đặt lịch đổi pin</h2>
+            </header>
+            <p>Điền thông tin ngày giờ đổi pin mong muốn. Hệ thống sẽ kiểm tra năng lực trạm và giữ chỗ cho bạn.</p>
+            <ul>
+                <li>Chọn ngày trong khoảng cho phép và thời gian bạn có thể có mặt.</li>
+                <li>Xác nhận thông tin liên hệ để trạm tiện trao đổi khi cần.</li>
+                <li>Nhấn <strong>"Xác nhận đặt lịch"</strong> để hoàn tất bước đặt lịch.</li>
+            </ul>
+        </article>
+
+        <article class="progress-panel"
+                 data-step="payment"
+                 th:classappend="${currentStep == 'payment'} ? ' is-active'">
+            <header class="progress-panel__header">
+                <span class="progress-panel__step">Bước 3</span>
+                <h2>Thanh toán nhanh chóng</h2>
+            </header>
+            <p>Chọn phương thức thanh toán yêu thích để đảm bảo phiên đổi pin diễn ra suôn sẻ khi bạn đến trạm.</p>
+            <ul>
+                <li>Hỗ trợ ví điện tử, thẻ ngân hàng và thanh toán tại trạm.</li>
+                <li>Hóa đơn điện tử sẽ được gửi tới email bạn đã đăng ký.</li>
+                <li>Có thể thay đổi phương thức thanh toán trước khi phiên đổi bắt đầu.</li>
+            </ul>
+        </article>
+
+        <article class="progress-panel"
+                 data-step="swap"
+                 th:classappend="${currentStep == 'swap'} ? ' is-active'">
+            <header class="progress-panel__header">
+                <span class="progress-panel__step">Bước 4</span>
+                <h2>Đến trạm và đổi pin</h2>
+            </header>
+            <p>Đến trạm đúng giờ đã hẹn, đưa mã đặt lịch cho nhân viên hoặc quét QR tại kiosk tự động để bắt đầu đổi pin.</p>
+            <ul>
+                <li>Nhân viên sẽ kiểm tra nhanh tình trạng xe và pin hiện tại.</li>
+                <li>Quy trình đổi pin diễn ra trong 3&ndash;5 phút với hệ thống tự động.</li>
+                <li>Nhận pin mới đã được sạc đầy và kiểm định chất lượng.</li>
+            </ul>
+        </article>
+
+        <article class="progress-panel"
+                 data-step="done"
+                 th:classappend="${currentStep == 'done'} ? ' is-active'">
+            <header class="progress-panel__header">
+                <span class="progress-panel__step">Bước 5</span>
+                <h2>Hoàn tất và đánh giá</h2>
+            </header>
+            <p>Kiểm tra lại thông tin giao dịch, nhận hóa đơn và gửi đánh giá để EV SWAP tiếp tục cải thiện dịch vụ.</p>
+            <ul>
+                <li>Nhận thông báo xác nhận cùng điểm thưởng tích lũy (nếu có).</li>
+                <li>Gửi phản hồi về trải nghiệm để được hỗ trợ nhanh chóng.</li>
+                <li>Lên kế hoạch cho lần đổi pin tiếp theo ngay trong ứng dụng.</li>
+            </ul>
+        </article>
+
+        <div class="progress-nav">
+            <button type="button" class="btn ghost" id="prevStepBtn">Bước trước</button>
+            <button type="button" class="btn primary" id="nextStepBtn">Bước tiếp</button>
+        </div>
+    </section>
+
     <section class="reservation-layout">
         <div class="reservation-map-panel">
             <div class="panel-heading">
@@ -362,20 +444,79 @@
     })();
 
     const progressSteps = document.getElementById('progressSteps');
+    const progressPanels = document.querySelectorAll('#progressPanels .progress-panel');
+    const prevStepBtn = document.getElementById('prevStepBtn');
+    const nextStepBtn = document.getElementById('nextStepBtn');
+
     if (progressSteps) {
         const order = ['search', 'schedule', 'payment', 'swap', 'done'];
-        const currentStep = progressSteps.dataset.step || 'search';
-        const currentIndex = order.indexOf(currentStep);
+        let currentStep = progressSteps.dataset.step || 'search';
+        let currentIndex = order.indexOf(currentStep);
+
+        if (currentIndex === -1) {
+            currentIndex = 0;
+            currentStep = order[currentIndex];
+        }
+
+        function applyStep() {
+            progressSteps.dataset.step = currentStep;
+
+            Array.from(progressSteps.children).forEach(item => {
+                const step = item.getAttribute('data-step');
+                const index = order.indexOf(step);
+                item.classList.toggle('is-complete', index < currentIndex);
+                item.classList.toggle('is-current', index === currentIndex);
+            });
+
+            progressPanels.forEach(panel => {
+                panel.classList.toggle('is-active', panel.dataset.step === currentStep);
+            });
+
+            if (prevStepBtn) {
+                prevStepBtn.disabled = currentIndex <= 0;
+            }
+
+            if (nextStepBtn) {
+                const isLast = currentIndex >= order.length - 1;
+                nextStepBtn.disabled = isLast;
+                nextStepBtn.textContent = isLast ? 'Hoàn tất' : 'Bước tiếp';
+            }
+        }
+
+        function goToStep(step) {
+            const index = order.indexOf(step);
+            if (index === -1) {
+                return;
+            }
+            currentIndex = index;
+            currentStep = order[currentIndex];
+            applyStep();
+        }
 
         Array.from(progressSteps.children).forEach(item => {
-            const step = item.getAttribute('data-step');
-            const index = order.indexOf(step);
-            if (index < currentIndex) {
-                item.classList.add('is-complete');
-            } else if (index === currentIndex) {
-                item.classList.add('is-current');
-            }
+            item.addEventListener('click', () => {
+                const step = item.getAttribute('data-step');
+                goToStep(step);
+            });
         });
+
+        if (prevStepBtn) {
+            prevStepBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    goToStep(order[currentIndex - 1]);
+                }
+            });
+        }
+
+        if (nextStepBtn) {
+            nextStepBtn.addEventListener('click', () => {
+                if (currentIndex < order.length - 1) {
+                    goToStep(order[currentIndex + 1]);
+                }
+            });
+        }
+
+        applyStep();
     }
 </script>
 </body>
