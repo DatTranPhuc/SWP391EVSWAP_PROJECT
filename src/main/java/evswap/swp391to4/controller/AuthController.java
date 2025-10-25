@@ -2,9 +2,11 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.service.AdminService;
 import evswap.swp391to4.service.DriverService;
+import evswap.swp391to4.service.StaffService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import java.util.Random;
 public class AuthController {
 
     private final DriverService driverService;
+    private final StaffService staffService;
     private final AdminService adminService;
     private final DriverRepository driverRepository;
     private final JavaMailSender mailSender;
@@ -37,25 +40,42 @@ public class AuthController {
         return "login";
     }
 
+
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
                         HttpSession session,
                         RedirectAttributes redirect) {
         try {
+            // 1. Thử đăng nhập với tư cách Driver
             Driver driver = driverService.login(email, password);
             session.setAttribute("loggedInDriver", driver);
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
             return "redirect:/dashboard";
         } catch (Exception driverException) {
+
+            // 2. NẾU DRIVER THẤT BẠI, thử đăng nhập với tư cách Staff
             try {
-                Admin admin = adminService.login(email, password);
-                session.setAttribute("loggedInAdmin", admin);
-                redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
-                return "redirect:/admin/dashboard";
-            } catch (Exception adminException) {
-                redirect.addFlashAttribute("loginError", adminException.getMessage());
-                return "redirect:/login";
+                Staff staff = staffService.login(email, password); // <-- LOGIC MỚI CỦA STAFF
+                session.setAttribute("loggedInStaff", staff);
+                redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + staff.getFullName());
+                return "redirect:/staff/dashboard"; // <-- CHUYỂN HƯỚNG TỚI TRANG CỦA STAFF
+
+            } catch (Exception staffException) {
+
+                // 3. NẾU STAFF CŨNG THẤT BẠI, thử đăng nhập với tư cách Admin
+                try {
+                    Admin admin = adminService.login(email, password);
+                    session.setAttribute("loggedInAdmin", admin);
+                    redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
+                    return "redirect:/admin/dashboard";
+
+                } catch (Exception adminException) {
+                    // 4. CẢ 3 ĐỀU THẤT BẠI
+                    // Hiển thị lỗi của lần đăng nhập thất bại cuối cùng (Admin)
+                    redirect.addFlashAttribute("loginError", adminException.getMessage());
+                    return "redirect:/login";
+                }
             }
         }
     }

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/staff.css}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body class="staff-body">
+
+<header class="staff-top-nav">
+    <div class="container nav-inner">
+
+        <a th:href="@{/staff/dashboard}" class="brand">
+            <i class="fas fa-charging-station brand-icon"></i>
+            <span th:text="${stationName ?: 'Staff'}">Tên Trạm</span>
+        </a>
+
+        <nav class="nav-links">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button active">Tổng quan</a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
+            <a href="#" class="nav-link-button">Giao dịch</a>
+        </nav>
+
+        <div class="auth-area">
+                <span class="welcome">
+                    Chào, <strong th:text="${staffName}">[Staff Name]</strong>
+                </span>
+            <form th:action="@{/logout}" method="POST" style="margin: 0;">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+
+    <div th:if="${loginSuccess}" class="staff-alert success" th:text="${loginSuccess}">
+        Đăng nhập thành công!
+    </div>
+
+    <header class="staff-header">
+        <h1 class="staff-title">Bảng điều khiển Trạm</h1>
+        <p class="staff-subtitle" th:text="${stationAddress ?: 'Quản lý tổng quan trạm của bạn'}">
+            Địa chỉ trạm...
+        </p>
+    </header>
+
+    <div class="staff-grid">
+        <div class="staff-card">
+            <h2 style="color: var(--success-green); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
+                th:text="${fullCount ?: '--'}">
+                N/A
+            </h2>
+            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
+                Pin Sẵn Sàng (Full)
+            </h3>
+        </div>
+
+        <div class="staff-card">
+            <h2 style="color: var(--accent-secondary); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
+                th:text="${chargingCount ?: '--'}">
+                N/A
+            </h2>
+            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
+                Pin Đang Sạc
+            </h3>
+        </div>
+
+        <div class="staff-card">
+            <h2 style="color: var(--error-red); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
+                th:text="${maintenanceCount ?: '--'}">
+                N/A
+            </h2>
+            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
+                Pin Bảo trì/Hỏng
+            </h3>
+        </div>
+
+        <div class="staff-card">
+            <h2 style="color: var(--text-dark); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
+                th:text="${totalCount ?: '--'}">
+                N/A
+            </h2>
+            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
+                Tổng Pin tại Trạm
+            </h3>
+        </div>
+    </div>
+
+    <header class="staff-header" style="margin-top: 3.5rem; margin-bottom: 2rem;">
+        <h2 class="staff-title" style="font-size: 1.8rem;">Chức năng Quản lý</h2>
+    </header>
+
+    <div class="staff-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+
+        <a th:href="@{/staff/batteries}" class="staff-card">
+            <div class="card-icon">
+                <i class="fas fa-battery-full"></i>
+            </div>
+            <h3 class="card-title">Quản lý Pin</h3>
+            <p class="card-description">
+                Xem danh sách, tìm kiếm và cập nhật trạng thái pin (đang sạc, bảo trì, hỏng...) tại trạm.
+            </p>
+            <span class="card-link">Đi đến &rarr;</span>
+        </a>
+
+        <a href="#" class="staff-card">
+            <div class="card-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <h3 class="card-title">Lịch sử Giao dịch</h3>
+            <p class="card-description">
+                Xem lại các lượt đổi pin, thanh toán và các hoạt động đã diễn ra tại trạm của bạn.
+            </p>
+            <span class="card-link">Đi đến &rarr;</span>
+        </a>
+
+    </div>
+
+</main>
+
+<footer class="staff-footer">
+    © 2024 EV SWAP - Staff Portal.
+</footer>
+
+</body>
+</html>

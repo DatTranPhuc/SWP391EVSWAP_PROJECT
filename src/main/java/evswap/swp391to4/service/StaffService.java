@@ -151,6 +151,32 @@ public class StaffService {
         staffRepo.deleteById(id);
     }
 
+    /**
+     * CHỨC NĂNG 6: Đăng nhập cho Staff
+     */
+    @Transactional(readOnly = true)
+    public Staff login(String email, String password) {
+        // 1. Tìm staff bằng email
+        Staff staff = staffRepo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Email hoặc mật khẩu không đúng"));
+
+        // 2. Kiểm tra mật khẩu
+        if (!passwordEncoder.matches(password, staff.getPasswordHash())) {
+            throw new IllegalArgumentException("Email hoặc mật khẩu không đúng");
+        }
+
+        // 3. Kiểm tra tài khoản có bị khóa không
+        if (!staff.getIsActive()) {
+            throw new IllegalStateException("Tài khoản này đã bị quản trị viên vô hiệu hóa");
+        }
+
+        // 4. SỬA LỖI 500:
+        // Chủ động "đánh thức" Station TRƯỚC KHI transaction kết thúc
+        staff.getStation().getName(); // <-- THÊM DÒNG NÀY
+
+        // 5. Đăng nhập thành công, trả về Entity
+        return staff;
+    }
 
     /**
      * HÀM HELPER (PRIVATE) 📦
