@@ -46,8 +46,7 @@ public class DashboardController {
         }
 
         if ("Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Tìm trạm đang được phát triển.");
-            return "redirect:/dashboard";
+            return "redirect:/reservations/schedule";
         }
 
         if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
