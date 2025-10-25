@@ -33,6 +33,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReservationController {
 
+    private static final List<String> PROGRESS_STEPS = List.of("search", "schedule", "payment", "swap", "done");
+    private static final Map<String, String> PROGRESS_LABELS = Map.of(
+            "search", "Tìm trạm",
+            "schedule", "Đặt lịch",
+            "payment", "Thanh toán",
+            "swap", "Đổi pin",
+            "done", "Hoàn tất"
+    );
+
     private final StationService stationService;
     private final ReservationService reservationService;
 
@@ -264,6 +273,8 @@ public class ReservationController {
         model.addAttribute("pageTitle", pageTitle);
         model.addAttribute("pageHint", pageHint);
         model.addAttribute("currentStep", currentStep);
+        model.addAttribute("progressSteps", PROGRESS_STEPS);
+        model.addAttribute("progressLabels", PROGRESS_LABELS);
     }
 
     private Map<String, String> buildScheduleProgressLinks(Integer stationId, String query) {
