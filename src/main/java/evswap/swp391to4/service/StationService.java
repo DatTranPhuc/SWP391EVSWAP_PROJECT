@@ -63,7 +63,7 @@ public class StationService {
         if (name == null || name.trim().isEmpty()) {
             return getAllStations();
         }
-        return stationRepo.findByNameContainingIgnoreCase(name).stream()
+        return stationRepo.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(name, name).stream()
                 .map(this::toResponse)
                 .toList();
     }
