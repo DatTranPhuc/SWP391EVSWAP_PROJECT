@@ -23,14 +23,14 @@
         <nav class="nav-links" aria-label="Điều hướng chính">
             <a th:if="${loggedIn}" th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:if="${loggedIn}" th:href="@{/vehicles}" class="nav-link-button">Phương tiện</a>
-            <a th:if="${loggedIn}" th:href="@{/stations}" class="nav-link-button">Tìm trạm</a>
+            <a th:if="${loggedIn}" th:href="@{/reservations/schedule}" class="nav-link-button">Đổi pin</a>
             <a th:if="${loggedIn}" th:href="@{/reports}" class="nav-link-button">Báo cáo</a>
             <a th:if="${loggedIn}" th:href="@{/account}" class="nav-link-button">Tài khoản</a>
             <a th:if="${loggedIn}" th:href="@{/support}" class="nav-link-button">Hỗ trợ</a>
 
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tổng quan">Tổng quan</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Phương tiện">Phương tiện</button>
-            <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tìm trạm">Tìm trạm</button>
+            <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Đổi pin">Đổi pin</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Báo cáo">Báo cáo</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tài khoản">Tài khoản</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Hỗ trợ">Hỗ trợ</button>
