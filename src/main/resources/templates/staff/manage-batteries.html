@@ -11,18 +11,18 @@
     <style>
         .manage-layout {
             display: grid;
-            grid-template-columns: 1fr; /* Mặc định 1 cột */
-            gap: 2.5rem;
+            grid-template-columns: 1fr; /* Default to 1 column */
+            gap: 2rem; /* Reduced gap */
         }
 
-        /* Khi màn hình lớn, chia 2 cột: Form bên trái, List bên phải */
+        /* On larger screens, switch to 2 columns */
         @media (min-width: 1024px) {
             .manage-layout {
-                grid-template-columns: 350px 1fr; /* Cột form nhỏ, cột list lớn */
+                grid-template-columns: 320px 1fr; /* Narrower form column */
             }
         }
 
-        /* Style cho thẻ <select> để giống <input> */
+        /* Style for <select> elements to match <input> */
         .form-control-select {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -38,11 +38,11 @@
             appearance: none;
         }
 
-        /* Style cho thanh cuộn của bảng */
+        /* Style for the table scroll container */
         .table-scroll-container {
-            max-height: 600px;  /* Đặt chiều cao tối đa cho bảng */
-            overflow-y: auto;   /* Tự động thêm cuộn dọc KHI cần */
-            overflow-x: auto;   /* Giữ lại cuộn ngang */
+            max-height: 600px;  /* Max height before scrolling */
+            overflow-y: auto;   /* Enable vertical scroll when needed */
+            overflow-x: auto;   /* Keep horizontal scroll for smaller screens */
         }
     </style>
 </head>
@@ -53,21 +53,19 @@
     <div class="container nav-inner">
         <a th:href="@{/staff/dashboard}" class="brand">
             <i class="fas fa-charging-station brand-icon"></i>
-            <span th:text="${stationName ?: 'Staff'}">Tên Trạm</span>
+            <span th:text="${stationName ?: 'Staff'}">Station Name</span>
         </a>
-
         <nav class="nav-links">
-            <a th:href="@{/staff/dashboard}" class="nav-link-button">Tổng quan</a>
-            <a th:href="@{/staff/batteries}" class="nav-link-button active">Quản lý Pin</a>
-            <a href="#" class="nav-link-button">Giao dịch</a>
+            <a th:href="@{/staff/dashboard}" class="nav-link-button">Overview</a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button active">Manage Batteries</a>
+            <a href="#" class="nav-link-button">Transactions</a>
         </nav>
-
         <div class="auth-area">
                 <span class="welcome" th:if="${session.loggedInStaff}">
-                    Chào, <strong th:text="${session.loggedInStaff.fullName}"></strong>
+                    Hi, <strong th:text="${session.loggedInStaff.fullName}"></strong>
                 </span>
             <form th:action="@{/logout}" method="POST" style="margin: 0;">
-                <button class="btn ghost" type="submit">Đăng xuất</button>
+                <button class="btn ghost" type="submit">Logout</button>
             </form>
         </div>
     </div>
@@ -76,8 +74,8 @@
 <main class="container">
 
     <header class="staff-header" style="margin-bottom: 2rem;">
-        <h1 class="staff-title">Quản lý Pin</h1>
-        <p class="staff-subtitle">Thêm mới pin hoặc cập nhật trạng thái pin tại trạm.</p>
+        <h1 class="staff-title">Manage Batteries</h1>
+        <p class="staff-subtitle">Add new batteries or update the status of existing batteries at the station.</p>
     </header>
 
     <div th:if="${successMessage}" class="staff-alert success" th:text="${successMessage}"></div>
@@ -87,7 +85,7 @@
     <div class="manage-layout">
 
         <div class="staff-form-card" style="padding: 2rem; max-width: none;">
-            <h2>Thêm pin mới</h2>
+            <h2>Add New Battery</h2>
 
             <form th:action="@{/staff/batteries/add}" method="POST" th:object="${newBattery}">
 
@@ -96,17 +94,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="model">Model Pin</label>
-                    <input type="text" id="model" th:field="*{model}" placeholder="Ví dụ: Model-X, Vin-A1">
+                    <label for="model">Battery Model</label>
+                    <input type="text" id="model" th:field="*{model}" placeholder="e.g., Model-X, Vin-A1">
                     <small class="form-error" th:if="${#fields.hasErrors('model')}" th:errors="*{model}"></small>
                 </div>
 
                 <div class="form-group">
-                    <label for="state">Trạng thái ban đầu</label>
+                    <label for="state">Initial State</label>
                     <select id="state" th:field="*{state}" class="form-control-select">
-                        <option value="charging">Charging (Đang sạc)</option>
-                        <option value="maintenance">Maintenance (Bảo trì)</option>
-                        <option value="full">Full (Đầy)</option>
+                        <option value="charging">Charging</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="full">Full</option>
                     </select>
                     <small class="form-error" th:if="${#fields.hasErrors('state')}" th:errors="*{state}"></small>
                 </div>
@@ -124,13 +122,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="quantity">Số lượng</label>
+                    <label for="quantity">Quantity</label>
                     <input type="number" id="quantity" th:field="*{quantity}" placeholder="1">
                     <small class="form-error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></small>
                 </div>
 
                 <div class="form-actions" style="text-align: left; margin-top: 1rem;">
-                    <button type="submit" class="btn primary" style="width: 100%;">Thêm Pin</button>
+                    <button type="submit" class="btn primary" style="width: 100%;">Add Battery</button>
                 </div>
             </form>
         </div>
@@ -138,21 +136,21 @@
         <div class="staff-content-card" style="padding: 2rem;">
 
             <div class="content-header" style="margin-bottom: 1rem;">
-                <h2 style="font-size: 1.5rem;">Danh sách pin tại trạm</h2>
+                <h2 style="font-size: 1.5rem;">Batteries at Station</h2>
 
                 <form th:action="@{/staff/batteries}" method="GET" class="staff-search" style="align-items: center;">
                     <select name="searchType" class="form-control-select"
                             style="padding: 0.6rem 1rem; width: 150px; font-size: 0.9rem;">
-                        <option value="state" th:selected="${currentSearchType == 'state' or currentSearchType == null}">Theo Trạng thái</option>
-                        <option value="id" th:selected="${currentSearchType == 'id'}">Theo ID Pin</option>
-                        <option value="model" th:selected="${currentSearchType == 'model'}">Theo Model</option>
+                        <option value="state" th:selected="${currentSearchType == 'state' or currentSearchType == null}">By State</option>
+                        <option value="id" th:selected="${currentSearchType == 'id'}">By Battery ID</option>
+                        <option value="model" th:selected="${currentSearchType == 'model'}">By Model</option>
                     </select>
 
-                    <input type="text" name="searchTerm" placeholder="Nhập từ khóa..."
+                    <input type="text" name="searchTerm" placeholder="Enter keyword..."
                            th:value="${currentSearchTerm}"
                            style="width: 200px;">
 
-                    <button type="submit" class="btn primary" style="padding: 0.6rem 1.2rem;">Tìm</button>
+                    <button type="submit" class="btn primary" style="padding: 0.6rem 1.2rem;">Search</button>
                 </form>
             </div>
 
@@ -162,54 +160,83 @@
                     <tr>
                         <th>ID</th>
                         <th>Model</th>
-                        <th>SOH</th>
-                        <th>SOC</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động (Cập nhật)</th>
-                    </tr>
+                        <th>SOH/SOC</th>
+                        <th>State</th>
+                        <th>Update State</th>
+                        <th>Simulate Full</th>
+                        <th>Simulate Usage</th> </tr>
                     </thead>
                     <tbody>
                     <tr th:each="battery : ${batteryList}">
                         <td th:text="${battery.batteryId}">#101</td>
                         <td th:text="${battery.model}">Model-X</td>
-                        <td th:text="${battery.sohPercent + '%'}">98%</td>
-                        <td th:text="${battery.socPercent + '%'}">100%</td>
+
+                        <td>
+                            <div style="line-height: 1.3;">
+                                <i class="fas fa-heartbeat" title="SOH" style="color: var(--accent-primary); font-size: 0.85em; margin-right: 4px;"></i>
+                                <span style="font-weight: 600;" th:text="${battery.sohPercent + '%'}">98%</span>
+                                <small style="color: var(--text-secondary); font-size: 0.8em;"> SOH</small>
+                            </div>
+                            <div style="line-height: 1.3;">
+                                <i class="fas fa-battery-full" title="SOC" style="color: var(--success-green); font-size: 0.85em; margin-right: 4px;"></i>
+                                <span style="font-weight: 600;" th:text="${battery.socPercent + '%'}">100%</span>
+                                <small style="color: var(--text-secondary); font-size: 0.8em;"> SOC</small>
+                            </div>
+                        </td>
+
                         <td>
                                     <span class="status-badge"
-                                          th:classappend="${battery.state == 'full' || battery.state == 'charging'} ? 'active' : 'inactive'"
+                                          th:classappend="${#strings.equals(battery.state,'full') or #strings.equals(battery.state,'charging')} ? 'active' : 'inactive'"
                                           th:text="${battery.state}">full</span>
                         </td>
+
                         <td>
                             <form th:action="@{/staff/batteries/update}" method="POST" style="display: flex; gap: 0.5rem; min-width: 250px;">
-
                                 <input type="hidden" name="batteryId" th:value="${battery.batteryId}">
-
                                 <select name="newState"
                                         style="background: #0f141e; color: #f3f4f6; border-radius: 8px; border: 1px solid var(--border-color); padding: 0.5rem; min-width: 150px;">
                                     <option value="charging" th:selected="${battery.state == 'charging'}">Charging</option>
                                     <option value="maintenance" th:selected="${battery.state == 'maintenance'}">Maintenance</option>
                                     <option value="retired" th:selected="${battery.state == 'retired'}">Retired</option>
                                 </select>
+                                <button type="submit" class="btn primary" style="padding: 0.5rem 1rem;">Save</button>
+                            </form>
+                        </td>
 
-                                <button type="submit" class="btn primary" style="padding: 0.5rem 1rem;">Lưu</button>
+                        <td>
+                            <form th:if="${battery.state == 'charging'}"
+                                  th:action="@{/staff/batteries/mark-full}" method="POST">
+                                <input type="hidden" name="batteryId" th:value="${battery.batteryId}">
+                                <button type="submit" class="btn primary" style="background: var(--success-green); color: #020817; border-color: transparent; padding: 0.5rem 1rem;">
+                                    ⚡ Simulate FULL
+                                </button>
+                            </form>
+                        </td>
+
+                        <td>
+                            <form th:action="@{/staff/batteries/simulate-usage}" method="POST" style="display: flex; gap: 0.5rem; min-width: 180px;">
+                                <input type="hidden" name="batteryId" th:value="${battery.batteryId}">
+                                <input type="number" name="newSocPercent" min="0" max="100"
+                                       th:value="${battery.socPercent}"
+                                       required
+                                       style="width: 70px; padding: 0.5rem; background: #0f141e; color: #f3f4f6; border-radius: 8px; border: 1px solid var(--border-color); text-align: center;">
+                                <button type="submit" class="btn primary" style="padding: 0.5rem 1rem; background: var(--accent-primary);">
+                                    Set SOC
+                                </button>
                             </form>
                         </td>
                     </tr>
 
                     <tr th:if="${batteryList == null || batteryList.isEmpty()}">
-                        <td colspan="6" class="empty-state">
-                            Không tìm thấy pin nào.
+                        <td colspan="8" class="empty-state"> No batteries found.
                         </td>
                     </tr>
                     </tbody>
                 </table>
-            </div>
-
-        </div> </div> </main>
+            </div> </div> </div> </main>
 
 <footer class="staff-footer">
-    © 2024 EV SWAP - Staff Portal.
-</footer>
+    © <span th:text="${#dates.year(#dates.createNow())}">2025</span> EV SWAP - Staff Portal. </footer>
 
 </body>
 </html>
