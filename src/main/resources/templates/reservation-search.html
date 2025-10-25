@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm trạm đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Quy trình đổi pin</span>
+            <h1 class="page-title">Chọn trạm đổi pin</h1>
+            <p class="page-hint"
+               th:text="${'Xin chào ' + driverName + '! Chọn trạm phù hợp để bắt đầu quy trình đổi pin.'}">
+                Xin chào! Chọn trạm phù hợp để bắt đầu quy trình đổi pin.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-progress">
+        <ul class="progress-steps"
+            th:with="laterForSearch=${T(java.util.Arrays).asList('schedule','payment','swap','done')},
+                     laterForSchedule=${T(java.util.Arrays).asList('payment','swap','done')},
+                     laterForPayment=${T(java.util.Arrays).asList('swap','done')},
+                     laterForSwap=${T(java.util.Arrays).asList('done')}">
+            <li class="progress-step"
+                th:classappend="${currentStep == 'search'} ? ' is-current' : (${#lists.contains(laterForSearch, currentStep)} ? ' is-complete' : '')">
+                <span>Tìm trạm</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'schedule'} ? ' is-current' : (${#lists.contains(laterForSchedule, currentStep)} ? ' is-complete' : '')">
+                <span>Đặt lịch</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'payment'} ? ' is-current' : (${#lists.contains(laterForPayment, currentStep)} ? ' is-complete' : '')">
+                <span>Thanh toán</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'swap'} ? ' is-current' : (${#lists.contains(laterForSwap, currentStep)} ? ' is-complete' : '')">
+                <span>Đổi pin</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'done'} ? ' is-current' : ''">
+                <span>Hoàn tất</span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="reservation-layout">
+        <div class="reservation-map-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Bản đồ trạm</h2>
+                    <p class="map-caption">Di chuột vào trạm trên bản đồ để xem chi tiết và chọn nhanh.</p>
+                </div>
+                <div class="map-controls">
+                    <button type="button" class="btn ghost" id="locateMeBtn">
+                        <span>Vị trí của tôi</span>
+                    </button>
+                </div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <aside class="reservation-sidebar">
+            <h2>Tìm kiếm trạm đổi pin</h2>
+            <form class="station-search" method="get" th:action="@{/reservations/search}">
+                <input type="text" name="q" placeholder="Tìm theo tên trạm hoặc địa chỉ..." th:value="${searchQuery}">
+                <button class="btn primary" type="submit">Tìm kiếm</button>
+            </form>
+
+            <div class="station-empty" th:if="${stations == null or stations.isEmpty()}">
+                Không tìm thấy trạm phù hợp. Hãy thử lại với từ khóa khác.
+            </div>
+
+            <div class="station-list" th:if="${stations != null and !stations.isEmpty()}">
+                <article class="station-card"
+                         th:each="station : ${stations}"
+                         th:classappend="${highlightStationId != null and highlightStationId == station.stationId} ? ' is-selected'"
+                         th:attr="data-station-id=${station.stationId}">
+                    <div class="station-meta">
+                        <span class="station-name" th:text="${station.name}">EV Swap Station</span>
+                        <span class="station-status"
+                              th:text="${station.status == 'active' ? 'Hoạt động' : 'Tạm dừng'}"
+                              th:style="${station.status == 'active' ? '' : 'color:#facc15'}"></span>
+                    </div>
+                    <div class="station-address" th:text="${station.address != null ? station.address : 'Địa chỉ đang cập nhật'}">123 Nguyễn Văn Cừ, Q.5</div>
+                    <div class="form-actions">
+                        <button class="btn ghost" type="button" th:attr="data-focus-id=${station.stationId}">Xem trên bản đồ</button>
+                        <a class="btn primary" th:href="@{/reservations/schedule(stationId=${station.stationId},q=${searchQuery})}">Đặt lịch</a>
+                    </div>
+                </article>
+            </div>
+        </aside>
+    </section>
+
+    <section class="upcoming-reservations">
+        <h2>Lịch đổi pin của bạn</h2>
+        <p class="map-caption">Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.</p>
+        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
+            Chưa có lịch đổi pin nào. Hãy chọn trạm và đặt lịch ngay!
+        </div>
+        <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
+            <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
+                <div class="reservation-info">
+                    <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
+                    <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
+                </div>
+                <span class="reservation-status"
+                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
+                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
+                    Đang chờ xác nhận
+                </span>
+            </article>
+        </div>
+    </section>
+</main>
+
+<script th:inline="javascript">
+    const stations = /*[[${stations}]]*/ [];
+    const highlightedStationId = /*[[${highlightStationId}]]*/ null;
+
+    (function () {
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+            return;
+        }
+
+        if (typeof L === 'undefined') {
+            mapContainer.classList.add('map-fallback');
+            mapContainer.innerHTML = '<p class="map-error">Không thể tải bản đồ. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.</p>';
+            return;
+        }
+
+        const mappedStations = (stations || [])
+            .filter(st => st && st.latitude && st.longitude)
+            .map(st => ({
+                id: st.stationId,
+                name: st.name,
+                address: st.address,
+                status: st.status,
+                latitude: parseFloat(st.latitude),
+                longitude: parseFloat(st.longitude)
+            }));
+
+        let mapCenter = [10.7769, 106.7009];
+        let mapZoom = 12;
+
+        if (highlightedStationId) {
+            const selected = mappedStations.find(item => item.id === highlightedStationId);
+            if (selected) {
+                mapCenter = [selected.latitude, selected.longitude];
+                mapZoom = 14;
+            }
+        } else if (mappedStations.length > 0) {
+            const first = mappedStations[0];
+            mapCenter = [first.latitude, first.longitude];
+        }
+
+        const map = L.map(mapContainer, {
+            zoomControl: false,
+            scrollWheelZoom: true
+        }).setView(mapCenter, mapZoom);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const stationIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const inactiveIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const userIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const markerById = new Map();
+        let userMarker = null;
+
+        const stationCards = Array.from(document.querySelectorAll('.station-card'));
+
+        function focusOnStation(stationId) {
+            const station = mappedStations.find(item => item.id === stationId);
+            if (!station) return;
+
+            map.setView([station.latitude, station.longitude], 15);
+
+            const marker = markerById.get(stationId);
+            if (marker) {
+                marker.openPopup();
+            }
+
+            stationCards.forEach(card => card.classList.toggle('is-selected', Number(card.dataset.stationId) === stationId));
+        }
+
+        mappedStations.forEach(station => {
+            const marker = L.marker([station.latitude, station.longitude], {
+                icon: station.status === 'active' ? stationIcon : inactiveIcon
+            }).addTo(map);
+
+            marker.bindPopup(
+                `<div class="popup-station">` +
+                `<strong>${station.name}</strong>` +
+                `<p>${station.address || ''}</p>` +
+                `<div class="popup-actions">` +
+                `<a class="btn primary" href="/reservations/schedule?stationId=${station.id}">Đặt lịch</a>` +
+                `</div>` +
+                `</div>`
+            );
+
+            marker.on('mouseover', () => focusOnStation(station.id));
+            marker.on('click', () => focusOnStation(station.id));
+            markerById.set(station.id, marker);
+        });
+
+        if (highlightedStationId) {
+            focusOnStation(highlightedStationId);
+        }
+
+        stationCards.forEach(card => {
+            const stationId = Number(card.dataset.stationId);
+            card.addEventListener('mouseenter', () => focusOnStation(stationId));
+
+            const focusBtn = card.querySelector('[data-focus-id]');
+            if (focusBtn) {
+                focusBtn.addEventListener('click', () => focusOnStation(stationId));
+            }
+        });
+
+        const locateBtn = document.getElementById('locateMeBtn');
+        if (locateBtn && navigator.geolocation) {
+            locateBtn.addEventListener('click', () => {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    if (userMarker) {
+                        userMarker.setLatLng([latitude, longitude]);
+                    } else {
+                        userMarker = L.marker([latitude, longitude], { icon: userIcon }).addTo(map);
+                        userMarker.bindPopup('<strong>Vị trí của bạn</strong>').openPopup();
+                    }
+                    map.setView([latitude, longitude], 15);
+                });
+            });
+        }
+    })();
+</script>
+</body>
+</html>

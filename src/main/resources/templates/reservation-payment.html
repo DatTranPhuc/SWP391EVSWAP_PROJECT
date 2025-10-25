@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Quy trình đổi pin</span>
+            <h1 class="page-title">Thanh toán đặt lịch</h1>
+            <p class="page-hint">
+                Hãy kiểm tra thông tin lịch hẹn và hoàn tất thanh toán để xác nhận việc đổi pin.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/search}">Quay về trang tìm trạm</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-progress">
+        <ul class="progress-steps"
+            th:with="laterForSearch=${T(java.util.Arrays).asList('schedule','payment','swap','done')},
+                     laterForSchedule=${T(java.util.Arrays).asList('payment','swap','done')},
+                     laterForPayment=${T(java.util.Arrays).asList('swap','done')},
+                     laterForSwap=${T(java.util.Arrays).asList('done')}">
+            <li class="progress-step" th:classappend="${#lists.contains(laterForSearch, currentStep)} ? ' is-complete' : ''">
+                <a th:href="@{/reservations/search(stationId=${reservationDetail.stationId})}" th:if="${reservationDetail.stationId != null}">Tìm trạm</a>
+                <span th:if="${reservationDetail.stationId == null}">Tìm trạm</span>
+            </li>
+            <li class="progress-step" th:classappend="${#lists.contains(laterForSchedule, currentStep)} ? ' is-complete' : ''">
+                <span>Đặt lịch</span>
+            </li>
+            <li class="progress-step" th:classappend="${currentStep == 'payment'} ? ' is-current' : (${#lists.contains(laterForPayment, currentStep)} ? ' is-complete' : '')">
+                <span>Thanh toán</span>
+            </li>
+            <li class="progress-step" th:classappend="${currentStep == 'swap'} ? ' is-current' : (${#lists.contains(laterForSwap, currentStep)} ? ' is-complete' : '')">
+                <span>Đổi pin</span>
+            </li>
+            <li class="progress-step" th:classappend="${currentStep == 'done'} ? ' is-current' : ''">
+                <span>Hoàn tất</span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="reservation-step-layout single-column">
+        <article class="step-card payment-summary">
+            <h2>Xác nhận lịch đổi pin</h2>
+            <ul class="reservation-detail">
+                <li>
+                    <span>Trạm</span>
+                    <strong th:text="${reservationDetail.stationName()}">EV Swap Station</strong>
+                </li>
+                <li>
+                    <span>Địa chỉ</span>
+                    <strong th:text="${reservationDetail.stationAddress() != null ? reservationDetail.stationAddress() : 'Chưa cập nhật'}">123 Nguyễn Văn Cừ, Q.5</strong>
+                </li>
+                <li>
+                    <span>Thời gian</span>
+                    <strong th:text="${#temporals.format(reservationDetail.reservedStart(), 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</strong>
+                </li>
+                <li>
+                    <span>Trạng thái</span>
+                    <strong th:text="${reservationDetail.status()}">pending</strong>
+                </li>
+            </ul>
+            <div class="payment-instructions">
+                <h3>Hướng dẫn thanh toán</h3>
+                <ol>
+                    <li>Quét mã QR tại quầy hoặc sử dụng ví điện tử được hỗ trợ.</li>
+                    <li>Nhập mã đặt lịch <strong th:text="${'#EV' + reservationDetail.reservationId()}">#EV001</strong> khi thực hiện thanh toán.</li>
+                    <li>Lưu lại biên lai hoặc ảnh chụp màn hình để đối chiếu khi tới trạm.</li>
+                </ol>
+            </div>
+            <div class="form-actions">
+                <a class="btn ghost" th:href="@{/reservations/schedule(stationId=${reservationDetail.stationId})}">Chỉnh sửa thời gian</a>
+                <a class="btn primary" th:href="@{/reservations/swap(reservationId=${reservationDetail.reservationId()})}">Tôi đã thanh toán</a>
+            </div>
+        </article>
+    </section>
+</main>
+</body>
+</html>

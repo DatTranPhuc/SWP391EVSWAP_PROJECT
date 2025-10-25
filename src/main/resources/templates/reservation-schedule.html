@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Quy trình đổi pin</span>
+            <h1 class="page-title">Đặt lịch đổi pin</h1>
+            <p class="page-hint"
+               th:text="${'Bạn đang đặt lịch tại ' + selectedStation.name + '. Vui lòng chọn thời gian phù hợp.'}">
+                Bạn đang đặt lịch. Vui lòng chọn thời gian phù hợp.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/search(q=${searchQuery}, stationId=${selectedStation.stationId})}">Quay lại chọn trạm</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-progress">
+        <ul class="progress-steps"
+            th:with="laterForSearch=${T(java.util.Arrays).asList('schedule','payment','swap','done')},
+                     laterForSchedule=${T(java.util.Arrays).asList('payment','swap','done')},
+                     laterForPayment=${T(java.util.Arrays).asList('swap','done')},
+                     laterForSwap=${T(java.util.Arrays).asList('done')}">
+            <li class="progress-step"
+                th:classappend="${#lists.contains(laterForSearch, currentStep)} ? ' is-complete' : (${currentStep == 'search'} ? ' is-current' : '')">
+                <a th:href="@{/reservations/search(stationId=${selectedStation.stationId}, q=${searchQuery})}">Tìm trạm</a>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'schedule'} ? ' is-current' : (${#lists.contains(laterForSchedule, currentStep)} ? ' is-complete' : '')">
+                <span>Đặt lịch</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'payment'} ? ' is-current' : (${#lists.contains(laterForPayment, currentStep)} ? ' is-complete' : '')">
+                <span>Thanh toán</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'swap'} ? ' is-current' : (${#lists.contains(laterForSwap, currentStep)} ? ' is-complete' : '')">
+                <span>Đổi pin</span>
+            </li>
+            <li class="progress-step"
+                th:classappend="${currentStep == 'done'} ? ' is-current' : ''">
+                <span>Hoàn tất</span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="reservation-step-layout">
+        <article class="step-card station-summary">
+            <h2 th:text="${selectedStation.name}">EV Swap Station</h2>
+            <p class="station-address" th:text="${selectedStation.address != null ? selectedStation.address : 'Địa chỉ đang cập nhật'}">123 Nguyễn Văn Cừ, Q.5</p>
+            <dl class="station-detail">
+                <div>
+                    <dt>Trạng thái</dt>
+                    <dd th:text="${selectedStation.status == 'active' ? 'Hoạt động' : 'Tạm dừng phục vụ'}">Hoạt động</dd>
+                </div>
+            </dl>
+            <p class="step-hint">Hãy chuẩn bị phương tiện và đến đúng giờ để đảm bảo thời gian đổi pin của bạn.</p>
+        </article>
+
+        <article class="step-card schedule-form" th:object="${reservationForm}">
+            <h2>Chọn thời gian đặt lịch</h2>
+            <form th:action="@{/reservations/schedule}" method="post">
+                <input type="hidden" name="q" th:value="${searchQuery}">
+                <input type="hidden" th:field="*{stationId}" th:value="${selectedStation.stationId}">
+                <div class="form-grid">
+                    <label>
+                        <span>Ngày đổi pin</span>
+                        <input type="date" th:field="*{date}" th:attr="min=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                    </label>
+                    <label>
+                        <span>Giờ dự kiến</span>
+                        <input type="time" th:field="*{time}" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <a class="btn ghost" th:href="@{/reservations/search(stationId=${selectedStation.stationId}, q=${searchQuery})}">Chọn trạm khác</a>
+                    <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
+                </div>
+            </form>
+        </article>
+    </section>
+</main>
+</body>
+</html>
