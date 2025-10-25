@@ -1,0 +1,421 @@
+/*
+ * =========================================
+ * FILE CSS RIÊNG CHO TRANG STAFF
+ * (staff.css)
+ * (Đồng bộ 100% phong cách với admin.css)
+ * =========================================
+ */
+
+/* 1. Imports và Biến toàn cục (Variables)
+   (Giữ nguyên 100% từ file admin)
+------------------------------------------ */
+:root {
+    --font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    --bg-gradient: linear-gradient(145deg, #05070c 0%, #121826 45%, #1e293b 100%);
+    --bg-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80");
+    --bg-light-gray: rgba(18, 24, 36, 0.7);
+    --bg-white: rgba(24, 32, 45, 0.82);
+    --bg-white-strong: rgba(31, 41, 55, 0.92);
+    --accent-primary: #6366f1;
+    --accent-secondary: #22d3ee;
+    --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    --accent-soft: rgba(99, 102, 241, 0.18);
+    --accent-soft-strong: rgba(34, 211, 238, 0.22);
+    --text-dark: #f3f4f6;
+    --text-light: rgba(226, 232, 240, 0.78);
+    --text-secondary: rgba(148, 163, 184, 0.7);
+    --border-color: rgba(99, 102, 241, 0.32);
+    --border-strong: rgba(34, 211, 238, 0.4);
+    --success-green: #4ade80;
+    --error-red: #f87171;
+    --shadow-sm: 0 20px 48px rgba(2, 6, 16, 0.45);
+    --shadow-md: 0 36px 88px rgba(2, 6, 16, 0.6);
+}
+
+/* 2. Thiết lập Body và Nền (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-body { /* <--- ĐÃ ĐỔI TÊN */
+    font-family: var(--font-family);
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-gradient), var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.staff-body::before, /* <--- ĐÃ ĐỔI TÊN */
+.staff-body::after { /* <--- ĐÃ ĐỔI TÊN */
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -2;
+}
+
+.staff-body::before { /* <--- ĐÃ ĐỔI TÊN */
+    background: linear-gradient(180deg, rgba(6, 10, 18, 0.9) 0%, rgba(12, 18, 28, 0.72) 100%);
+    backdrop-filter: blur(24px);
+}
+
+.staff-body::after { /* <--- ĐÃ ĐỔI TÊN */
+    z-index: -3;
+    background:
+            radial-gradient(circle at 20% 18%, rgba(99, 102, 241, 0.24), transparent 62%),
+            radial-gradient(circle at 78% 10%, rgba(34, 211, 238, 0.2), transparent 68%),
+            radial-gradient(circle at 52% 115%, rgba(79, 70, 229, 0.18), transparent 74%);
+}
+
+/* 3. Layout chung (Giữ nguyên)
+------------------------------------------ */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+/* 4. Header (Thanh điều hướng top) (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-top-nav { /* <--- ĐÃ ĐỔI TÊN */
+    background: rgba(7, 11, 20, 0.82);
+    border-bottom: 1px solid var(--border-strong);
+    box-shadow: 0 18px 44px rgba(2, 6, 16, 0.55);
+    backdrop-filter: blur(20px);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+/* (Các class chung như .nav-inner, .brand, .auth-area, .btn... giữ nguyên) */
+.nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.brand-icon {
+    font-size: 1.8rem;
+    margin-right: 0.5rem;
+    background: var(--surface-soft);
+    color: var(--accent-secondary);
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 0 0 1px var(--border-color);
+}
+.staff-badge { /* <--- ĐÃ ĐỔI TÊN (Dùng để hiển thị tên trạm) */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    background: var(--surface-soft);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    margin-left: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+.nav-links { display: flex; gap: 0.5rem; }
+.nav-link-button {
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+.nav-link-button:hover {
+    background: var(--surface-soft);
+    color: var(--text-dark);
+    box-shadow: 0 12px 28px rgba(2, 6, 16, 0.45);
+}
+.nav-link-button.active {
+    background: rgba(24, 32, 45, 0.78);
+    color: var(--text-dark);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.auth-area { display: flex; align-items: center; gap: 1rem; }
+.auth-area .welcome { font-weight: 500; color: var(--text-secondary); font-size: 0.9rem; }
+.auth-area strong { font-weight: 700; color: var(--accent-secondary); }
+
+/* 5. Nút bấm (Buttons) (Giữ nguyên)
+------------------------------------------ */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    display: inline-block;
+    font-family: var(--font-family);
+    color: var(--text-dark);
+}
+.btn.ghost {
+    background-color: var(--surface-soft);
+    color: var(--text-light);
+    border-color: var(--border-color);
+}
+.btn.ghost:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--accent-secondary);
+    border-color: var(--border-strong);
+    box-shadow: 0 12px 28px rgba(2, 6, 16, 0.45);
+}
+.btn.primary {
+    background: var(--accent-gradient);
+    color: #020817;
+    border-color: transparent;
+    box-shadow: 0 18px 42px rgba(99, 102, 241, 0.32);
+}
+.btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 56px rgba(34, 211, 238, 0.28);
+}
+
+/* 6. Nội dung chính (Main Content) (ĐỔI TÊN CLASS)
+------------------------------------------ */
+main.container {
+    padding-top: 2.5rem;
+    padding-bottom: 3rem;
+    flex-grow: 1;
+}
+.staff-header { margin-bottom: 2.5rem; text-align: center; } /* <--- ĐÃ ĐỔI TÊN */
+.staff-title { font-size: 2.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 0.5rem; } /* <--- ĐÃ ĐỔI TÊN */
+.staff-subtitle { font-size: 1.1rem; color: var(--text-light); margin-top: 0; } /* <--- ĐÃ ĐỔI TÊN */
+
+/* 7. Thông báo (Alerts) (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-alert { /* <--- ĐÃ ĐỔI TÊN */
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 16px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: var(--bg-light-gray);
+    box-shadow: 0 14px 32px rgba(2, 6, 16, 0.55);
+    color: var(--text-light);
+}
+.staff-alert.success { background-color: rgba(34, 197, 94, 0.18); border-color: rgba(34, 197, 94, 0.35); color: #bbf7d0; }
+.staff-alert.error { background-color: rgba(248, 113, 113, 0.18); border-color: rgba(248, 113, 113, 0.38); color: #fecaca; }
+
+/* 8. Lưới Thẻ Card (Dashboard) (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; } /* <--- ĐÃ ĐỔI TÊN */
+.staff-card { /* <--- ĐÃ ĐỔI TÊN */
+    display: block;
+    background: var(--bg-light-gray);
+    border-radius: 18px;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.25s ease-in-out;
+    text-decoration: none;
+    color: var(--text-dark);
+    backdrop-filter: blur(12px);
+}
+.staff-card:hover { /* <--- ĐÃ ĐỔI TÊN */
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+}
+/* (Các class con .card-icon, .card-title... giữ nguyên vì chúng chung) */
+.card-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--accent-secondary); }
+.card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+.card-description { font-size: 0.95rem; color: var(--text-light); line-height: 1.5; min-height: 60px; }
+.card-link { display: inline-block; margin-top: 1rem; font-weight: 600; color: var(--accent-secondary); }
+
+/* 9. Footer (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-footer { /* <--- ĐÃ ĐỔI TÊN */
+    background-color: transparent;
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: auto;
+}
+
+/* 10. Card cho Form (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-form-card { /* <--- ĐÃ ĐỔI TÊN */
+    background: var(--bg-light-gray);
+    border-radius: 18px;
+    padding: 2.5rem;
+    box-shadow: 0 24px 54px rgba(2, 6, 16, 0.55);
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid var(--border-strong);
+    backdrop-filter: blur(14px);
+}
+.staff-form-card h2 { /* <--- ĐÃ ĐỔI TÊN */
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+/* (Các class form chung như .form-group, .form-error... giữ nguyên) */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+}
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(15, 20, 30, 0.72);
+    color: var(--text-dark);
+    box-sizing: border-box;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+.form-group input:focus {
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
+    outline: none;
+}
+.form-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+.form-error {
+    font-size: 0.85rem;
+    color: var(--error-red);
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+.form-actions {
+    margin-top: 2rem;
+    text-align: right;
+}
+
+/* 11. Card cho Table (List) (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-content-card { /* <--- ĐÃ ĐỔI TÊN */
+    background: var(--bg-light-gray);
+    border-radius: 18px;
+    padding: 2.5rem;
+    box-shadow: 0 24px 54px rgba(2, 6, 16, 0.55);
+    overflow-x: auto;
+    border: 1px solid var(--border-strong);
+    backdrop-filter: blur(14px);
+}
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.content-header h2 {
+    margin: 0;
+    font-weight: 700;
+}
+.staff-search { /* <--- ĐÃ ĐỔI TÊN */
+    display: flex;
+    gap: 0.5rem;
+}
+.staff-search input { /* <--- ĐÃ ĐỔI TÊN */
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 250px;
+    background: rgba(15, 20, 30, 0.72);
+    color: var(--text-dark);
+}
+.staff-search .btn { /* <--- ĐÃ ĐỔI TÊN */
+    padding: 0.6rem 1.2rem;
+}
+
+/* 12. Table Styling (ĐỔI TÊN CLASS)
+------------------------------------------ */
+.staff-table { /* <--- ĐÃ ĐỔI TÊN */
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+.staff-table th, /* <--- ĐÃ ĐỔI TÊN */
+.staff-table td { /* <--- ĐÃ ĐỔI TÊN */
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    vertical-align: middle;
+}
+.staff-table th { /* <--- ĐÃ ĐỔI TÊN */
+    font-weight: 600;
+    color: var(--text-dark);
+    background-color: rgba(24, 32, 45, 0.8);
+}
+.staff-table tr:last-child td { /* <--- ĐÃ ĐỔI TÊN */
+    border-bottom: none;
+}
+.staff-table tr:hover { /* <--- ĐÃ ĐỔI TÊN */
+    background-color: rgba(24, 32, 45, 0.6);
+}
+/* (Các class chung như .status-badge, .action-links... giữ nguyên) */
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+.status-badge.active {
+    background-color: rgba(34, 197, 94, 0.24);
+    color: #bbf7d0;
+}
+.status-badge.inactive {
+    background-color: rgba(248, 113, 113, 0.24);
+    color: #fecaca;
+}
+.action-links a {
+    font-weight: 600;
+    text-decoration: none;
+    margin-right: 1rem;
+}
+.action-links a:hover {
+    text-decoration: underline;
+}
+.action-links .edit-link { color: var(--accent-primary); }
+.action-links .delete-link { color: var(--error-red); }
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-light);
+}

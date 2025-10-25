@@ -14,6 +14,7 @@ public interface StationRepository extends JpaRepository<Station, Integer> {
 
     Optional<Station> findByNameIgnoreCase(String name);
     List<Station> findByNameContainingIgnoreCase(String keyword);
+    List<Station> findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(String nameKeyword, String addressKeyword);
     List<Station> findByStatus(String status);
     boolean existsByName(String name);
 

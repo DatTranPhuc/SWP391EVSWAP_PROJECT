@@ -127,6 +127,7 @@
                     </div>
 
                     <div class="form-actions">
+                        <button type="button" class="btn ghost" onclick="resetForm()">Tạo mới</button>
                         <button type="submit" class="btn primary">Gửi báo cáo</button>
                     </div>
                 </form>
@@ -156,12 +157,18 @@
                         </div>
                         <div class="feedback-footer">
                             <span class="feedback-date" th:text="${#temporals.format(feedback.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày tạo</span>
-                            <form th:action="@{/feedback/delete/{id}(id=${feedback.feedbackId})}" method="post" style="display: inline;">
-                                <button type="submit" class="btn ghost small" 
-                                        onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');">
-                                    Xóa
+                            <div class="feedback-actions">
+                                <button type="button" class="btn primary small" 
+                                        th:onclick="'editFeedback(' + ${feedback.feedbackId} + ', \'' + ${feedback.stationName} + '\', ' + ${feedback.rating} + ', \'' + ${feedback.comment} + '\', ' + ${feedback.stationId} + ')'">
+                                    Sửa
                                 </button>
-                            </form>
+                                <form th:action="@{/feedback/delete/{id}(id=${feedback.feedbackId})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn ghost small" 
+                                            onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -743,6 +750,12 @@
     color: rgba(243, 244, 246, 0.6);
 }
 
+.feedback-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
 .btn.small {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
@@ -913,6 +926,82 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000); // 3 seconds
     });
 });
+</script>
+
+<script>
+// Edit Feedback Function
+function editFeedback(feedbackId, stationName, rating, comment, stationId) {
+    // Tìm form feedback
+    const form = document.querySelector('.feedback-form');
+    if (!form) return;
+    
+    // Điền dữ liệu vào form
+    const stationSelect = form.querySelector('#station');
+    const ratingInputs = form.querySelectorAll('input[name="rating"]');
+    const commentTextarea = form.querySelector('#comment');
+    
+    // Set station
+    if (stationSelect) {
+        stationSelect.value = stationId;
+        // Trigger change event để update custom select
+        stationSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Set rating
+    ratingInputs.forEach(input => {
+        input.checked = (input.value == rating);
+    });
+    
+    // Set comment
+    if (commentTextarea) {
+        commentTextarea.value = comment;
+    }
+    
+    // Thay đổi form action để update thay vì create
+    form.action = '/feedback/update/' + feedbackId;
+    
+    // Thay đổi button text
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Cập nhật Feedback';
+    }
+    
+    // Scroll to form
+    form.scrollIntoView({ behavior: 'smooth' });
+    
+    // Focus vào comment field
+    if (commentTextarea) {
+        commentTextarea.focus();
+    }
+}
+
+// Reset form khi click "Tạo mới"
+function resetForm() {
+    const form = document.querySelector('.feedback-form');
+    if (!form) return;
+    
+    // Reset form action
+    form.action = '/feedback';
+    
+    // Reset button text
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Gửi Feedback';
+    }
+    
+    // Clear form
+    form.reset();
+    
+    // Reset custom select
+    const customSelect = document.getElementById('station-select');
+    if (customSelect) {
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const selectedValue = trigger.querySelector('.selected-value');
+        if (selectedValue) {
+            selectedValue.textContent = 'Chọn trạm';
+        }
+    }
+}
 </script>
 
 </body>

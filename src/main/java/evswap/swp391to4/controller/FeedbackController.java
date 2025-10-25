@@ -102,6 +102,35 @@ public class FeedbackController {
     }
 
     /**
+     * Cập nhật feedback
+     */
+    @PostMapping("/update/{id}")
+    public String updateFeedback(@PathVariable Integer id,
+                                @Valid @ModelAttribute("feedback") FeedbackRequest feedback,
+                                BindingResult bindingResult,
+                                HttpSession session,
+                                RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            return "redirect:/login";
+        }
+
+        if (bindingResult.hasErrors()) {
+            redirect.addFlashAttribute("error", "Dữ liệu không hợp lệ");
+            return "redirect:/feedback";
+        }
+
+        try {
+            feedbackService.updateFeedback(id, feedback, driver.getDriverId());
+            redirect.addFlashAttribute("success", "Cập nhật feedback thành công!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/feedback";
+    }
+
+    /**
      * Xóa feedback
      */
     @PostMapping("/delete/{id}")

@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Ticket - EV SWAP Staff</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body class="admin-body">
+
+<header class="admin-top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">👨‍🔧</span> <span class="brand-name">EV SWAP</span> <span class="admin-badge">Staff Panel</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/staff/tickets}" class="nav-link-button active">Quản lý Tickets</a>
+        </nav>
+        <div class="auth-area" th:if="${session.loggedInStaff}">
+            <span class="welcome">Xin chào, <strong th:text="${session.loggedInStaff.fullName}">Staff</strong>!</span>
+            <form th:action="@{/logout}" method="post"><button class="btn ghost" type="submit">Đăng xuất</button></form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="admin-content-card">
+
+        <div class="content-header">
+            <h2 th:text="'Ticket #' + ${ticket.ticketId}">Ticket #1</h2>
+            <div class="header-actions">
+                <a th:href="@{/staff/tickets}" class="btn ghost">← Quay lại danh sách</a>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
+
+        <!-- Ticket Information -->
+        <div class="ticket-info-section">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Driver:</label>
+                    <span th:text="${ticket.driverName}">Nguyễn Văn A</span>
+                </div>
+                <div class="info-item">
+                    <label>Danh mục:</label>
+                    <span th:class="'category-badge category-' + ${ticket.category}" th:text="${ticket.category}">station</span>
+                </div>
+                <div class="info-item">
+                    <label>Trạng thái:</label>
+                    <span th:class="'status-badge status-' + ${ticket.status}" th:text="${ticket.status}">open</span>
+                </div>
+                <div class="info-item">
+                    <label>Ngày tạo:</label>
+                    <span th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:30</span>
+                </div>
+                <div class="info-item" th:if="${ticket.resolvedAt != null}">
+                    <label>Ngày giải quyết:</label>
+                    <span th:text="${#temporals.format(ticket.resolvedAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 15:30</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Content -->
+        <div class="ticket-content-section">
+            <h3>Mô tả vấn đề</h3>
+            <div class="content-box">
+                <p th:text="${ticket.comment}">Mô tả chi tiết vấn đề...</p>
+            </div>
+        </div>
+
+        <!-- Staff Note -->
+        <div class="ticket-note-section" th:if="${ticket.note != null}">
+            <h3>Ghi chú hiện tại</h3>
+            <div class="content-box">
+                <p th:text="${ticket.note}">Ghi chú từ staff...</p>
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="ticket-attachments" th:if="${ticket.attachments != null and !ticket.attachments.isEmpty()}">
+            <h3>Tệp đính kèm</h3>
+            <div class="attachments-list">
+                <div th:each="attachment : ${#strings.arraySplit(ticket.attachments, ',')}" class="attachment-item">
+                    <a th:href="@{'/uploads/tickets/' + ${attachment}}" th:text="${attachment}" target="_blank" class="attachment-link">
+                        📎 <span th:text="${attachment}">file.pdf</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>Trao đổi với Driver</h3>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div th:if="${comments == null or comments.isEmpty()}" class="chat-empty">
+                    Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!
+                </div>
+                
+                <div th:each="comment : ${comments}" 
+                     th:class="${comment.author == 'staff'} ? 'message-wrapper right' : 'message-wrapper left'">
+                    <div class="message-bubble">
+                        <div class="message-author" th:text="${comment.name}">Author</div>
+                        <div class="message-text" th:text="${comment.message}">Message</div>
+                        <div class="message-time" th:text="${comment.timestamp}">Time</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <form th:action="@{/staff/tickets/{id}/comment(id=${ticket.ticketId})}" method="post" class="chat-form">
+                    <textarea name="message" 
+                              placeholder="Nhập tin nhắn của bạn..." 
+                              maxlength="500" 
+                              required 
+                              rows="1"></textarea>
+                    <button type="submit" class="send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Spacing between chat and update form -->
+        <div style="margin: 2rem 0;"></div>
+
+        <!-- Update Form -->
+        <div class="ticket-update-section">
+            <h3>Cập nhật ticket</h3>
+            <form th:action="@{/staff/tickets/{id}/update(id=${ticket.ticketId})}" th:object="${ticketUpdate}" method="post" enctype="multipart/form-data" class="update-form">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="status">Trạng thái</label>
+                        <div class="custom-select-wrapper">
+                            <div class="custom-select" id="status-select">
+                                <div class="custom-select-trigger">
+                                    <span class="selected-value">-- Chọn trạng thái --</span>
+                                    <div class="arrow">▼</div>
+                                </div>
+                                <div class="custom-options">
+                                    <div class="custom-option" data-value="open">
+                                        <span class="text">Mở</span>
+                                    </div>
+                                    <div class="custom-option" data-value="in_progress">
+                                        <span class="text">Đang xử lý</span>
+                                    </div>
+                                    <div class="custom-option" data-value="resolved">
+                                        <span class="text">Đã giải quyết</span>
+                                    </div>
+                                    <div class="custom-option" data-value="closed">
+                                        <span class="text">Đã đóng</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="status" name="status" th:field="*{status}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="note">Ghi chú</label>
+                    <textarea id="note" name="note" th:field="*{note}" 
+                              placeholder="Thêm ghi chú cho ticket này..." 
+                              rows="3" maxlength="500"></textarea>
+                </div>
+
+
+                <!-- File Upload for Staff -->
+                <div class="form-group">
+                    <label for="attachment">Tệp đính kèm (tùy chọn)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="attachment-staff" name="attachment" 
+                               accept="image/*,.pdf,.doc,.docx" 
+                               class="file-input">
+                        <label for="attachment-staff" class="file-upload-label">
+                            <span class="file-upload-icon">📎</span>
+                            <span class="file-upload-text">Chọn tệp đính kèm</span>
+                            <span class="file-upload-hint">Ảnh, PDF, Word (tối đa 5MB)</span>
+                        </label>
+                        <div class="file-preview" id="filePreviewStaff" style="display: none;">
+                            <div class="file-preview-item">
+                                <span class="file-icon">📄</span>
+                                <span class="file-name"></span>
+                                <button type="button" class="file-remove" onclick="removeFileStaff()">×</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer class="admin-footer">
+    <div class="container"><p>© 2025 EV SWAP - Staff Control Panel.</p></div>
+</footer>
+
+<style>
+.ticket-info-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: rgba(243, 244, 246, 0.7);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-item span {
+    color: #f3f4f6;
+    font-size: 1rem;
+}
+
+.ticket-content-section,
+.ticket-note-section,
+.ticket-attachments,
+.ticket-comments,
+.ticket-update-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ticket-content-section h3,
+.ticket-note-section h3,
+.ticket-attachments h3,
+.ticket-comments h3,
+.ticket-update-section h3 {
+    color: #f3f4f6;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.content-box {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-box p {
+    color: rgba(243, 244, 246, 0.9);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.attachment-item {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 8px;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attachment-link {
+    color: #60a5fa;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.attachment-link:hover {
+    color: #93c5fd;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.comment-item {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #f3f4f6;
+}
+
+.comment-time {
+    color: rgba(243, 244, 246, 0.6);
+    font-size: 0.875rem;
+}
+
+.comment-message {
+    color: rgba(243, 244, 246, 0.9);
+    line-height: 1.5;
+}
+
+.update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #f3f4f6;
+    font-size: 0.875rem;
+}
+
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    color: #f3f4f6;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group textarea::placeholder {
+    color: rgba(243, 244, 246, 0.6);
+    font-style: italic;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Status and Category Badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-open {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-in_progress {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-resolved {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(21, 128, 61, 0.1));
+    color: #10b981;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-closed {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(75, 85, 99, 0.1));
+    color: #9ca3af;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.category-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.2), rgba(79, 70, 229, 0.1));
+    color: #a5b4fc;
+    border: 1px solid rgba(67, 56, 202, 0.3);
+}
+
+/* File Upload Styles */
+.file-upload-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border: 2px dashed rgba(67, 56, 202, 0.5);
+    border-radius: 16px;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.3) 0%,
+        rgba(15, 50, 30, 0.3) 100%
+    );
+    color: #f3f4f6;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+    text-align: center;
+    min-height: 120px;
+}
+
+.file-upload-label:hover {
+    border-color: rgba(67, 56, 202, 0.8);
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.5) 0%,
+        rgba(15, 50, 30, 0.5) 100%
+    );
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.file-upload-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.file-upload-text {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.file-upload-hint {
+    font-size: 0.875rem;
+    color: rgba(243, 244, 246, 0.6);
+    font-style: italic;
+    display: block;
+}
+
+.file-preview {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.4) 0%,
+        rgba(15, 50, 30, 0.4) 100%
+    );
+    border-radius: 12px;
+    border: 1px solid rgba(67, 56, 202, 0.3);
+    backdrop-filter: blur(15px);
+}
+
+.file-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.file-icon {
+    font-size: 1.25rem;
+}
+
+.file-name {
+    flex: 1;
+    color: #f3f4f6;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.file-remove {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.8) 0%,
+        rgba(185, 28, 28, 0.8) 100%
+    );
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.file-remove:hover {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 1) 0%,
+        rgba(185, 28, 28, 1) 100%
+    );
+    transform: scale(1.1);
+}
+
+/* Custom Select Styles */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.5) 0%,    /* Tím-xanh dương tối */
+        rgba(15, 50, 30, 0.5) 100%  /* Xanh lá tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.5);
+    border-radius: 12px;
+    color: #f3f4f6;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(15px);
+}
+
+.custom-select-trigger:hover {
+    border-color: rgba(67, 56, 202, 0.7);
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.7) 0%,    /* Tím-xanh dương tối đậm hơn */
+        rgba(15, 50, 30, 0.7) 100%  /* Xanh lá tối đậm hơn */
+    );
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.custom-select-trigger.active {
+    border-color: rgba(67, 56, 202, 0.8);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.25), 0 6px 20px rgba(67, 56, 202, 0.3);
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.9) 0%,    /* Tím-xanh dương tối đậm nhất */
+        rgba(15, 50, 30, 0.9) 100%  /* Xanh lá tối đậm nhất */
+    );
+    transform: translateY(-2px);
+}
+
+.arrow {
+    transition: transform 0.3s ease;
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.8) 0%,    /* Tím-xanh dương */
+        rgba(34, 197, 94, 0.8) 100%  /* Xanh lá */
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 0.8rem;
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.98) 0%,    /* Tím-xanh dương rất tối */
+        rgba(15, 50, 30, 0.98) 100%  /* Xanh lá rất tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.6);
+    border-radius: 12px;
+    margin-top: 4px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+.custom-options.open {
+    max-height: 200px; /* Giới hạn chiều cao cho 4 options */
+    opacity: 1;
+    transform: translateY(0);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar cho options */
+.custom-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-options::-webkit-scrollbar-track {
+    background: rgba(67, 56, 202, 0.1);
+    border-radius: 3px;
+}
+
+.custom-options::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.6) 0%,    /* Tím-xanh dương */
+        rgba(34, 197, 94, 0.6) 100%  /* Xanh lá */
+    );
+    border-radius: 3px;
+}
+
+.custom-options::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, 
+        rgba(67, 56, 202, 0.8) 0%,    /* Tím-xanh dương đậm hơn */
+        rgba(34, 197, 94, 0.8) 100%  /* Xanh lá đậm hơn */
+    );
+}
+
+.custom-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid rgba(67, 56, 202, 0.6);
+    margin: 4px 8px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.4) 0%,    /* Tím-xanh dương tối */
+        rgba(15, 50, 30, 0.4) 100%  /* Xanh lá tối */
+    );
+    border: 1px solid rgba(67, 56, 202, 0.3);
+}
+
+.custom-option:hover {
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.6) 0%,    /* Tím-xanh dương tối đậm hơn */
+        rgba(15, 50, 30, 0.6) 100%  /* Xanh lá tối đậm hơn */
+    );
+    border-left-color: rgba(67, 56, 202, 0.8);
+    border-color: rgba(67, 56, 202, 0.6);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.custom-option.selected {
+    background: linear-gradient(135deg, 
+        rgba(30, 24, 48, 0.8) 0%,    /* Tím-xanh dương tối đậm nhất */
+        rgba(15, 50, 30, 0.8) 100%  /* Xanh lá tối đậm nhất */
+    );
+    border-left-color: rgba(67, 56, 202, 1);
+    border-color: rgba(67, 56, 202, 0.7);
+    color: #ffffff;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.custom-option .text {
+    color: #f3f4f6;
+    font-size: 0.95rem;
+}
+
+.custom-option:hover .text,
+.custom-option.selected .text {
+    color: #ffffff;
+}
+
+/* Chat UI Styles */
+.chat-container {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    max-height: 700px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.2), rgba(34, 197, 94, 0.2));
+}
+
+.chat-header h3 {
+    color: #f3f4f6;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    max-height: 500px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chat-empty {
+    text-align: center;
+    color: rgba(243, 244, 246, 0.5);
+    padding: 2rem;
+    font-style: italic;
+}
+
+.message-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+.message-wrapper.left {
+    justify-content: flex-start;
+}
+
+.message-wrapper.right {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    animation: messageSlide 0.3s ease;
+}
+
+.message-wrapper.left .message-bubble {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.3), rgba(75, 85, 99, 0.2));
+    border-bottom-left-radius: 4px;
+}
+
+.message-wrapper.right .message-bubble {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(21, 128, 61, 0.2));
+    border-bottom-right-radius: 4px;
+}
+
+.message-author {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    opacity: 0.8;
+    color: #f3f4f6;
+}
+
+.message-text {
+    color: #f3f4f6;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+    text-align: right;
+    color: #f3f4f6;
+}
+
+.chat-input-container {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+}
+
+.chat-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.chat-form textarea {
+    flex: 1;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: #f3f4f6;
+    resize: none;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: inherit;
+}
+
+.chat-form textarea:focus {
+    outline: none;
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
+}
+
+.chat-form textarea::placeholder {
+    color: rgba(243, 244, 246, 0.6);
+    font-style: italic;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(21, 128, 61, 0.8));
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.send-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.send-btn:active {
+    transform: scale(0.95);
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .message-bubble {
+        max-width: 85%;
+    }
+    
+    .chat-messages {
+        max-height: 400px;
+        min-height: 250px;
+    }
+    
+    .chat-container {
+        max-height: 600px;
+    }
+}
+</style>
+
+<script>
+// Custom Select JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize custom select
+    initializeCustomSelect('status-select', 'status');
+    
+    // Initialize file upload for staff
+    initializeFileUploadStaff();
+    
+    // Initialize chat functionality
+    initializeChat();
+    
+    // Load comments if comment history exists
+    const commentHistory = /*[[${ticket.commentHistory}]]*/ null;
+    if (commentHistory && commentHistory !== '' && commentHistory !== 'null') {
+        try {
+            const comments = JSON.parse(commentHistory);
+            if (Array.isArray(comments) && comments.length > 0) {
+                displayComments(comments);
+            } else {
+                console.log('No comments found or empty array');
+            }
+        } catch (e) {
+            console.error('Error parsing comment history:', e);
+            // Show error message to user
+            const commentsList = document.getElementById('commentsList');
+            if (commentsList) {
+                commentsList.innerHTML = '<div class="comment-item"><div class="comment-message" style="color: #ef4444; font-style: italic;">Lỗi khi tải lịch sử bình luận</div></div>';
+            }
+        }
+    } else {
+        console.log('No comment history available');
+    }
+    
+    function initializeCustomSelect(selectId, inputId) {
+        const customSelect = document.getElementById(selectId);
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const options = customSelect.querySelector('.custom-options');
+        const customOptions = customSelect.querySelectorAll('.custom-option');
+        const hiddenInput = document.getElementById(inputId);
+        const selectedValue = trigger.querySelector('.selected-value');
+
+        // Toggle dropdown
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Close other open dropdowns first
+            const allCustomSelects = document.querySelectorAll('.custom-select');
+            allCustomSelects.forEach(select => {
+                if (select !== customSelect && select.classList.contains('active')) {
+                    const otherOptions = select.querySelector('.custom-options');
+                    select.classList.remove('active');
+                    otherOptions.classList.remove('open');
+                    
+                    // Add closing animation for other dropdowns
+                    otherOptions.style.transform = 'translateY(-10px)';
+                    otherOptions.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        otherOptions.style.transform = '';
+                        otherOptions.style.opacity = '';
+                    }, 300);
+                }
+            });
+            
+            customSelect.classList.toggle('active');
+            options.classList.toggle('open');
+            
+            // Add opening animation
+            if (options.classList.contains('open')) {
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Trigger opening animation
+                setTimeout(() => {
+                    options.style.transform = 'translateY(0)';
+                    options.style.opacity = '1';
+                }, 10);
+            }
+        });
+
+        // Handle option selection
+        customOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                const text = this.querySelector('.text').textContent;
+                
+                // Update selected value display
+                selectedValue.textContent = text;
+                
+                // Update hidden input
+                hiddenInput.value = value;
+                
+                // Update visual state
+                customOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // Close dropdown with animation
+                customSelect.classList.remove('active');
+                options.classList.remove('open');
+                
+                // Add closing animation
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Reset animation after transition
+                setTimeout(() => {
+                    options.style.transform = '';
+                    options.style.opacity = '';
+                }, 300);
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('active');
+                options.classList.remove('open');
+                
+                // Add closing animation
+                options.style.transform = 'translateY(-10px)';
+                options.style.opacity = '0';
+                
+                // Reset animation after transition
+                setTimeout(() => {
+                    options.style.transform = '';
+                    options.style.opacity = '';
+                }, 300);
+            }
+        });
+
+        // Handle keyboard navigation
+        trigger.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                customSelect.classList.toggle('active');
+                options.classList.toggle('open');
+            }
+        });
+
+        // Set initial value if form is pre-filled
+        const initialValue = hiddenInput.value;
+        if (initialValue) {
+            const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
+            if (selectedOption) {
+                const text = selectedOption.querySelector('.text').textContent;
+                selectedValue.textContent = text;
+                selectedOption.classList.add('selected');
+            }
+        }
+    }
+});
+
+function displayComments(comments) {
+    const commentsList = document.getElementById('commentsList');
+    if (!commentsList) return;
+
+    commentsList.innerHTML = '';
+    
+    comments.forEach(comment => {
+        const commentElement = document.createElement('div');
+        commentElement.className = 'comment-item';
+        
+        const time = new Date(comment.timestamp).toLocaleString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        commentElement.innerHTML = `
+            <div class="comment-header">
+                <span class="comment-author">${comment.name} (${comment.author})</span>
+                <span class="comment-time">${time}</span>
+            </div>
+            <div class="comment-message">${comment.message}</div>
+        `;
+        
+        commentsList.appendChild(commentElement);
+    });
+}
+
+// File Upload Functions for Staff
+function initializeFileUploadStaff() {
+    const fileInput = document.getElementById('attachment-staff');
+    const filePreview = document.getElementById('filePreviewStaff');
+    const fileName = filePreview.querySelector('.file-name');
+    
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File quá lớn! Tối đa 5MB.');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Validate file type
+            const allowedTypes = ['image/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const isValidType = allowedTypes.some(type => file.type.startsWith(type));
+            
+            if (!isValidType) {
+                alert('Chỉ chấp nhận file ảnh, PDF hoặc Word!');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Show preview
+            fileName.textContent = file.name;
+            filePreview.style.display = 'block';
+        }
+    });
+}
+
+function removeFileStaff() {
+    const fileInput = document.getElementById('attachment-staff');
+    const filePreview = document.getElementById('filePreviewStaff');
+    
+    fileInput.value = '';
+    filePreview.style.display = 'none';
+}
+
+// Chat functionality
+function initializeChat() {
+    const chatMessages = document.getElementById('chatMessages');
+    const textarea = document.querySelector('.chat-form textarea');
+    
+    // Auto-scroll to bottom on page load
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Auto-resize textarea
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+        
+        // Handle Enter key (submit on Enter, new line on Shift+Enter)
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const form = this.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+    }
+}
+</script>
+
+</body>
+</html>

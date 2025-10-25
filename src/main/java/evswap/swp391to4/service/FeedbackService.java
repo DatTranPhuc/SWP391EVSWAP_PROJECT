@@ -96,6 +96,37 @@ public class FeedbackService {
     }
 
     /**
+     * Cập nhật feedback (chỉ driver sở hữu mới được cập nhật)
+     */
+    @Transactional
+    public FeedbackResponse updateFeedback(Integer feedbackId, FeedbackRequest request, Integer driverId) {
+        Feedback feedback = feedbackRepo.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy feedback"));
+
+        // Kiểm tra quyền sở hữu
+        if (!feedback.getDriver().getDriverId().equals(driverId)) {
+            throw new IllegalStateException("Bạn không có quyền cập nhật feedback này");
+        }
+
+        // Kiểm tra station có tồn tại không
+        Station station = stationRepo.findById(request.getStationId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy trạm"));
+
+        // Kiểm tra rating hợp lệ
+        if (request.getRating() == null || request.getRating() < 1 || request.getRating() > 5) {
+            throw new IllegalArgumentException("Rating phải từ 1 đến 5");
+        }
+
+        // Cập nhật thông tin
+        feedback.setStation(station);
+        feedback.setRating(request.getRating());
+        feedback.setComment(request.getComment());
+
+        Feedback saved = feedbackRepo.save(feedback);
+        return mapToResponse(saved);
+    }
+
+    /**
      * Xóa feedback (chỉ driver sở hữu mới được xóa)
      */
     @Transactional
