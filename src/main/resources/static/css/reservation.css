@@ -297,6 +297,20 @@ body.reservation-body {
                 rgba(15, 23, 42, 0.9);
 }
 
+#map.map-fallback {
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+.map-error {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 320px;
+    line-height: 1.5;
+}
+
 .map-caption {
     margin-top: 16px;
     color: var(--text-muted);
