@@ -25,6 +25,6 @@ public class StationController {
     @GetMapping("/{id}")
     public String redirectStationDetails(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         redirectAttributes.addAttribute("stationId", id);
-        return "redirect:/reservations/schedule";
+        return "redirect:/reservations/book";
     }
 }
