@@ -23,7 +23,7 @@
         <nav class="nav-links" aria-label="Điều hướng chính">
             <a th:if="${loggedIn}" th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:if="${loggedIn}" th:href="@{/vehicles}" class="nav-link-button">Phương tiện</a>
-            <a th:if="${loggedIn}" th:href="@{/reservations/schedule}" class="nav-link-button">Đổi pin</a>
+            <a th:if="${loggedIn}" th:href="@{/reservations/search}" class="nav-link-button">Đổi pin</a>
             <a th:if="${loggedIn}" th:href="@{/reports}" class="nav-link-button">Báo cáo</a>
             <a th:if="${loggedIn}" th:href="@{/account}" class="nav-link-button">Tài khoản</a>
             <a th:if="${loggedIn}" th:href="@{/support}" class="nav-link-button">Hỗ trợ</a>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoàn tất đổi pin - EV SWAP</title>
+    <title th:text="${pageTitle + ' - EV SWAP'}">Hoàn tất đổi pin - EV SWAP</title>
     <link rel="stylesheet" th:href="@{/css/reservation.css}">
 </head>
 <body class="reservation-body">
@@ -11,45 +11,14 @@
 <div class="reservation-overlay"></div>
 
 <header class="manage-header container">
-    <div class="driver-identity">
-        <div class="driver-avatar" th:text="${driverInitial}">D</div>
-        <div class="driver-intro">
-            <span class="subtitle">Quy trình đổi pin</span>
-            <h1 class="page-title">Hoàn tất quy trình</h1>
-            <p class="page-hint">
-                Chúc mừng! Quy trình đổi pin đã hoàn tất. Hãy đánh giá trải nghiệm và đặt lịch cho lần tiếp theo.
-            </p>
-        </div>
-    </div>
+    <div th:replace="fragments/reservation :: driverHeader(${pageSubtitle}, ${pageTitle}, ${pageHint}, ${driverInitial})"></div>
     <div class="header-actions">
         <a class="btn primary" th:href="@{/reservations/search}">Đặt lịch mới</a>
     </div>
 </header>
 
 <main class="manage-main container">
-    <section class="reservation-progress">
-        <ul class="progress-steps"
-            th:with="laterForSearch=${T(java.util.Arrays).asList('schedule','payment','swap','done')},
-                     laterForSchedule=${T(java.util.Arrays).asList('payment','swap','done')},
-                     laterForPayment=${T(java.util.Arrays).asList('swap','done')},
-                     laterForSwap=${T(java.util.Arrays).asList('done')}">
-            <li class="progress-step" th:classappend="${#lists.contains(laterForSearch, currentStep)} ? ' is-complete' : ''">
-                <span>Tìm trạm</span>
-            </li>
-            <li class="progress-step" th:classappend="${#lists.contains(laterForSchedule, currentStep)} ? ' is-complete' : ''">
-                <span>Đặt lịch</span>
-            </li>
-            <li class="progress-step" th:classappend="${#lists.contains(laterForPayment, currentStep)} ? ' is-complete' : ''">
-                <span>Thanh toán</span>
-            </li>
-            <li class="progress-step" th:classappend="${#lists.contains(laterForSwap, currentStep)} ? ' is-complete' : ''">
-                <span>Đổi pin</span>
-            </li>
-            <li class="progress-step" th:classappend="${currentStep == 'done'} ? ' is-current' : ''">
-                <span>Hoàn tất</span>
-            </li>
-        </ul>
-    </section>
+    <section th:replace="fragments/reservation :: progress(${currentStep}, ${progressLinks})"></section>
 
     <section class="reservation-step-layout single-column">
         <article class="step-card complete-summary">
@@ -75,26 +44,7 @@
         </article>
     </section>
 
-    <section class="upcoming-reservations">
-        <h2>Lịch đổi pin sắp tới</h2>
-        <p class="map-caption">Theo dõi lịch đã đặt để chủ động chuẩn bị cho chuyến đi tiếp theo.</p>
-        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
-            Bạn chưa có lịch nào khác. Hãy đặt lịch mới ngay hôm nay!
-        </div>
-        <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
-            <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
-                <div class="reservation-info">
-                    <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
-                    <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
-                </div>
-                <span class="reservation-status"
-                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
-                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
-                    Đang chờ xác nhận
-                </span>
-            </article>
-        </div>
-    </section>
+    <section th:replace="fragments/reservation :: upcoming(${upcomingReservations}, ${'Lịch đổi pin sắp tới'}, ${'Theo dõi lịch đã đặt để chủ động chuẩn bị cho chuyến đi tiếp theo.'})"></section>
 </main>
 </body>
 </html>

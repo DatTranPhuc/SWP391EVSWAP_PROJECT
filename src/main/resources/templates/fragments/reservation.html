@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="driverHeader(pageSubtitle, pageTitle, pageHint, driverInitial)">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle" th:text="${pageSubtitle}">Quy trình đổi pin</span>
+            <h1 class="page-title" th:text="${pageTitle}">Chọn trạm đổi pin</h1>
+            <p class="page-hint" th:text="${pageHint}">
+                Xin chào! Hãy làm theo các bước để hoàn tất quy trình đổi pin.
+            </p>
+        </div>
+    </div>
+</div>
+
+<section class="reservation-progress"
+         th:fragment="progress(currentStep, links)">
+    <ul class="progress-steps"
+        th:with="steps=${T(java.util.Arrays).asList('search','schedule','payment','swap','done')},
+                 labels=${{ 'search':'Tìm trạm','schedule':'Đặt lịch','payment':'Thanh toán','swap':'Đổi pin','done':'Hoàn tất'}},
+                 currentIndex=${#lists.indexOf(steps, currentStep)}">
+        <li th:each="step : ${steps}"
+            th:with="stepIndex=${#lists.indexOf(steps, step)}"
+            th:class="${'progress-step' + (currentIndex == stepIndex ? ' is-current' : (currentIndex > stepIndex ? ' is-complete' : ''))}">
+            <a th:if="${links != null and links.containsKey(step)}"
+               th:href="${links[step]}"
+               th:text="${labels[step]}"></a>
+            <span th:if="${links == null or !links.containsKey(step)}"
+                  th:text="${labels[step]}"></span>
+        </li>
+    </ul>
+</section>
+
+<section class="upcoming-reservations"
+         th:fragment="upcoming(upcomingReservations, heading, description)">
+    <h2 th:text="${heading != null} ? ${heading} : 'Lịch đổi pin của bạn'">Lịch đổi pin của bạn</h2>
+    <p class="map-caption"
+       th:text="${description != null} ? ${description} : 'Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.'">
+        Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.
+    </p>
+    <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
+        Chưa có lịch đổi pin nào. Hãy chọn trạm và đặt lịch ngay!
+    </div>
+    <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
+        <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
+            <div class="reservation-info">
+                <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
+                <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}"
+                      class="station-address">10/06/2024 08:30</span>
+            </div>
+            <span class="reservation-status"
+                  th:classappend="${reservation.status() == 'pending'} ? ' pending'"
+                  th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
+                Đang chờ xác nhận
+            </span>
+        </article>
+    </div>
+</section>
+</body>
+</html>

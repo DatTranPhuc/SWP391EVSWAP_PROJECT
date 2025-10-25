@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt lịch đổi pin - EV SWAP</title>
+    <title th:text="${pageTitle + ' - EV SWAP'}">Đặt lịch đổi pin - EV SWAP</title>
     <link rel="stylesheet" th:href="@{/css/reservation.css}">
 </head>
 <body class="reservation-body">
@@ -11,17 +11,7 @@
 <div class="reservation-overlay"></div>
 
 <header class="manage-header container">
-    <div class="driver-identity">
-        <div class="driver-avatar" th:text="${driverInitial}">D</div>
-        <div class="driver-intro">
-            <span class="subtitle">Quy trình đổi pin</span>
-            <h1 class="page-title">Đặt lịch đổi pin</h1>
-            <p class="page-hint"
-               th:text="${'Bạn đang đặt lịch tại ' + selectedStation.name + '. Vui lòng chọn thời gian phù hợp.'}">
-                Bạn đang đặt lịch. Vui lòng chọn thời gian phù hợp.
-            </p>
-        </div>
-    </div>
+    <div th:replace="fragments/reservation :: driverHeader(${pageSubtitle}, ${pageTitle}, ${pageHint}, ${driverInitial})"></div>
     <div class="header-actions">
         <a class="btn ghost" th:href="@{/reservations/search(q=${searchQuery}, stationId=${selectedStation.stationId})}">Quay lại chọn trạm</a>
     </div>
@@ -31,34 +21,7 @@
     <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
     <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
 
-    <section class="reservation-progress">
-        <ul class="progress-steps"
-            th:with="laterForSearch=${T(java.util.Arrays).asList('schedule','payment','swap','done')},
-                     laterForSchedule=${T(java.util.Arrays).asList('payment','swap','done')},
-                     laterForPayment=${T(java.util.Arrays).asList('swap','done')},
-                     laterForSwap=${T(java.util.Arrays).asList('done')}">
-            <li class="progress-step"
-                th:classappend="${#lists.contains(laterForSearch, currentStep)} ? ' is-complete' : (${currentStep == 'search'} ? ' is-current' : '')">
-                <a th:href="@{/reservations/search(stationId=${selectedStation.stationId}, q=${searchQuery})}">Tìm trạm</a>
-            </li>
-            <li class="progress-step"
-                th:classappend="${currentStep == 'schedule'} ? ' is-current' : (${#lists.contains(laterForSchedule, currentStep)} ? ' is-complete' : '')">
-                <span>Đặt lịch</span>
-            </li>
-            <li class="progress-step"
-                th:classappend="${currentStep == 'payment'} ? ' is-current' : (${#lists.contains(laterForPayment, currentStep)} ? ' is-complete' : '')">
-                <span>Thanh toán</span>
-            </li>
-            <li class="progress-step"
-                th:classappend="${currentStep == 'swap'} ? ' is-current' : (${#lists.contains(laterForSwap, currentStep)} ? ' is-complete' : '')">
-                <span>Đổi pin</span>
-            </li>
-            <li class="progress-step"
-                th:classappend="${currentStep == 'done'} ? ' is-current' : ''">
-                <span>Hoàn tất</span>
-            </li>
-        </ul>
-    </section>
+    <section th:replace="fragments/reservation :: progress(${currentStep}, ${progressLinks})"></section>
 
     <section class="reservation-step-layout">
         <article class="step-card station-summary">
