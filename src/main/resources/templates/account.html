@@ -1,10 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản | EV SWAP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/account.css}">
 </head>
 <body>
-$END$
+
+<div class="account-card">
+    <h2>Thông tin tài khoản</h2>
+
+    <form th:action="@{/account/update}" method="post" class="account-form">
+        <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" name="fullName" th:value="${driver.fullName}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="text" name="phone" th:value="${driver.phone}" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" th:value="${driver.email}" readonly>
+        </div>
+
+        <!-- ✅ Xe của bạn -->
+        <div class="vehicle-section" th:if="${vehicles != null and #lists.size(vehicles) > 0}">
+            <h3>Xe của bạn</h3>
+            <div th:each="v : ${vehicles}" class="vehicle-card">
+                <div class="form-group">
+                    <label>Biển số</label>
+                    <input type="text" th:value="${v.plateNumber}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Số khung (VIN)</label>
+                    <input type="text" th:value="${v.vin}" readonly>
+                </div>
+                <div class="form-group" th:if="${v.model != null}">
+                    <label>Mẫu xe</label>
+                    <input type="text" th:value="${v.model}" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" id="editBtn" class="btn ghost">Chỉnh sửa</button>
+            <button type="submit" id="updateBtn" class="btn primary" disabled>Cập nhật</button>
+        </div>
+    </form>
+
+    <form th:action="@{/account/delete}" method="post"
+          onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?');">
+        <button type="submit" class="btn danger full">Xóa tài khoản</button>
+    </form>
+
+    <a th:href="@{/dashboard}" class="back-link">← Quay về Dashboard</a>
+</div>
+
+<footer>
+    © 2025 EV SWAP. Nền tảng đổi pin xe máy điện thông minh.
+</footer>
+
+<script>
+    const editBtn = document.getElementById('editBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const inputs = document.querySelectorAll('.account-form input');
+
+    editBtn.addEventListener('click', () => {
+        inputs.forEach(input => input.removeAttribute('readonly'));
+        updateBtn.disabled = false;
+        editBtn.disabled = true;
+    });
+</script>
+
 </body>
 </html>
