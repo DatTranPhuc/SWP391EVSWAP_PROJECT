@@ -30,9 +30,6 @@
 </header>
 
 <main class="manage-main container">
-    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
-    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
-
     <section class="reservation-progress">
         <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
             <li class="progress-step" data-step="search">Tìm trạm</li>
@@ -73,7 +70,6 @@
             <div class="station-list" th:if="${stations != null and !stations.isEmpty()}">
                 <article class="station-card"
                          th:each="station : ${stations}"
-                         th:classappend="${selectedStation != null and selectedStation.stationId == station.stationId} ? ' is-selected'"
                          th:attr="data-station-id=${station.stationId}">
                     <div class="station-meta">
                         <span class="station-name" th:text="${station.name}">EV Swap Station</span>
@@ -84,32 +80,9 @@
                     <div class="station-address" th:text="${station.address}">123 Nguyễn Văn Cừ, Q.5</div>
                     <div class="form-actions">
                         <button class="btn ghost" type="button" th:attr="data-focus-id=${station.stationId}">Xem trên bản đồ</button>
-                        <a class="btn primary" th:href="@{/reservations/schedule(stationId=${station.stationId},q=${searchQuery})}">Đặt lịch</a>
+                        <a class="btn primary" th:href="@{/reservations/book(stationId=${station.stationId})}">Đặt lịch</a>
                     </div>
                 </article>
-            </div>
-
-            <div class="reservation-form" th:if="${selectedStation != null}" th:object="${reservationForm}">
-                <h3 th:text="${'Đặt lịch tại ' + selectedStation.name}">Đặt lịch</h3>
-                <p class="station-address" th:text="${selectedStation.address}">Địa chỉ</p>
-                <form th:action="@{/reservations/schedule}" method="post">
-                    <input type="hidden" name="q" th:value="${searchQuery}">
-                    <input type="hidden" th:field="*{stationId}" th:value="${selectedStation.stationId}">
-                    <div class="form-grid">
-                        <label>
-                            <span>Ngày đổi pin</span>
-                            <input type="date" th:field="*{date}" th:attr="min=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
-                        </label>
-                        <label>
-                            <span>Giờ dự kiến</span>
-                            <input type="time" th:field="*{time}" required>
-                        </label>
-                    </div>
-                    <div class="form-actions">
-                        <a class="btn ghost" th:href="@{/reservations/schedule(q=${searchQuery})}">Chọn trạm khác</a>
-                        <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
-                    </div>
-                </form>
             </div>
         </aside>
     </section>
@@ -138,7 +111,7 @@
 
 <script th:inline="javascript">
     const stations = /*[[${stations}]]*/ [];
-    const selectedStationId = /*[[${selectedStation != null ? selectedStation.stationId : null}]]*/ null;
+    let selectedStationId = null;
 
     (function () {
         const mapContainer = document.getElementById('map');
@@ -219,9 +192,8 @@
         let userMarker = null;
 
         function openSchedule(stationId) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('stationId', stationId);
-            window.location.href = url.toString();
+            const baseUrl = /*[[@{/reservations/book}]]*/ '/reservations/book';
+            window.location.href = `${baseUrl}?stationId=${stationId}`;
         }
 
         function highlightCard(stationId) {

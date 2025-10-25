@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận lịch đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Bước 2: Đặt lịch</span>
+            <h1 class="page-title">Xác nhận lịch đổi pin</h1>
+            <p class="page-hint"
+               th:text="${'Xin chào ' + driverName + '! Kiểm tra thông tin trạm bên dưới và chọn thời gian phù hợp.'}">
+                Kiểm tra thông tin trạm bên dưới và chọn thời gian phù hợp.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/schedule}">Quay về Tìm trạm</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-progress">
+        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+            <li class="progress-step" data-step="search">Tìm trạm</li>
+            <li class="progress-step" data-step="schedule">Đặt lịch</li>
+            <li class="progress-step" data-step="payment">Thanh toán</li>
+            <li class="progress-step" data-step="swap">Đổi pin</li>
+            <li class="progress-step" data-step="done">Hoàn tất</li>
+        </ul>
+    </section>
+
+    <section class="reservation-layout reservation-booking">
+        <div class="reservation-map-panel booking-details">
+            <div class="panel-heading">
+                <div>
+                    <h2 th:text="${selectedStation.name}">EV Swap Station</h2>
+                    <p class="map-caption">Kiểm tra lại thông tin trạm trước khi xác nhận lịch của bạn.</p>
+                </div>
+            </div>
+            <div class="station-address" th:text="${selectedStation.address}">123 Nguyễn Văn Cừ, Q.5</div>
+            <dl class="station-summary">
+                <div>
+                    <dt>Trạng thái</dt>
+                    <dd th:text="${selectedStation.status == 'active' ? 'Đang hoạt động' : 'Tạm dừng'}">Đang hoạt động</dd>
+                </div>
+                <div>
+                    <dt>Mã trạm</dt>
+                    <dd th:text="${selectedStation.stationId}">EVS-001</dd>
+                </div>
+            </dl>
+        </div>
+
+        <aside class="reservation-sidebar booking-form" th:object="${reservationForm}">
+            <h2>Chọn thời gian</h2>
+            <form th:action="@{/reservations/book}" method="post">
+                <input type="hidden" th:field="*{stationId}" th:value="${selectedStation.stationId}">
+                <div class="form-grid">
+                    <label>
+                        <span>Ngày đổi pin</span>
+                        <input type="date"
+                               th:field="*{date}"
+                               th:attr="min=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                               required>
+                    </label>
+                    <label>
+                        <span>Giờ dự kiến</span>
+                        <input type="time" th:field="*{time}" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <a class="btn ghost" th:href="@{/reservations/schedule}">Chọn trạm khác</a>
+                    <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
+                </div>
+            </form>
+        </aside>
+    </section>
+
+    <section class="upcoming-reservations">
+        <h2>Lịch đổi pin của bạn</h2>
+        <p class="map-caption">Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.</p>
+        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
+            Chưa có lịch đổi pin nào. Hãy xác nhận lịch ngay!
+        </div>
+        <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
+            <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
+                <div class="reservation-info">
+                    <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
+                    <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
+                </div>
+                <span class="reservation-status"
+                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
+                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
+                    Đang chờ xác nhận
+                </span>
+            </article>
+        </div>
+    </section>
+</main>
+
+<script>
+    const progressSteps = document.getElementById('progressSteps');
+    if (progressSteps) {
+        const order = ['search', 'schedule', 'payment', 'swap', 'done'];
+        const currentStep = progressSteps.dataset.step || 'schedule';
+        const currentIndex = order.indexOf(currentStep);
+
+        Array.from(progressSteps.children).forEach(item => {
+            const step = item.getAttribute('data-step');
+            const index = order.indexOf(step);
+            if (index < currentIndex) {
+                item.classList.add('is-complete');
+            } else if (index === currentIndex) {
+                item.classList.add('is-current');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

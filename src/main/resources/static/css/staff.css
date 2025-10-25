@@ -70,6 +70,7 @@
             radial-gradient(circle at 20% 18%, rgba(99, 102, 241, 0.24), transparent 62%),
             radial-gradient(circle at 78% 10%, rgba(34, 211, 238, 0.2), transparent 68%),
             radial-gradient(circle at 52% 115%, rgba(79, 70, 229, 0.18), transparent 74%);
+    animation: staffAuroraSweep 28s ease-in-out infinite alternate;
 }
 
 /* 3. Layout chung (Giữ nguyên)
@@ -418,4 +419,19 @@ main.container {
     text-align: center;
     padding: 2rem;
     color: var(--text-light);
+}
+
+@keyframes staffAuroraSweep {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        background-position: 20% 18%, 78% 10%, 52% 115%;
+    }
+    50% {
+        transform: translate3d(18px, -14px, 0) scale(1.06);
+        background-position: 28% 22%, 70% 16%, 48% 108%;
+    }
+    100% {
+        transform: translate3d(-14px, 12px, 0) scale(0.97);
+        background-position: 16% 24%, 86% 12%, 58% 120%;
+    }
 }

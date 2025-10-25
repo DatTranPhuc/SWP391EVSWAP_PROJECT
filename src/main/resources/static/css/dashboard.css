@@ -44,19 +44,23 @@ body.dashboard-body {
 .background-gradient {
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg, rgba(6, 10, 18, 0.94) 0%, rgba(12, 18, 28, 0.72) 100%);
+    background: radial-gradient(circle at 12% 16%, rgba(56, 189, 248, 0.22), transparent 58%),
+    radial-gradient(circle at 82% 28%, rgba(129, 140, 248, 0.26), transparent 64%),
+    linear-gradient(185deg, rgba(6, 10, 18, 0.94) 0%, rgba(12, 18, 28, 0.72) 100%);
     backdrop-filter: blur(22px);
     z-index: -3;
+    animation: dashboardBackgroundShift 18s ease-in-out infinite alternate;
 }
 
 .background-glow {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(circle at 22% 20%, rgba(99, 102, 241, 0.28), transparent 58%),
-    radial-gradient(circle at 76% 16%, rgba(34, 211, 238, 0.22), transparent 64%),
-    radial-gradient(circle at 48% 110%, rgba(79, 70, 229, 0.18), transparent 74%);
+    background: radial-gradient(580px at 26% 24%, rgba(59, 130, 246, 0.32), transparent 70%),
+    radial-gradient(620px at 74% 18%, rgba(34, 211, 238, 0.25), transparent 68%),
+    radial-gradient(680px at 48% 110%, rgba(165, 180, 252, 0.22), transparent 76%);
     z-index: -2;
+    animation: dashboardAuroraDrift 22s ease-in-out infinite alternate;
 }
 
 .container {
@@ -812,3 +816,28 @@ body.modal-open {
         max-height: 360px;
     }
 }
+
+@keyframes dashboardBackgroundShift {
+    0% {
+        background-position: 12% 16%, 82% 28%, center;
+    }
+    50% {
+        background-position: 22% 24%, 70% 22%, center;
+    }
+    100% {
+        background-position: 18% 20%, 88% 32%, center;
+    }
+}
+
+@keyframes dashboardAuroraDrift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(-12px, 8px, 0) scale(1.04);
+    }
+    100% {
+        transform: translate3d(10px, -6px, 0) scale(0.98);
+    }
+}
+
