@@ -66,8 +66,16 @@
                 <button class="btn primary" type="submit">Tìm kiếm</button>
             </form>
 
+            <form id="nearby-form" th:action="@{/reservations/nearby}" method="get" style="display:none;">
+                <input type="hidden" name="lat" id="latitude">
+                <input type="hidden" name="lng" id="longitude">
+                <input type="hidden" name="radiusKm" value="5">
+            </form>
+
+
             <div class="station-empty" th:if="${stations == null or stations.isEmpty()}">
-                Không tìm thấy trạm phù hợp. Hãy thử lại với từ khóa khác.
+                <span th:if="${isNearbySearch == true}">Không tìm thấy trạm nào gần vị trí của bạn.</span>
+                <span th:unless="${isNearbySearch == true}">Không tìm thấy trạm phù hợp. Hãy thử lại với từ khóa khác.</span>
             </div>
 
             <div class="station-list" th:if="${stations != null and !stations.isEmpty()}">
@@ -77,6 +85,13 @@
                          th:attr="data-station-id=${station.stationId}">
                     <div class="station-meta">
                         <span class="station-name" th:text="${station.name}">EV Swap Station</span>
+
+                        <span class="station-distance"
+                              th:if="${station.distance != null}"
+                              th:text="${#numbers.formatDecimal(station.distance, 1, 1) + ' km'}"
+                              style="font-weight: 500; color: var(--text-muted);">
+                        </span>
+
                         <span class="station-status"
                               th:text="${station.status == 'active' ? 'Hoạt động' : 'Tạm dừng'}"
                               th:style="${station.status == 'active' ? '' : 'color:#facc15'}"></span>
@@ -84,7 +99,9 @@
                     <div class="station-address" th:text="${station.address}">123 Nguyễn Văn Cừ, Q.5</div>
                     <div class="form-actions">
                         <button class="btn ghost" type="button" th:attr="data-focus-id=${station.stationId}">Xem trên bản đồ</button>
-                        <a class="btn primary" th:href="@{/reservations/schedule(stationId=${station.stationId},q=${searchQuery})}">Đặt lịch</a>
+
+                        <a class="btn primary"
+                           th:href="@{/reservations/schedule(stationId=${station.stationId}, q=${(isNearbySearch == true || searchQuery == null) ? null : searchQuery})}">Đặt lịch</a>
                     </div>
                 </article>
             </div>
@@ -93,7 +110,9 @@
                 <h3 th:text="${'Đặt lịch tại ' + selectedStation.name}">Đặt lịch</h3>
                 <p class="station-address" th:text="${selectedStation.address}">Địa chỉ</p>
                 <form th:action="@{/reservations/schedule}" method="post">
-                    <input type="hidden" name="q" th:value="${searchQuery}">
+
+                    <input type="hidden" name="q" th:if="${isNearbySearch != true and searchQuery != null}" th:value="${searchQuery}">
+
                     <input type="hidden" th:field="*{stationId}" th:value="${selectedStation.stationId}">
                     <div class="form-grid">
                         <label>
@@ -106,7 +125,8 @@
                         </label>
                     </div>
                     <div class="form-actions">
-                        <a class="btn ghost" th:href="@{/reservations/schedule(q=${searchQuery})}">Chọn trạm khác</a>
+                        <a class="btn ghost"
+                           th:href="@{/reservations/schedule(q=${(isNearbySearch == true || searchQuery == null) ? null : searchQuery})}">Chọn trạm khác</a>
                         <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
                     </div>
                 </form>
@@ -137,8 +157,16 @@
 </main>
 
 <script th:inline="javascript">
+    /* <![CDATA[ */
     const stations = /*[[${stations}]]*/ [];
     const selectedStationId = /*[[${selectedStation != null ? selectedStation.stationId : null}]]*/ null;
+
+    const userLat = /*[[${userLat}]]*/ null;
+    const userLng = /*[[${userLng}]]*/ null;
+
+    const isNearbySearch = /*[[${isNearbySearch == true}]]*/ false;
+    const currentSearchQuery = /*[[${searchQuery}]]*/ null;
+
 
     (function () {
         const mapContainer = document.getElementById('map');
@@ -166,7 +194,10 @@
         let mapCenter = [10.7769, 106.7009];
         let mapZoom = 12;
 
-        if (selectedStationId) {
+        if (userLat != null && userLng != null) {
+            mapCenter = [userLat, userLng];
+            mapZoom = 14;
+        } else if (selectedStationId) {
             const selected = mappedStations.find(item => item.id === selectedStationId);
             if (selected) {
                 mapCenter = [selected.latitude, selected.longitude];
@@ -216,11 +247,16 @@
         });
 
         const markerById = new Map();
-        let userMarker = null;
+        let userMarker = null; // Cảnh báo 'is null' ở đây là bình thường
 
         function openSchedule(stationId) {
-            const url = new URL(window.location.href);
+            const url = new URL(window.location.origin);
+            url.pathname = '/reservations/schedule';
             url.searchParams.set('stationId', stationId);
+
+            if (!isNearbySearch && currentSearchQuery) {
+                url.searchParams.set('q', currentSearchQuery);
+            }
             window.location.href = url.toString();
         }
 
@@ -290,6 +326,17 @@
             }
         });
 
+        if (userLat != null && userLng != null) {
+            const userLatLng = [userLat, userLng];
+            if (userMarker) { // Cảnh báo 'is null' ở đây là bình thường
+                userMarker.remove();
+            }
+            userMarker = L.marker(userLatLng, { icon: userIcon }).addTo(map)
+                .bindPopup('<b>Vị trí của bạn</b>')
+                .openPopup();
+        }
+
+
         map.on('popupopen', evt => {
             const popupEl = evt.popup.getElement();
             if (!popupEl) {
@@ -322,12 +369,13 @@
             });
         });
 
+
         const locateBtn = document.getElementById('locateMeBtn');
         if (locateBtn) {
             const defaultLabel = locateBtn.innerHTML;
             locateBtn.addEventListener('click', () => {
                 if (!navigator.geolocation) {
-                    alert('Trình duyệt của bạn không hỗ trợ định vị.');
+                    alert('Trình duyệt của bạn không hỗt trợ định vị.');
                     return;
                 }
                 locateBtn.disabled = true;
@@ -335,17 +383,9 @@
                 locateBtn.innerHTML = '<span>Đang xác định...</span>';
 
                 navigator.geolocation.getCurrentPosition(position => {
-                    const userLatLng = [position.coords.latitude, position.coords.longitude];
-                    if (userMarker) {
-                        userMarker.remove();
-                    }
-                    userMarker = L.marker(userLatLng, { icon: userIcon }).addTo(map)
-                        .bindPopup('<b>Vị trí của bạn</b>')
-                        .openPopup();
-                    map.flyTo(userLatLng, 14, { duration: 0.8 });
-                    locateBtn.disabled = false;
-                    locateBtn.classList.remove('is-loading');
-                    locateBtn.innerHTML = defaultLabel;
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                    document.getElementById('nearby-form').submit();
                 }, () => {
                     alert('Không thể lấy vị trí của bạn. Vui lòng thử lại.');
                     locateBtn.disabled = false;
@@ -377,6 +417,7 @@
             }
         });
     }
+    /* ]]> */
 </script>
 </body>
 </html>

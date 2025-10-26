@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal; // << THÊM IMPORT NÀY
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,6 +80,56 @@ public class ReservationController {
 
         return "reservation-schedule";
     }
+
+    // <<============================================================>>
+    // << HÀM MỚI CHO CHỨC NĂNG "TÌM TRẠM GẦN TÔI" >>
+    // <<============================================================>>
+    @GetMapping("/nearby")
+    public String findNearbyStations(
+            @RequestParam("lat") BigDecimal lat,
+            @RequestParam("lng") BigDecimal lng,
+            @RequestParam(value = "radiusKm", defaultValue = "5.0") double radiusKm,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirect) {
+
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đặt lịch đổi pin");
+            return "redirect:/login";
+        }
+
+        // 1. GỌI HÀM TÌM KIẾM LÂN CẬN (thay vì getAll)
+        List<StationResponse> stations = stationService.findNearby(lat, lng, radiusKm);
+        model.addAttribute("stations", stations);
+
+        // 2. Thêm cờ để báo cho HTML biết đây là tìm kiếm lân cận
+        model.addAttribute("isNearbySearch", true);
+        model.addAttribute("searchQuery", "Các trạm gần vị trí của bạn"); // Hiển thị tiêu đề tìm kiếm
+
+        // 3. Thêm tọa độ user để JS bản đồ đọc và zoom vào
+        model.addAttribute("userLat", lat);
+        model.addAttribute("userLng", lng);
+
+        // 4. (QUAN TRỌNG) Thêm TẤT CẢ các model attributes khác
+        // mà trang này cần (lấy từ hàm showSchedulePage)
+        model.addAttribute("driverName", driver.getFullName());
+        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+        model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
+        if (!model.containsAttribute("reservationForm")) {
+            model.addAttribute("reservationForm", new ReservationScheduleForm());
+        }
+        if (!model.containsAttribute("currentStep")) {
+            model.addAttribute("currentStep", "search");
+        }
+
+        // 5. Trả về đúng file HTML
+        return "reservation-schedule";
+    }
+    // <<============================================================>>
+    // << KẾT THÚC HÀM MỚI >>
+    // <<============================================================>>
+
 
     @PostMapping("/schedule")
     public String submitReservation(@ModelAttribute("reservationForm") ReservationScheduleForm form,
