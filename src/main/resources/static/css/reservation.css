@@ -38,20 +38,25 @@ body.reservation-body {
 .reservation-background {
     position: fixed;
     inset: 0;
-    background: url('https://images.unsplash.com/photo-1529429617124-aee711a2cc44?auto=format&fit=crop&w=2100&q=80') center/cover no-repeat;
-    opacity: 0.18;
+    background:
+        radial-gradient(circle at 18% 24%, rgba(244, 114, 182, 0.18), transparent 70%),
+        radial-gradient(circle at 82% 20%, rgba(56, 189, 248, 0.22), transparent 68%),
+        linear-gradient(160deg, rgba(4, 7, 17, 0.94) 0%, rgba(9, 13, 23, 0.86) 35%, rgba(15, 23, 42, 0.82) 100%);
+    opacity: 0.95;
     pointer-events: none;
     z-index: -3;
+    animation: reservationNebulaShift 26s ease-in-out infinite alternate;
 }
 
 .reservation-overlay {
     position: fixed;
     inset: 0;
-    background: radial-gradient(750px at 15% 20%, rgba(99, 102, 241, 0.26), transparent 60%),
-                radial-gradient(820px at 85% 15%, rgba(34, 211, 238, 0.24), transparent 62%),
-                rgba(6, 11, 20, 0.82);
+    background: radial-gradient(780px at 20% 18%, rgba(99, 102, 241, 0.22), transparent 64%),
+                radial-gradient(820px at 72% 16%, rgba(34, 211, 238, 0.24), transparent 62%),
+                radial-gradient(980px at 48% 120%, rgba(244, 114, 182, 0.18), transparent 72%);
     pointer-events: none;
     z-index: -2;
+    animation: reservationAuroraPulse 32s ease-in-out infinite alternate;
 }
 
 .container {
@@ -242,6 +247,10 @@ body.reservation-body {
     align-items: start;
 }
 
+.reservation-layout.reservation-booking {
+    grid-template-columns: minmax(0, 46%) minmax(0, 54%);
+}
+
 .reservation-map-panel,
 .reservation-sidebar {
     background: var(--surface);
@@ -276,6 +285,42 @@ body.reservation-body {
 .map-controls .btn {
     padding: 10px 16px;
     gap: 8px;
+}
+
+.booking-details {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.booking-details .panel-heading {
+    margin-bottom: 12px;
+}
+
+.station-summary {
+    margin: 12px 0 0;
+    display: grid;
+    gap: 14px;
+}
+
+.station-summary div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.station-summary dt {
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.station-summary dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .btn.is-loading,
@@ -468,6 +513,23 @@ body.reservation-body {
     color: var(--text-muted);
 }
 
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.booking-form h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.booking-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
 .upcoming-reservations {
     margin-top: 32px;
     background: var(--surface);
@@ -596,7 +658,11 @@ body.reservation-body {
         grid-template-columns: 1fr;
     }
 
-    .reservation-sidebar {
+    .reservation-layout.reservation-booking {
+        grid-template-columns: 1fr;
+    }
+
+    .reservation-layout:not(.reservation-booking) .reservation-sidebar {
         order: -1;
     }
 }
@@ -616,6 +682,10 @@ body.reservation-body {
         grid-template-columns: 1fr;
     }
 
+    .booking-form {
+        gap: 18px;
+    }
+
     .progress-steps {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -624,3 +694,31 @@ body.reservation-body {
         display: none;
     }
 }
+
+@keyframes reservationNebulaShift {
+    0% {
+        background-position: 18% 24%, 82% 20%, center;
+    }
+    50% {
+        background-position: 24% 30%, 74% 28%, center;
+    }
+    100% {
+        background-position: 16% 20%, 88% 16%, center;
+    }
+}
+
+@keyframes reservationAuroraPulse {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: translate3d(-18px, 10px, 0) scale(1.04);
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(16px, -12px, 0) scale(0.96);
+        opacity: 0.92;
+    }
+}
+

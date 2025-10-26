@@ -41,55 +41,61 @@
 
 <main class="container">
 
-    <div th:if="${loginSuccess}" class="staff-alert success" th:text="${loginSuccess}">
-        Đăng nhập thành công!
-    </div>
-
-    <header class="staff-header">
-        <h1 class="staff-title">Bảng điều khiển Trạm</h1>
-        <p class="staff-subtitle" th:text="${stationAddress ?: 'Quản lý tổng quan trạm của bạn'}">
-            Địa chỉ trạm...
-        </p>
-    </header>
+    <div th:if="${successMessage}" class="staff-alert success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="staff-alert error" th:text="${errorMessage}"></div>
+    <div th:if="${loginError}" class="staff-alert error" th:text="${loginError}"></div> <header class="staff-header">
+    <h1 class="staff-title">Bảng điều khiển Trạm</h1>
+    <p class="staff-subtitle" th:text="${stationAddress ?: 'Quản lý tổng quan trạm của bạn'}">
+        Địa chỉ trạm...
+    </p>
+</header>
 
     <div class="staff-grid">
-        <div class="staff-card">
-            <h2 style="color: var(--success-green); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${fullCount ?: '--'}">
+
+        <div class="staff-card" style="text-align: center;">
+            <div class="card-icon" style="margin-bottom: 0.5rem; font-size: 2.2rem; color: var(--success-green);">
+                <i class="fas fa-battery-check"></i>
+            </div>
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem;" th:text="${fullCount ?: '--'}">
                 N/A
             </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
-                Pin Sẵn Sàng (Full)
+            <h3 class="card-title" style="font-size: 1rem; color: var(--text-light); margin: 0; font-weight: 500;">
+                Pin Sẵn Sàng
             </h3>
         </div>
 
-        <div class="staff-card">
-            <h2 style="color: var(--accent-secondary); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${chargingCount ?: '--'}">
+        <div class="staff-card" style="text-align: center;">
+            <div class="card-icon" style="margin-bottom: 0.5rem; font-size: 2.2rem; color: var(--accent-secondary);">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem;" th:text="${chargingCount ?: '--'}">
                 N/A
             </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
+            <h3 class="card-title" style="font-size: 1rem; color: var(--text-light); margin: 0; font-weight: 500;">
                 Pin Đang Sạc
             </h3>
         </div>
 
-        <div class="staff-card">
-            <h2 style="color: var(--error-red); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${maintenanceCount ?: '--'}">
+        <div class="staff-card" style="text-align: center;">
+            <div class="card-icon" style="margin-bottom: 0.5rem; font-size: 2.2rem; color: #facc15;"> <i class="fas fa-tools"></i>
+            </div>
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem;" th:text="${maintenanceCount ?: '--'}">
                 N/A
             </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
-                Pin Bảo trì/Hỏng
+            <h3 class="card-title" style="font-size: 1rem; color: var(--text-light); margin: 0; font-weight: 500;">
+                Pin Bảo trì
             </h3>
         </div>
 
-        <div class="staff-card">
-            <h2 style="color: var(--text-dark); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${totalCount ?: '--'}">
+        <div class="staff-card" style="text-align: center;">
+            <div class="card-icon" style="margin-bottom: 0.5rem; font-size: 2.2rem; color: var(--error-red);">
+                <i class="fas fa-battery-slash"></i>
+            </div>
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.25rem;" th:text="${retiredCount ?: '--'}">
                 N/A
             </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
-                Tổng Pin tại Trạm
+            <h3 class="card-title" style="font-size: 1rem; color: var(--text-light); margin: 0; font-weight: 500;">
+                Pin Hỏng
             </h3>
         </div>
 
@@ -122,11 +128,11 @@
 
         <a th:href="@{/staff/batteries}" class="staff-card">
             <div class="card-icon">
-                <i class="fas fa-battery-full"></i>
+                <i class="fas fa-tasks"></i>
             </div>
             <h3 class="card-title">Quản lý Pin</h3>
             <p class="card-description">
-                Xem danh sách, tìm kiếm và cập nhật trạng thái pin (đang sạc, bảo trì, hỏng...) tại trạm.
+                Xem danh sách, thêm mới, và cập nhật trạng thái pin (bảo trì, hỏng...) tại trạm.
             </p>
             <span class="card-link">Đi đến &rarr;</span>
         </a>
