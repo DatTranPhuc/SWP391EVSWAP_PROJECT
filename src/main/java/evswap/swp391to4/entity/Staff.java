@@ -16,7 +16,7 @@ public class Staff {
     @JoinColumn(name = "station_id")
     private Station station;
 
-    @Column(name = "full_name")
+    @Column(name = "full_name", columnDefinition = "nvarchar(50)")
     private String fullName;
 
     @Column(unique = true)
