@@ -3,8 +3,11 @@ package evswap.swp391to4.controller;
 import evswap.swp391to4.dto.ReservationScheduleForm;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.entity.Reservation; // << Cần import
+import evswap.swp391to4.service.PaymentService; // << Cần import
 import evswap.swp391to4.service.ReservationService;
 import evswap.swp391to4.service.StationService;
+import jakarta.servlet.http.HttpServletRequest; // << Cần import
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -16,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal; // << THÊM IMPORT NÀY
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +34,11 @@ public class ReservationController {
 
     private final StationService stationService;
     private final ReservationService reservationService;
+    private final PaymentService paymentService; // << Tiêm (Inject) PaymentService
 
+    /**
+     * Hàm hiển thị trang đặt lịch
+     */
     @GetMapping("/schedule")
     public String showSchedulePage(@RequestParam(value = "stationId", required = false) Integer stationId,
                                    @RequestParam(value = "q", required = false) String query,
@@ -81,9 +88,9 @@ public class ReservationController {
         return "reservation-schedule";
     }
 
-    // <<============================================================>>
-    // << HÀM MỚI CHO CHỨC NĂNG "TÌM TRẠM GẦN TÔI" >>
-    // <<============================================================>>
+    /**
+     * Hàm xử lý chức năng "Tìm trạm gần tôi"
+     */
     @GetMapping("/nearby")
     public String findNearbyStations(
             @RequestParam("lat") BigDecimal lat,
@@ -99,20 +106,19 @@ public class ReservationController {
             return "redirect:/login";
         }
 
-        // 1. GỌI HÀM TÌM KIẾM LÂN CẬN (thay vì getAll)
+        // 1. GỌI HÀM TÌM KIẾM LÂN CẬN
         List<StationResponse> stations = stationService.findNearby(lat, lng, radiusKm);
         model.addAttribute("stations", stations);
 
         // 2. Thêm cờ để báo cho HTML biết đây là tìm kiếm lân cận
         model.addAttribute("isNearbySearch", true);
-        model.addAttribute("searchQuery", "Các trạm gần vị trí của bạn"); // Hiển thị tiêu đề tìm kiếm
+        model.addAttribute("searchQuery", "Các trạm gần vị trí của bạn");
 
         // 3. Thêm tọa độ user để JS bản đồ đọc và zoom vào
         model.addAttribute("userLat", lat);
         model.addAttribute("userLng", lng);
 
-        // 4. (QUAN TRỌNG) Thêm TẤT CẢ các model attributes khác
-        // mà trang này cần (lấy từ hàm showSchedulePage)
+        // 4. Thêm TẤT CẢ các model attributes khác
         model.addAttribute("driverName", driver.getFullName());
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
         model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
@@ -126,14 +132,15 @@ public class ReservationController {
         // 5. Trả về đúng file HTML
         return "reservation-schedule";
     }
-    // <<============================================================>>
-    // << KẾT THÚC HÀM MỚI >>
-    // <<============================================================>>
 
 
+    /**
+     * Hàm xử lý submit đặt lịch (ĐÃ CẬP NHẬT ĐỂ GỌI VNPay)
+     */
     @PostMapping("/schedule")
     public String submitReservation(@ModelAttribute("reservationForm") ReservationScheduleForm form,
                                     @RequestParam(value = "q", required = false) String query,
+                                    HttpServletRequest httpReq, // << Thêm tham số này
                                     HttpSession session,
                                     RedirectAttributes redirect) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
@@ -176,15 +183,22 @@ public class ReservationController {
         }
 
         try {
-            reservationService.createReservation(driver.getDriverId(), form.getStationId(), reservedStart);
-            redirect.addFlashAttribute("reservationSuccess", "Đặt lịch đổi pin thành công! Hãy chuẩn bị cho bước thanh toán.");
-            redirect.addFlashAttribute("currentStep", "payment");
-            redirect.addAttribute("stationId", form.getStationId());
-            if (query != null && !query.isBlank()) {
-                redirect.addAttribute("q", query);
-            }
+            // 1. Tạo Reservation với status "pending"
+            Reservation reservation = reservationService.createReservation(
+                    driver.getDriverId(),
+                    form.getStationId(),
+                    reservedStart
+            );
+
+            // 2. TẠO THANH TOÁN
+            // Gọi PaymentService để tạo Payment và lấy URL
+            String paymentUrl = paymentService.createPaymentForReservation(httpReq, reservation, driver);
+
+            // 3. CHUYỂN HƯỚNG NGƯỜI DÙNG sang VNPay
+            return "redirect:" + paymentUrl;
+
         } catch (Exception e) {
-            redirect.addFlashAttribute("reservationError", e.getMessage());
+            redirect.addFlashAttribute("reservationError", "Lỗi khi tạo thanh toán: " + e.getMessage());
             redirect.addFlashAttribute("reservationForm", form);
             redirect.addAttribute("stationId", form.getStationId());
             if (query != null && !query.isBlank()) {
@@ -195,6 +209,9 @@ public class ReservationController {
         return "redirect:/reservations/schedule";
     }
 
+    /**
+     * Hàm tiện ích
+     */
     private String extractInitial(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "U";
