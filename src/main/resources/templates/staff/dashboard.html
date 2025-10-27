@@ -24,7 +24,6 @@
         <nav class="nav-links">
             <a th:href="@{/staff/dashboard}" class="nav-link-button active">Tổng quan</a>
             <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
-            <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
             <a href="#" class="nav-link-button">Giao dịch</a>
         </nav>
 
@@ -98,26 +97,6 @@
                 Pin Hỏng
             </h3>
         </div>
-
-        <div class="staff-card">
-            <h2 style="color: var(--accent-primary); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${openTicketsCount ?: '0'}">
-                0
-            </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
-                Ticket Mở
-            </h3>
-        </div>
-
-        <div class="staff-card">
-            <h2 style="color: var(--success-green); font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${resolvedTicketsCount ?: '0'}">
-                0
-            </h2>
-            <h3 class="card-title" style="font-size: 1.1rem; color: var(--text-light); margin: 0;">
-                Ticket Đã Giải quyết
-            </h3>
-        </div>
     </div>
 
     <header class="staff-header" style="margin-top: 3.5rem; margin-bottom: 2rem;">
@@ -133,17 +112,6 @@
             <h3 class="card-title">Quản lý Pin</h3>
             <p class="card-description">
                 Xem danh sách, thêm mới, và cập nhật trạng thái pin (bảo trì, hỏng...) tại trạm.
-            </p>
-            <span class="card-link">Đi đến &rarr;</span>
-        </a>
-
-        <a th:href="@{/staff/tickets}" class="staff-card">
-            <div class="card-icon">
-                <i class="fas fa-headset"></i>
-            </div>
-            <h3 class="card-title">Hỗ trợ Khách hàng</h3>
-            <p class="card-description">
-                Xem và xử lý các ticket hỗ trợ từ driver, cập nhật trạng thái và trả lời khách hàng.
             </p>
             <span class="card-link">Đi đến &rarr;</span>
         </a>

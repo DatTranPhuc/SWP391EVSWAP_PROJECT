@@ -2,21 +2,10 @@ package evswap.swp391to4.entity;
 
 
 
-import java.time.Instant;
+import jakarta.persistence.*;
+import lombok.*;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.time.Instant;
 
 @Entity @Table(name = "reservation")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -42,7 +31,7 @@ public class Reservation {
     private Instant createdAt;
 
     // QR fields
-    @Column(name = "qr_nonce", columnDefinition = "nvarchar(MAX)")
+    @Column(name = "qr_nonce")
     private String qrNonce;
 
     @Column(name = "qr_expires_at")
@@ -51,7 +40,7 @@ public class Reservation {
     @Column(name = "qr_status")
     private String qrStatus; // active/expired/revoked/used
 
-    @Column(name = "qr_token", columnDefinition = "nvarchar(MAX)")
+    @Column(name = "qr_token")
     private String qrToken;
 
     @Column(name = "checked_in_at")

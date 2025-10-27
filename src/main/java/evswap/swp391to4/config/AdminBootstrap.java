@@ -1,14 +1,13 @@
 package evswap.swp391to4.config;
 
-import java.time.Instant;
-
+import evswap.swp391to4.entity.Admin;
+import evswap.swp391to4.repository.AdminRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import evswap.swp391to4.entity.Admin;
-import evswap.swp391to4.repository.AdminRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
 
 @Configuration
 @RequiredArgsConstructor
