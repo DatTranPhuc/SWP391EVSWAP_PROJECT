@@ -19,7 +19,7 @@ public class Notification {
     private Driver driver;
 
     private String type;
-    @Column( columnDefinition = "nvarchar(100)",nullable = false)
+    @Column(nullable = false)
     private String title;
 
     @Column(name = "is_read")
