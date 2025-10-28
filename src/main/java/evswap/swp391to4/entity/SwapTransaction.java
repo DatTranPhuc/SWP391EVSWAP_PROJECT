@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name = "swap_transaction")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class SwapTransaction {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "swap_id")

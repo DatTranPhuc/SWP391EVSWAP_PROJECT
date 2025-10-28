@@ -1,5 +1,9 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.LoginRequest;
+import evswap.swp391to4.dto.LoginResponse;
+import evswap.swp391to4.dto.RegisterRequest;
+import evswap.swp391to4.dto.RegisterResponse;
 import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Staff;
@@ -7,23 +11,21 @@ import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.service.AdminService;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.StaffService;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Random;
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -35,125 +37,78 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     // ===== LOGIN =====
-    @GetMapping("/login")
-    public String loginPage() {
-        return "login";
-    }
-
-
     @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        HttpSession session,
-                        RedirectAttributes redirect) {
-        try {
-            // 1. Thử đăng nhập với tư cách Driver
-            Driver driver = driverService.login(email, password);
-            session.setAttribute("loggedInDriver", driver);
-            redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
-            return "redirect:/dashboard";
-        } catch (Exception driverException) {
-
-            // 2. NẾU DRIVER THẤT BẠI, thử đăng nhập với tư cách Staff
-            try {
-                Staff staff = staffService.login(email, password); // <-- LOGIC MỚI CỦA STAFF
-                session.setAttribute("loggedInStaff", staff);
-                redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + staff.getFullName());
-                return "redirect:/staff/dashboard"; // <-- CHUYỂN HƯỚNG TỚI TRANG CỦA STAFF
-
-            } catch (Exception staffException) {
-
-                // 3. NẾU STAFF CŨNG THẤT BẠI, thử đăng nhập với tư cách Admin
-                try {
-                    Admin admin = adminService.login(email, password);
-                    session.setAttribute("loggedInAdmin", admin);
-                    redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
-                    return "redirect:/admin/dashboard";
-
-                } catch (Exception adminException) {
-                    // 4. CẢ 3 ĐỀU THẤT BẠI
-                    // Hiển thị lỗi của lần đăng nhập thất bại cuối cùng (Admin)
-                    redirect.addFlashAttribute("loginError", adminException.getMessage());
-                    return "redirect:/login";
-                }
-            }
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        Optional<Driver> driverOpt = driverService.login(request.getEmail(), request.getPassword());
+        if (driverOpt.isPresent()) {
+            Driver driver = driverOpt.get();
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .email(driver.getEmail())
+                    .fullName(driver.getFullName())
+                    .token("your-jwt-token")
+                    .message("Driver login thành công!").build());
         }
+
+        Optional<Staff> staffOpt = staffService.login(request.getEmail(), request.getPassword());
+        if (staffOpt.isPresent()) {
+            Staff staff = staffOpt.get();
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .email(staff.getEmail())
+                    .fullName(staff.getFullName())
+                    .token("your-jwt-token")
+                    .message("Staff login thành công!").build());
+        }
+
+        Optional<Admin> adminOpt = Optional.ofNullable(adminService.login(request.getEmail(), request.getPassword()));
+        if (adminOpt.isPresent()) {
+            Admin admin = adminOpt.get();
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .email(admin.getEmail())
+                    .fullName(admin.getFullName())
+                    .token("your-jwt-token")
+                    .message("Admin login thành công!").build());
+        }
+        return ResponseEntity.badRequest().body("Sai thông tin đăng nhập!");
     }
 
-    // ===== LOGOUT =====
     @PostMapping("/logout")
-    public String logout(HttpSession session, RedirectAttributes redirect) {
-        session.invalidate();
-        redirect.addFlashAttribute("logoutMessage", "Bạn đã đăng xuất thành công.");
-        return "redirect:/login";
-    }
-
-    // ===== REGISTER =====
-    @GetMapping("/register")
-    public String registerPage() {
-        return "register";
+    public ResponseEntity<?> logout() {
+        return ResponseEntity.ok("Bạn đã đăng xuất thành công.");
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String email,
-                           @RequestParam String password,
-                           @RequestParam String fullName,
-                           @RequestParam(required = false) String phone,
-                           RedirectAttributes redirect) {
+    public ResponseEntity<?> register(@Validated @RequestBody RegisterRequest request) {
         try {
-            Driver driver = Driver.builder()
-                    .email(email)
-                    .passwordHash(password)
-                    .fullName(fullName)
-                    .phone(phone)
-                    .build();
-
-            driverService.register(driver);
-            redirect.addFlashAttribute("registerSuccess", "Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP");
-            redirect.addFlashAttribute("email", email);
-            return "redirect:/verify";
+            Driver driver = driverService.registerDriver(
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getFullName()
+            );
+            return ResponseEntity.ok(RegisterResponse.builder()
+                    .email(driver.getEmail())
+                    .fullName(driver.getFullName())
+                    .message("Đăng ký thành công! Vui lòng xác minh email.").build());
         } catch (Exception e) {
-            redirect.addFlashAttribute("registerError", e.getMessage());
-            return "redirect:/register";
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-    }
-
-    // ===== VERIFY OTP =====
-    @GetMapping("/verify")
-    public String verifyPage() {
-        return "verify";
     }
 
     @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam String email,
-                            @RequestParam String otp,
-                            RedirectAttributes redirect) {
-        try {
-            Driver driver = driverService.verifyOtp(email, otp);
-            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng ký phương tiện.");
-            return "redirect:/vehicles/register?driverId=" + driver.getDriverId();
-        } catch (Exception e) {
-            redirect.addFlashAttribute("verifyError", e.getMessage());
-            redirect.addFlashAttribute("email", email);
-            return "redirect:/verify";
+    public ResponseEntity<?> verifyOtp(@RequestParam String email,
+                                       @RequestParam String otp) {
+        boolean result = driverService.verifyOtp(email, otp);
+        if (result) {
+            return ResponseEntity.ok("Xác minh email thành công! Vui lòng đăng ký phương tiện.");
         }
-    }
-
-    // ===== FORGOT PASSWORD =====
-    @GetMapping("/forgot-password")
-    public String forgotPasswordForm() {
-        return "forgot-password";
+        return ResponseEntity.badRequest().body("Xác thực thất bại: OTP không hợp lệ hoặc hết hạn.");
     }
 
     @PostMapping("/forgot-password")
-    public String handleForgotPassword(@RequestParam("email") @NotBlank String email,
-                                       RedirectAttributes redirect) {
+    public ResponseEntity<?> handleForgotPassword(@RequestParam("email") String email) {
         Optional<Driver> opt = driverRepository.findByEmail(email);
         if (opt.isEmpty()) {
-            redirect.addFlashAttribute("error", "Không tìm thấy tài khoản với email này.");
-            return "redirect:/forgot-password";
+            return ResponseEntity.badRequest().body("Không tìm thấy tài khoản với email này.");
         }
-
         Driver driver = opt.get();
         String otp = generateOtp();
         driver.setEmailOtp(otp);
@@ -169,49 +124,31 @@ public class AuthController {
                     + "\nMã có hiệu lực trong 10 phút.\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.\n\nTrân trọng,\nEV SWAP Team");
             mailSender.send(msg);
         } catch (Exception ex) {
-            redirect.addFlashAttribute("error", "Không thể gửi email: " + ex.getMessage());
-            return "redirect:/forgot-password";
+            return ResponseEntity.badRequest().body("Không thể gửi email: " + ex.getMessage());
         }
-
-        redirect.addFlashAttribute("success", "Đã gửi mã xác thực đến email. Vui lòng kiểm tra hộp thư.");
-        return "redirect:/reset-password?email=" + email;
-    }
-
-    // ===== RESET PASSWORD =====
-    @GetMapping("/reset-password")
-    public String resetPasswordForm(@RequestParam(value = "email", required = false) String email,
-                                    Model model) {
-        model.addAttribute("email", email);
-        return "reset-password";
+        return ResponseEntity.ok("Đã gửi mã xác thực đến email. Vui lòng kiểm tra hộp thư.");
     }
 
     @PostMapping("/reset-password")
-    public String handleResetPassword(@RequestParam("email") @NotBlank String email,
-                                      @RequestParam("otp") @NotBlank String otp,
-                                      @RequestParam("newPassword") @NotBlank String newPassword,
-                                      RedirectAttributes redirect) {
+    public ResponseEntity<?> handleResetPassword(@RequestParam("email") String email,
+                                                 @RequestParam("otp") String otp,
+                                                 @RequestParam("newPassword") String newPassword) {
         Optional<Driver> opt = driverRepository.findByEmail(email);
         if (opt.isEmpty()) {
-            redirect.addFlashAttribute("error", "Email không hợp lệ.");
-            return "redirect:/reset-password?email=" + email;
+            return ResponseEntity.badRequest().body("Email không hợp lệ.");
         }
-
         Driver driver = opt.get();
-
         if (driver.getEmailOtp() == null || driver.getOtpExpiry() == null
                 || Instant.now().isAfter(driver.getOtpExpiry())
                 || !driver.getEmailOtp().equals(otp)) {
-            redirect.addFlashAttribute("error", "Mã OTP không hợp lệ hoặc đã hết hạn.");
-            return "redirect:/reset-password?email=" + email;
+            return ResponseEntity.badRequest().body("Mã OTP không hợp lệ hoặc đã hết hạn.");
         }
-
         driver.setPasswordHash(passwordEncoder.encode(newPassword));
         driver.setEmailOtp(null);
         driver.setOtpExpiry(null);
         driverRepository.save(driver);
 
-        redirect.addFlashAttribute("success", "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
-        return "redirect:/login";
+        return ResponseEntity.ok("Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
     }
 
     // ===== UTIL =====

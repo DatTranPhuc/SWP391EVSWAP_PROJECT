@@ -1,71 +1,91 @@
 package evswap.swp391to4.controller;
 
 import evswap.swp391to4.entity.Driver;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import evswap.swp391to4.service.DriverService;
+import evswap.swp391to4.service.NotificationService;
+import evswap.swp391to4.service.ReservationService;
+import evswap.swp391to4.service.VehicleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.Map;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/dashboard")
+@RequiredArgsConstructor
 public class DashboardController {
 
-    @GetMapping({"/", "/dashboard"})
-    public String showDashboard(HttpSession session, Model model) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver != null) {
-            model.addAttribute("driverName", driver.getFullName());
-            model.addAttribute("loggedIn", true);
-        } else {
-            model.addAttribute("loggedIn", false);
+    private final DriverService driverService;
+    private final VehicleService vehicleService;
+    private final ReservationService reservationService;
+    private final NotificationService notificationService; // Bạn cần tạo thêm service này
+
+    /**
+     * Trả về tổng quan dashboard của tài xế (profile, thống kê, vehicles, lịch sử swap, notification)
+     */
+    @GetMapping
+    public ResponseEntity<?> getDashboard(@RequestHeader(name = "Driver-Id") Integer driverId) {
+        if (driverId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Bạn chưa đăng nhập"));
         }
-        return "dashboard";
+
+        Driver driver = driverService.getDriverById(driverId);
+
+        // Giả lập các API lấy dữ liệu:
+        List<?> vehicles = vehicleService.getVehiclesForDriver(driverId);
+        List<?> reservations = reservationService.getUpcomingReservations(driverId);
+        List<?> notifications = notificationService.getNotificationsForDriver(driverId); // Cần service
+
+        // Thêm các thống kê số lượng, trạng thái, v.v. nếu muốn
+        int totalVehicles = vehicles.size();
+        int totalReservations = reservations.size();
+        int unreadNotifications = (int) notifications.stream().filter(noti -> !((Map)noti).get("isRead").equals(Boolean.TRUE)).count();
+
+        return ResponseEntity.ok(Map.of(
+                "loggedIn", true,
+                "driver", Map.of(
+                        "driverId", driver.getDriverId(),
+                        "name", driver.getFullName(),
+                        "email", driver.getEmail()
+                ),
+                "statistics", Map.of(
+                        "totalVehicles", totalVehicles,
+                        "totalReservations", totalReservations,
+                        "unreadNotifications", unreadNotifications
+                ),
+                "vehicles", vehicles, // Mảng phương tiện/DTO
+                "upcomingReservations", reservations, // Mảng lịch sử/DTO
+                "notifications", notifications // Mảng thông báo/DTO
+        ));
     }
 
-    @PostMapping("/dashboard/action")
-    public String handleDashboardAction(@RequestParam("feature") String feature,
-                                        HttpSession session,
-                                        RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để sử dụng chức năng.");
-            return "redirect:/login";
+    // Xử lý action trên dashboard như cũ, có thể mở rộng cho mobile
+    @PostMapping("/action")
+    public ResponseEntity<?> handleDashboardAction(@RequestParam("feature") String feature,
+                                                   @RequestHeader(name = "Driver-Id") Integer driverId) {
+        if (driverId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập để sử dụng chức năng."));
         }
 
         String normalizedFeature = feature == null ? "" : feature.trim();
-
-        if ("Tổng quan".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Bạn đang ở trang tổng quan EV SWAP.");
-            return "redirect:/dashboard";
+        switch (normalizedFeature.toLowerCase()) {
+            case "tổng quan":
+                return ResponseEntity.ok(Map.of("dashboardMessage", "Bạn đang ở trang tổng quan EV SWAP."));
+            case "phương tiện":
+                return ResponseEntity.ok(Map.of("redirectTo", "/api/vehicles/manage"));
+            case "đổi pin":
+            case "tìm trạm":
+                return ResponseEntity.ok(Map.of("redirectTo", "/api/reservations/schedule"));
+            case "báo cáo":
+                return ResponseEntity.ok(Map.of("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt."));
+            case "tài khoản":
+                return ResponseEntity.ok(Map.of("dashboardMessage", "Truy cập trang tài khoản trong phiên bản sắp tới."));
+            case "hỗ trợ":
+                return ResponseEntity.ok(Map.of("dashboardMessage", "Đội ngũ hỗ trợ sẽ sẵn sàng sau khi bạn đăng nhập."));
+            default:
+                return ResponseEntity.ok(Map.of("dashboardMessage", "Bạn đã chọn chức năng: " + normalizedFeature));
         }
-
-        if ("Phương tiện".equalsIgnoreCase(normalizedFeature)) {
-            return "redirect:/vehicles/manage";
-        }
-
-        if ("Đổi pin".equalsIgnoreCase(normalizedFeature) || "Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
-            return "redirect:/reservations/schedule";
-        }
-
-        if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
-            return "redirect:/dashboard";
-        }
-
-        if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Truy cập trang tài khoản trong phiên bản sắp tới.");
-            return "redirect:/dashboard";
-        }
-
-        if ("Hỗ trợ".equalsIgnoreCase(normalizedFeature)) {
-            redirect.addFlashAttribute("dashboardMessage", "Đội ngũ hỗ trợ sẽ sẵn sàng sau khi bạn đăng nhập.");
-            return "redirect:/dashboard";
-        }
-
-        redirect.addFlashAttribute("dashboardMessage", "Bạn đã chọn chức năng: " + normalizedFeature);
-        return "redirect:/dashboard";
     }
 }
-

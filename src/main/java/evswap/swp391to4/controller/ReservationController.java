@@ -2,19 +2,12 @@ package evswap.swp391to4.controller;
 
 import evswap.swp391to4.dto.ReservationScheduleForm;
 import evswap.swp391to4.dto.StationResponse;
-import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.ReservationService;
 import evswap.swp391to4.service.StationService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,130 +16,61 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
-@Controller
-@RequestMapping("/reservations")
+@RestController
+@RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
 
     private final StationService stationService;
     private final ReservationService reservationService;
 
-    @GetMapping("/schedule")
-    public String showSchedulePage(@RequestParam(value = "q", required = false) String query,
-                                   HttpSession session,
-                                   Model model,
-                                   RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đặt lịch đổi pin");
-            return "redirect:/login";
+    /**
+     * Trả về danh sách trạm cho việc đặt lịch, có thể lọc theo query hoặc lấy tất cả
+     */
+    @GetMapping("/stations")
+    public ResponseEntity<List<StationResponse>> getStations(@RequestParam(value = "search", required = false) String query) {
+        if (query == null || query.isBlank()) {
+            return ResponseEntity.ok(stationService.getAllStations());
         }
-
-        List<StationResponse> stations = (query == null || query.isBlank())
-                ? stationService.getAllStations()
-                : stationService.searchByName(query);
-        model.addAttribute("stations", stations);
-        model.addAttribute("searchQuery", query);
-        model.addAttribute("driverName", driver.getFullName());
-        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
-
-        if (!model.containsAttribute("currentStep")) {
-            model.addAttribute("currentStep", "search");
-        }
-
-        return "reservation-schedule";
+        return ResponseEntity.ok(stationService.searchByName(query));
     }
 
-    @GetMapping("/book")
-    public String showBookingPage(@RequestParam("stationId") Integer stationId,
-                                  HttpSession session,
-                                  Model model,
-                                  RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đặt lịch đổi pin");
-            return "redirect:/login";
-        }
-
-        StationResponse selectedStation;
-        try {
-            selectedStation = stationService.findById(stationId);
-        } catch (Exception e) {
-            redirect.addFlashAttribute("reservationError", "Không tìm thấy trạm đã chọn");
-            return "redirect:/reservations/schedule";
-        }
-
-        if (!model.containsAttribute("reservationForm")) {
-            ReservationScheduleForm form = new ReservationScheduleForm();
-            form.setStationId(stationId);
-            model.addAttribute("reservationForm", form);
-        }
-
-        model.addAttribute("selectedStation", selectedStation);
-        model.addAttribute("driverName", driver.getFullName());
-        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
-
-        if (!model.containsAttribute("currentStep")) {
-            model.addAttribute("currentStep", "schedule");
-        }
-
-        return "reservation-book";
+    /**
+     * Lấy lịch đặt pin sắp tới của 1 tài xế (driverId lấy từ header hoặc JWT trong thực tế)
+     */
+    @GetMapping("/upcoming/{driverId}")
+    public ResponseEntity<List<ReservationService.ReservationSummary>> getUpcomingReservations(@PathVariable Integer driverId) {
+        return ResponseEntity.ok(reservationService.getUpcomingReservations(driverId));
     }
 
+    /**
+     * API đặt lịch đổi pin, nhận về DTO với stationId, date, time, và driverId (client lấy từ token khi triển khai auth)
+     */
     @PostMapping("/book")
-    public String submitReservation(@ModelAttribute("reservationForm") ReservationScheduleForm form,
-                                    HttpSession session,
-                                    RedirectAttributes redirect) {
-        Driver driver = (Driver) session.getAttribute("loggedInDriver");
-        if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đặt lịch đổi pin");
-            return "redirect:/login";
+    public ResponseEntity<?> submitReservation(@Validated @RequestBody ReservationScheduleForm form,
+                                               @RequestHeader(name = "Driver-Id") Integer driverId) {
+        // Validate đầu vào
+        if (driverId == null) {
+            return ResponseEntity.status(401).body("Bạn chưa đăng nhập!");
         }
-
         if (form.getStationId() == null) {
-            redirect.addFlashAttribute("reservationError", "Vui lòng chọn trạm đổi pin");
-            redirect.addFlashAttribute("reservationForm", form);
-            return "redirect:/reservations/schedule";
+            return ResponseEntity.badRequest().body("Vui lòng chọn trạm đổi pin");
         }
-
         LocalDate date = form.getDate();
         LocalTime time = form.getTime();
         if (date == null || time == null) {
-            redirect.addFlashAttribute("reservationError", "Vui lòng chọn ngày và giờ đặt lịch");
-            redirect.addFlashAttribute("reservationForm", form);
-            redirect.addAttribute("stationId", form.getStationId());
-            return "redirect:/reservations/book";
+            return ResponseEntity.badRequest().body("Vui lòng chọn ngày và giờ đặt lịch");
         }
-
         LocalDateTime localDateTime = LocalDateTime.of(date, time);
         Instant reservedStart = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
         if (reservedStart.isBefore(Instant.now())) {
-            redirect.addFlashAttribute("reservationError", "Thời gian đặt lịch phải ở tương lai");
-            redirect.addFlashAttribute("reservationForm", form);
-            redirect.addAttribute("stationId", form.getStationId());
-            return "redirect:/reservations/book";
+            return ResponseEntity.badRequest().body("Thời gian đặt lịch phải ở tương lai");
         }
-
         try {
-            reservationService.createReservation(driver.getDriverId(), form.getStationId(), reservedStart);
-            redirect.addFlashAttribute("reservationSuccess", "Đặt lịch đổi pin thành công! Hãy chuẩn bị cho bước thanh toán.");
-            redirect.addFlashAttribute("currentStep", "payment");
-            redirect.addAttribute("stationId", form.getStationId());
+            var reservation = reservationService.createReservation(driverId, form.getStationId(), reservedStart);
+            return ResponseEntity.ok(reservation);
         } catch (Exception e) {
-            redirect.addFlashAttribute("reservationError", e.getMessage());
-            redirect.addFlashAttribute("reservationForm", form);
-            redirect.addAttribute("stationId", form.getStationId());
+            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
         }
-
-        return "redirect:/reservations/book";
-    }
-
-    private String extractInitial(String fullName) {
-        if (fullName == null || fullName.isBlank()) {
-            return "U";
-        }
-        return fullName.trim().substring(0, 1).toUpperCase();
     }
 }

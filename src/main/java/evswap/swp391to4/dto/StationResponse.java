@@ -16,11 +16,7 @@ public class StationResponse {
     private String name;
     private String address;
     private String status;
-
-    // Cần cho việc hiển thị trên bản đồ
     private BigDecimal latitude;
     private BigDecimal longitude;
-
-    // Cần cho việc hiển thị khoảng cách trong bảng
-    private Double distance;
+    private Double distance; // nullable tuỳ hiển thị
 }

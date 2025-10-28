@@ -7,7 +7,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name = "ticket_support")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class TicketSupport {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_id")

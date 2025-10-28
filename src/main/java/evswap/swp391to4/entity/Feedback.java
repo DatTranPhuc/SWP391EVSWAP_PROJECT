@@ -8,7 +8,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name = "feedback")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class Feedback {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "feedback_id")

@@ -4,10 +4,15 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class StationCreateRequest {
 
     @NotBlank(message = "Tên trạm không được để trống")
@@ -26,6 +31,5 @@ public class StationCreateRequest {
     @DecimalMax(value = "180.0", message = "Kinh độ phải nhỏ hơn hoặc bằng 180")
     private BigDecimal longitude;
 
-    // Status có thể để trống, Service sẽ tự gán giá trị mặc định (ví dụ: "active")
-    private String status;
+    private String status; // Service sẽ tự gán mặc định nếu null
 }

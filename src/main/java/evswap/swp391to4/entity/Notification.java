@@ -8,7 +8,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name = "notification")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class Notification {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "noti_id")

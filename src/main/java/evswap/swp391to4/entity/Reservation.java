@@ -8,7 +8,7 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity @Table(name = "reservation")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class Reservation {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")

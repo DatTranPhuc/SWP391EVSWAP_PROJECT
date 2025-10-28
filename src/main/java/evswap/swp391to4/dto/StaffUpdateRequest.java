@@ -8,11 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Data
-@Builder
+@Builder // tiện cho test/service mapping
 @NoArgsConstructor
 @AllArgsConstructor
 public class StaffUpdateRequest {
-
     private Integer staffId;
 
     @NotBlank(message = "Họ tên không được để trống")

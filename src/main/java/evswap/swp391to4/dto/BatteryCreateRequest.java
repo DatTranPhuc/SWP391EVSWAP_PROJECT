@@ -11,11 +11,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class BatteryCreateRequest {
-
     @NotBlank(message = "Model không được để trống")
     private String model;
 

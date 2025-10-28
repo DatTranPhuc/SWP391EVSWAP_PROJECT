@@ -17,18 +17,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tắt CSRF (chỉ dùng cho API, nếu có frontend cần bật lại)
                 .csrf(csrf -> csrf.disable())
-
-                // Cho phép tất cả request mà không cần login
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(customizer -> {}); // chuẩn Spring Security 6.x
 
         return http.build();
     }
 
-    // Bean mã hóa mật khẩu
+    // Bean PasswordEncoder fix autowire cho mọi Service
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -5,170 +5,128 @@ import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.service.BatteryService;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
+import evswap.swp391to4.service.StaffService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-@Controller
-@RequestMapping("/staff")
+@RestController
+@RequestMapping("/api/staff")
 @RequiredArgsConstructor
 public class StaffController {
 
     private final BatteryService batteryService;
-
-    // (Hàm checkStaffLogin giữ nguyên)
-    private Staff checkStaffLogin(HttpSession session) {
-        Staff staff = (Staff) session.getAttribute("loggedInStaff");
-        if (staff == null) {
-            throw new IllegalStateException("Bạn chưa đăng nhập! Vui lòng đăng nhập với tư cách Staff.");
-        }
-        if (staff.getStation() == null) {
-            throw new IllegalStateException("Tài khoản Staff của bạn chưa được gán vào trạm nào. Vui lòng liên hệ Admin.");
-        }
-        return staff;
-    }
+    private final StaffService staffService;
 
     /**
-     * Trang Dashboard (ĐÃ SỬA LẠI DÒNG ĐẾM TỔNG)
+     * Dashboard của staff, trả về số liệu pin theo từng trạng thái và thông tin trạm
      */
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model, RedirectAttributes redirect) {
-        try {
-            Staff staff = checkStaffLogin(session);
-            Station station = staff.getStation();
-
-            model.addAttribute("staffName", staff.getFullName());
-            model.addAttribute("stationName", station.getName());
-            model.addAttribute("stationAddress", station.getAddress());
-            model.addAttribute("stationId", station.getStationId());
-
-            // Lấy số liệu thống kê
-            model.addAttribute("fullCount", batteryService.countBatteriesByState(station, "full"));
-            model.addAttribute("chargingCount", batteryService.countBatteriesByState(station, "charging"));
-            model.addAttribute("maintenanceCount", batteryService.countBatteriesByState(station, "maintenance"));
-            model.addAttribute("retiredCount", batteryService.countBatteriesByState(station, "retired"));
-
-            // ===== SỬA DÒNG NÀY =====
-            model.addAttribute("totalCount", batteryService.getAllBatteriesForStation(station).size());
-
-            return "staff/dashboard";
-
-        } catch (IllegalStateException authError) {
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Không thể tải dữ liệu dashboard: " + e.getMessage());
-            return "staff/dashboard";
+    public ResponseEntity<?> dashboard(@RequestHeader(name = "Staff-Id") Integer staffId) {
+        if (staffId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Bạn chưa đăng nhập!"));
         }
+        // Giả sử StaffService có hàm lấy Staff entity từ StaffId
+        Optional<Staff> staffOpt = staffService.login(getEmailFromId(staffId), "dummy"); // mock login để lấy Staff
+        Staff staff = staffOpt.orElse(null);
+        if (staff == null || staff.getStation() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tài khoản Staff chưa gán trạm!"));
+        }
+        Station station = staff.getStation();
+        long fullCount = batteryService.countBatteriesByState(station, "full");
+        long chargingCount = batteryService.countBatteriesByState(station, "charging");
+        long maintenanceCount = batteryService.countBatteriesByState(station, "maintenance");
+        long retiredCount = batteryService.countBatteriesByState(station, "retired");
+        int totalCount = batteryService.getAllBatteriesForStation(station).size();
+
+        return ResponseEntity.ok(Map.of(
+                "staffName", staff.getFullName(),
+                "stationName", station.getName(),
+                "stationAddress", station.getAddress(),
+                "stationId", station.getStationId(),
+                "fullCount", fullCount,
+                "chargingCount", chargingCount,
+                "maintenanceCount", maintenanceCount,
+                "retiredCount", retiredCount,
+                "totalCount", totalCount
+        ));
     }
 
     /**
-     * Trang Quản lý Pin (Code của bạn đã đúng)
+     * Quản lý/thống kê/hủy/tìm kiếm danh sách pin tại trạm của staff
      */
     @GetMapping("/batteries")
-    public String manageBatteriesPage(
+    public ResponseEntity<List<Battery>> manageBatteries(
             @RequestParam(name = "searchType", required = false) String searchType,
             @RequestParam(name = "searchTerm", required = false) String searchTerm,
-            HttpSession session,
-            Model model,
-            RedirectAttributes redirect) {
-
-        try {
-            Staff staff = checkStaffLogin(session);
-
-            List<Battery> batteryList = batteryService.searchBatteriesForStation(staff.getStation(), searchType, searchTerm);
-            model.addAttribute("batteryList", batteryList);
-            model.addAttribute("stationName", staff.getStation().getName());
-            model.addAttribute("currentSearchType", searchType);
-            model.addAttribute("currentSearchTerm", searchTerm);
-
-            if (!model.containsAttribute("newBattery")) {
-                model.addAttribute("newBattery", new BatteryCreateRequest());
-            }
-
-            return "staff/manage-batteries";
-
-        } catch (Exception e) {
-            redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            if (e instanceof IllegalStateException) {
-                return "redirect:/login";
-            }
-            return "redirect:/staff/dashboard";
+            @RequestHeader(name = "Staff-Id") Integer staffId) {
+        if (staffId == null) {
+            return ResponseEntity.status(401).build();
         }
+        Optional<Staff> staffOpt = staffService.login(getEmailFromId(staffId), "dummy");
+        Staff staff = staffOpt.orElse(null);
+        if (staff == null || staff.getStation() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<Battery> batteryList = batteryService.searchBatteriesForStation(staff.getStation(), searchType, searchTerm);
+        return ResponseEntity.ok(batteryList);
     }
 
     /**
-     * Xử lý Thêm Pin Mới (Code của bạn đã đúng)
+     * Thêm pin mới vào trạm
      */
-    @PostMapping("/batteries/add")
-    public String handleCreateBattery(
-            @Valid @ModelAttribute("newBattery") BatteryCreateRequest dto,
-            BindingResult bindingResult,
-            HttpSession session, Model model, RedirectAttributes redirect) {
-
-        Staff staff;
-        try {
-            staff = checkStaffLogin(session);
-        } catch (IllegalStateException authError) {
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
+    @PostMapping("/batteries")
+    public ResponseEntity<?> handleCreateBattery(
+            @Validated @RequestBody BatteryCreateRequest dto,
+            @RequestHeader(name = "Staff-Id") Integer staffId) {
+        if (staffId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Bạn chưa đăng nhập!"));
         }
-
-        if (bindingResult.hasErrors()) {
-            return loadPageForError(model, staff, "Thông tin nhập không hợp lệ. Vui lòng kiểm tra lại.");
+        Optional<Staff> staffOpt = staffService.login(getEmailFromId(staffId), "dummy");
+        Staff staff = staffOpt.orElse(null);
+        if (staff == null || staff.getStation() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tài khoản Staff chưa gán trạm!"));
         }
-
         try {
             batteryService.createBatteries(dto, staff);
-            redirect.addFlashAttribute("successMessage", "Đã thêm " + dto.getQuantity() + " pin (Model: " + dto.getModel() + ") thành công!");
-            return "redirect:/staff/batteries";
-
+            return ResponseEntity.ok(Map.of("success", "Đã thêm " + dto.getQuantity() + " pin (Model: " + dto.getModel() + ") thành công!"));
         } catch (Exception logicError) {
-            return loadPageForError(model, staff, logicError.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", logicError.getMessage()));
         }
     }
 
     /**
-     * HÀM HELPER (Code của bạn đã đúng)
+     * Cập nhật trạng thái pin
      */
-    private String loadPageForError(Model model, Staff staff, String errorMessage) {
-        // Hàm này giờ sẽ chạy đúng vì batteryService đã có getAllBatteriesForStation
-        List<Battery> batteryList = batteryService.getAllBatteriesForStation(staff.getStation());
-        model.addAttribute("batteryList", batteryList);
-        model.addAttribute("stationName", staff.getStation().getName());
-        model.addAttribute("createError", errorMessage);
-
-        return "staff/manage-batteries";
-    }
-
-    /**
-     * Xử lý Cập nhật Trạng thái (Code của bạn đã đúng)
-     */
-    @PostMapping("/batteries/update")
-    public String handleUpdateBatteryState(
-            @RequestParam("batteryId") Integer batteryId,
+    @PutMapping("/batteries/{batteryId}")
+    public ResponseEntity<?> handleUpdateBatteryState(
+            @PathVariable("batteryId") Integer batteryId,
             @RequestParam("newState") String newState,
-            HttpSession session, RedirectAttributes redirect) {
-
-        try {
-            checkStaffLogin(session);
-            batteryService.updateBatteryState(batteryId, newState, (Staff) session.getAttribute("loggedInStaff"));
-            redirect.addFlashAttribute("successMessage", "Đã cập nhật Pin #" + batteryId + " thành công!");
-
-        } catch (IllegalStateException authError) {
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            @RequestHeader(name = "Staff-Id") Integer staffId) {
+        if (staffId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Bạn chưa đăng nhập!"));
         }
+        Optional<Staff> staffOpt = staffService.login(getEmailFromId(staffId), "dummy");
+        Staff staff = staffOpt.orElse(null);
+        if (staff == null || staff.getStation() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tài khoản Staff chưa gán trạm!"));
+        }
+        try {
+            batteryService.updateBatteryState(batteryId, newState, staff);
+            return ResponseEntity.ok(Map.of("success", "Đã cập nhật Pin #" + batteryId + " trạng thái thành công!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
-        return "redirect:/staff/batteries";
+    // Helper: cần sửa lại, lấy email thực hoặc dùng token auth ở production
+    private String getEmailFromId(Integer staffId) {
+        // TODO: Service lấy email staff theo id (hoặc dùng token tại frontend)
+        return "";
     }
 }

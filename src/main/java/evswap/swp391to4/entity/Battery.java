@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity @Table(name = "battery")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data @NoArgsConstructor @AllArgsConstructor
 public class Battery {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "battery_id")

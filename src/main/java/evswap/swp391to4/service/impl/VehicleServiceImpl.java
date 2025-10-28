@@ -1,0 +1,73 @@
+package evswap.swp391to4.service.impl;
+
+import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.repository.DriverRepository;
+import evswap.swp391to4.repository.VehicleRepository;
+import evswap.swp391to4.service.VehicleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class VehicleServiceImpl implements VehicleService {
+
+    private final VehicleRepository vehicleRepository;
+    private final DriverRepository driverRepository;
+
+    @Override
+    @Transactional
+    public Vehicle addVehicleToDriver(Integer driverId, Vehicle vehicle) {
+        var driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new IllegalStateException("Tài khoản tài xế không tồn tại"));
+
+        if (vehicle.getVin() == null || vehicle.getVin().isBlank()) {
+            throw new IllegalArgumentException("Vui lòng cung cấp số VIN của phương tiện");
+        }
+
+        if (!Boolean.TRUE.equals(driver.getEmailVerified())) {
+            throw new IllegalStateException("Vui lòng xác minh email trước khi thêm phương tiện");
+        }
+
+        vehicleRepository.findByVin(vehicle.getVin())
+                .ifPresent(existingVehicle -> {
+                    if (existingVehicle.getDriver().getDriverId().equals(driverId)) {
+                        throw new IllegalStateException("Phương tiện đã tồn tại trong tài khoản của bạn");
+                    }
+                    throw new IllegalStateException("Phương tiện đã được đăng ký bởi tài khoản khác");
+                });
+
+        if (vehicle.getPlateNumber() != null && !vehicle.getPlateNumber().isBlank()) {
+            vehicleRepository.findByPlateNumber(vehicle.getPlateNumber())
+                    .ifPresent(existingVehicle -> {
+                        if (existingVehicle.getDriver().getDriverId().equals(driverId)) {
+                            throw new IllegalStateException("Biển số đã tồn tại trong tài khoản của bạn");
+                        }
+                        throw new IllegalStateException("Biển số đã được đăng ký bởi tài khoản khác");
+                    });
+        }
+
+        vehicle.setVehicleId(null);
+        vehicle.setDriver(driver);
+        vehicle.setCreatedAt(Instant.now());
+
+        return vehicleRepository.save(vehicle);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Vehicle> getVehiclesForDriver(Integer driverId) {
+        if (driverId == null) {
+            throw new IllegalArgumentException("Thiếu thông tin tài khoản tài xế");
+        }
+
+        if (!driverRepository.existsById(driverId)) {
+            throw new IllegalStateException("Tài khoản tài xế không tồn tại");
+        }
+
+        return vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driverId);
+    }
+}
