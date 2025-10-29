@@ -1,30 +1,34 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.ApiResponse;
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
-import evswap.swp391to4.entity.Admin; // <-- Import Admin
+import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
-import jakarta.servlet.http.HttpSession; // <-- Import Session
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
-/**
- * Controller DÀNH CHO ADMIN
- * ĐÃ ĐƯỢC BẢO MẬT: Mọi hàm đều yêu cầu đăng nhập.
- */
-@Controller
+@RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
@@ -32,289 +36,109 @@ public class AdminController {
     private final StaffService staffService;
     private final StationService stationService;
 
-    /**
-     * HÀM HELPER (NỘI BỘ)
-     * Kiểm tra xem Admin đã đăng nhập hay chưa (Người gác cửa)
-     */
     private Admin checkAdminLogin(HttpSession session) {
         Admin admin = (Admin) session.getAttribute("loggedInAdmin");
         if (admin == null) {
-            // Ném lỗi nếu chưa đăng nhập
-            throw new IllegalStateException("Bạn chưa đăng nhập! Vui lòng đăng nhập với tư cách Admin.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Bạn chưa đăng nhập! Vui lòng đăng nhập với tư cách Admin.");
         }
         return admin;
     }
 
-    // ====================== VIEW DASHBOARD ======================
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            return "admin/dashboard";
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+    public ResponseEntity<ApiResponse<Map<String, Object>>> dashboard(HttpSession session) {
+        Admin admin = checkAdminLogin(session);
+        Map<String, Object> data = Map.of(
+                "adminName", admin.getFullName(),
+                "next", List.of("/admin/staff", "/admin/stations")
+        );
+        return ResponseEntity.ok(ApiResponse.success("Thông tin dashboard admin.", data));
     }
-
-    // ==========================================================
-    // ====================== PHẦN QUẢN LÝ STAFF ==================
-    // ==========================================================
 
     @GetMapping("/staff")
-    public String listStaff(@RequestParam(value = "search", required = false) String search,
-                            Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            List<StaffResponse> staffList = staffService.getAllStaff(search);
-            model.addAttribute("staffList", staffList);
-            model.addAttribute("search", search);
-            return "admin/list-staff";
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+    public ResponseEntity<ApiResponse<List<StaffResponse>>> listStaff(
+            @RequestParam(value = "search", required = false) String search,
+            HttpSession session) {
+        checkAdminLogin(session);
+        List<StaffResponse> staffList = staffService.getAllStaff(search);
+        return ResponseEntity.ok(ApiResponse.success("Danh sách nhân viên", staffList));
     }
 
-    @GetMapping("/staff/add")
-    public String addStaffForm(Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            model.addAttribute("staff", new StaffCreateRequest());
-            return "admin/add-staff";
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+    @GetMapping("/staff/{id}")
+    public ResponseEntity<ApiResponse<StaffUpdateRequest>> getStaff(@PathVariable Integer id,
+                                                                     HttpSession session) {
+        checkAdminLogin(session);
+        StaffUpdateRequest staff = staffService.getStaffDetails(id);
+        return ResponseEntity.ok(ApiResponse.success("Thông tin chi tiết nhân viên", staff));
     }
 
-    @PostMapping("/staff/add")
-    public String addStaffSubmit(
-            @Valid @ModelAttribute("staff") StaffCreateRequest staff,
-            BindingResult bindingResult,
-            Model model, HttpSession session, RedirectAttributes redirect
-    ) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-
-            // Xử lý lỗi validation (giữ nguyên)
-            if (bindingResult.hasErrors()) {
-                for (FieldError error : bindingResult.getFieldErrors()) {
-                    model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
-                }
-                model.addAttribute("staff", staff);
-                return "admin/add-staff";
-            }
-
-            // Xử lý logic
-            staffService.createStaff(staff);
-
-            // ÁP DỤNG PRG: Redirect về trang list khi thành công
-            redirect.addFlashAttribute("success", "Tạo nhân viên thành công!");
-            return "redirect:/admin/staff";
-
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception logicError) { // Lỗi logic (ví dụ email trùng)
-            model.addAttribute("error", logicError.getMessage());
-            model.addAttribute("staff", staff);
-            return "admin/add-staff";
-        }
+    @PostMapping("/staff")
+    public ResponseEntity<ApiResponse<StaffResponse>> addStaff(@Valid @RequestBody StaffCreateRequest staff,
+                                                               HttpSession session) {
+        checkAdminLogin(session);
+        StaffResponse created = staffService.createStaff(staff);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Tạo nhân viên thành công!", created));
     }
 
-    @GetMapping("/staff/edit/{id}")
-    public String editStaffForm(@PathVariable Integer id, Model model,
-                                HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            StaffUpdateRequest staff = staffService.getStaffDetails(id);
-            model.addAttribute("staff", staff);
-            return "admin/edit-staff";
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic (ví dụ không tìm thấy ID)
-            redirect.addFlashAttribute("error", "Không tìm thấy nhân viên: " + e.getMessage());
-            return "redirect:/admin/staff";
-        }
+    @PutMapping("/staff/{id}")
+    public ResponseEntity<ApiResponse<StaffResponse>> editStaff(@PathVariable Integer id,
+                                                                 @Valid @RequestBody StaffUpdateRequest staff,
+                                                                 HttpSession session) {
+        checkAdminLogin(session);
+        StaffResponse updated = staffService.updateStaff(id, staff);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật nhân viên thành công!", updated));
     }
 
-    @PostMapping("/staff/edit/{id}")
-    public String editStaffSubmit(@PathVariable Integer id,
-                                  @Valid @ModelAttribute("staff") StaffUpdateRequest staff,
-                                  BindingResult bindingResult,
-                                  Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-
-            if (bindingResult.hasErrors()) {
-                for (FieldError error : bindingResult.getFieldErrors()) {
-                    model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
-                }
-                model.addAttribute("staff", staff);
-                return "admin/edit-staff";
-            }
-
-            staffService.updateStaff(id, staff);
-            redirect.addFlashAttribute("success", "Cập nhật nhân viên thành công!");
-            return "redirect:/admin/staff";
-
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic (email trùng, ID không tồn tại...)
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("staff", staff);
-            return "admin/edit-staff";
-        }
+    @DeleteMapping("/staff/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteStaff(@PathVariable Integer id,
+                                                         HttpSession session) {
+        checkAdminLogin(session);
+        staffService.deleteStaff(id);
+        return ResponseEntity.ok(ApiResponse.<Void>success("Xóa nhân viên thành công!"));
     }
-
-    @PostMapping("/staff/delete/{id}")
-    public String deleteStaff(@PathVariable Integer id,
-                              HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            staffService.deleteStaff(id);
-            redirect.addFlashAttribute("success", "Xóa nhân viên thành công!");
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic
-            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
-        }
-        return "redirect:/admin/staff";
-    }
-
-    // ==========================================================
-    // ====================== PHẦN QUẢN LÝ STATION ==================
-    // ==========================================================
 
     @GetMapping("/stations")
-    public String listStations(@RequestParam(value = "search", required = false) String search,
-                               Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            List<StationResponse> stationList;
-            if (search == null || search.isBlank()) {
-                stationList = stationService.getAllStations();
-            } else {
-                stationList = stationService.searchByName(search);
-            }
-            model.addAttribute("stationList", stationList);
-            model.addAttribute("search", search);
-            return "admin/list-station";
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+    public ResponseEntity<ApiResponse<List<StationResponse>>> listStations(
+            @RequestParam(value = "search", required = false) String search,
+            HttpSession session) {
+        checkAdminLogin(session);
+        List<StationResponse> stationList = (search == null || search.isBlank())
+                ? stationService.getAllStations()
+                : stationService.searchByName(search);
+        return ResponseEntity.ok(ApiResponse.success("Danh sách trạm", stationList));
     }
 
-    @GetMapping("/stations/add")
-    public String addStationForm(Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            model.addAttribute("station", new StationCreateRequest());
-            return "admin/add-station";
-        } catch (IllegalStateException e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+    @GetMapping("/stations/{id}")
+    public ResponseEntity<ApiResponse<StationResponse>> getStation(@PathVariable Integer id,
+                                                                    HttpSession session) {
+        checkAdminLogin(session);
+        return ResponseEntity.ok(ApiResponse.success("Thông tin trạm", stationService.findById(id)));
     }
 
-    @PostMapping("/stations/add")
-    public String addStationSubmit(
-            @Valid @ModelAttribute("station") StationCreateRequest station,
-            BindingResult bindingResult,
-            Model model, HttpSession session, RedirectAttributes redirect
-    ) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-
-            if (bindingResult.hasErrors()) {
-                for (FieldError error : bindingResult.getFieldErrors()) {
-                    model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
-                }
-                model.addAttribute("station", station);
-                return "admin/add-station";
-            }
-
-            stationService.createStation(station);
-
-            // ÁP DỤNG PRG: Redirect về trang list khi thành công
-            redirect.addFlashAttribute("success", "Tạo trạm thành công!");
-            return "redirect:/admin/stations";
-
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception logicError) { // Lỗi logic
-            model.addAttribute("error", logicError.getMessage());
-            model.addAttribute("station", station);
-            return "admin/add-station";
-        }
+    @PostMapping("/stations")
+    public ResponseEntity<ApiResponse<StationResponse>> addStation(@Valid @RequestBody StationCreateRequest station,
+                                                                   HttpSession session) {
+        checkAdminLogin(session);
+        StationResponse created = stationService.createStation(station);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Tạo trạm thành công!", created));
     }
 
-    @GetMapping("/stations/edit/{id}")
-    public String editStationForm(@PathVariable Integer id, Model model,
-                                  HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            StationResponse station = stationService.findById(id);
-            model.addAttribute("station", station);
-            return "admin/edit-station";
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic
-            redirect.addFlashAttribute("error", "Không tìm thấy trạm: " + e.getMessage());
-            return "redirect:/admin/stations";
-        }
+    @PutMapping("/stations/{id}")
+    public ResponseEntity<ApiResponse<StationResponse>> editStation(@PathVariable Integer id,
+                                                                    @Valid @RequestBody StationCreateRequest stationRequest,
+                                                                    HttpSession session) {
+        checkAdminLogin(session);
+        StationResponse updated = stationService.updateStation(id, stationRequest);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạm thành công!", updated));
     }
 
-    @PostMapping("/stations/edit/{id}")
-    public String editStationSubmit(@PathVariable Integer id,
-                                    @Valid @ModelAttribute("station") StationCreateRequest stationRequest,
-                                    BindingResult bindingResult,
-                                    Model model, HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-
-            if (bindingResult.hasErrors()) {
-                for (FieldError error : bindingResult.getFieldErrors()) {
-                    model.addAttribute(error.getField() + "Error", error.getDefaultMessage());
-                }
-                model.addAttribute("station", stationRequest);
-                return "admin/edit-station";
-            }
-
-            stationService.updateStation(id, stationRequest);
-            redirect.addFlashAttribute("success", "Cập nhật trạm thành công!");
-            return "redirect:/admin/stations";
-
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("station", stationRequest);
-            return "admin/edit-station";
-        }
-    }
-
-    @PostMapping("/stations/delete/{id}")
-    public String deleteStation(@PathVariable Integer id,
-                                HttpSession session, RedirectAttributes redirect) {
-        try {
-            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
-            stationService.deleteStation(id);
-            redirect.addFlashAttribute("success", "Xóa trạm thành công!");
-        } catch (IllegalStateException authError) { // Lỗi đăng nhập
-            redirect.addFlashAttribute("loginError", authError.getMessage());
-            return "redirect:/login";
-        } catch (Exception e) { // Lỗi logic
-            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
-        }
-        return "redirect:/admin/stations";
+    @DeleteMapping("/stations/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteStation(@PathVariable Integer id,
+                                                           HttpSession session) {
+        checkAdminLogin(session);
+        stationService.deleteStation(id);
+        return ResponseEntity.ok(ApiResponse.<Void>success("Xóa trạm thành công!"));
     }
 }
