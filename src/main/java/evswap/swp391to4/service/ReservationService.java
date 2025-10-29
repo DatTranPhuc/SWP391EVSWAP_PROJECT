@@ -22,6 +22,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepo;
     private final DriverRepository driverRepo;
     private final StationRepository stationRepo;
+    private final NotificationService notificationService;
 
     @Transactional
     public Reservation createReservation(Integer driverId, Integer stationId, Instant reservedStart) {
@@ -39,7 +40,17 @@ public class ReservationService {
                 .createdAt(Instant.now())
                 .build();
 
-        return reservationRepo.save(reservation);
+        Reservation saved = reservationRepo.save(reservation);
+        
+        // Gửi thông báo đặt lịch thành công
+        try {
+            notificationService.notifyReservationCreated(driverId, saved.getReservationId(), station.getName());
+        } catch (Exception e) {
+            // Log nhưng không ảnh hưởng đến luồng chính
+            System.err.println("Failed to send notification: " + e.getMessage());
+        }
+        
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -94,7 +105,17 @@ public class ReservationService {
         }
         
         reservation.setStatus("canceled");
-        return reservationRepo.save(reservation);
+        Reservation saved = reservationRepo.save(reservation);
+        
+        // Gửi thông báo hủy lịch
+        try {
+            notificationService.notifyReservationCanceled(driverId, saved.getReservationId(), saved.getStation().getName());
+        } catch (Exception e) {
+            // Log nhưng không ảnh hưởng đến luồng chính
+            System.err.println("Failed to send notification: " + e.getMessage());
+        }
+        
+        return saved;
     }
 }
 

@@ -22,6 +22,7 @@ import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.repository.SwapTransactionRepository;
+import evswap.swp391to4.service.NotificationService;
 import evswap.swp391to4.service.ReservationService;
 import evswap.swp391to4.service.StationService;
 import evswap.swp391to4.service.SwapService;
@@ -37,6 +38,7 @@ public class ReservationController {
     private final ReservationService reservationService;
     private final SwapService swapService;
     private final SwapTransactionRepository swapTransactionRepository;
+    private final NotificationService notificationService;
 
     @GetMapping("/schedule")
     public String showSchedulePage(@RequestParam(value = "q", required = false) String query,
@@ -57,6 +59,7 @@ public class ReservationController {
         model.addAttribute("driverName", driver.getFullName());
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
         model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
+        model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
 
         if (!model.containsAttribute("currentStep")) {
             model.addAttribute("currentStep", "search");
@@ -94,6 +97,7 @@ public class ReservationController {
         model.addAttribute("driverName", driver.getFullName());
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
         model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
+        model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
 
         if (!model.containsAttribute("currentStep")) {
             model.addAttribute("currentStep", "schedule");
@@ -177,6 +181,7 @@ public class ReservationController {
             }
             model.addAttribute("qrToken", reservation.getQrToken());
             model.addAttribute("qrExpiresAt", reservation.getQrExpiresAt());
+            model.addAttribute("reservedStart", reservation.getReservedStart());
             model.addAttribute("stationName", reservation.getStation().getName());
             model.addAttribute("stationAddress", reservation.getStation().getAddress());
             model.addAttribute("currentStep", "swap");
@@ -212,6 +217,7 @@ public class ReservationController {
             model.addAttribute("swapTransaction", swapTransaction);
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+            model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
             return "reservation-detail";
         } catch (Exception e) {
             redirect.addFlashAttribute("reservationError", e.getMessage());

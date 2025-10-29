@@ -8,10 +8,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 
 @Controller
+@RequiredArgsConstructor
 public class DashboardController {
+
+    private final NotificationService notificationService;
 
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
@@ -19,8 +24,12 @@ public class DashboardController {
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("loggedIn", true);
+            // Lấy số thông báo chưa đọc
+            long unreadCount = notificationService.getUnreadCount(driver.getDriverId());
+            model.addAttribute("unreadNotificationCount", unreadCount);
         } else {
             model.addAttribute("loggedIn", false);
+            model.addAttribute("unreadNotificationCount", 0L);
         }
         return "dashboard";
     }

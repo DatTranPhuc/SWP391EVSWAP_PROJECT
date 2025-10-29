@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+    <style>
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .notification-item {
+            background: var(--surface);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-item:hover {
+            border-color: rgba(148, 163, 184, 0.32);
+        }
+        
+        .notification-item.unread {
+            border-left: 4px solid var(--accent-primary);
+            background: rgba(99, 102, 241, 0.06);
+        }
+        
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            flex: 1;
+        }
+        
+        .notification-time {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-left: 16px;
+        }
+        
+        .notification-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .notification-type-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .notification-type-badge.reservation_created,
+        .notification-type-badge.reservation_confirmed,
+        .notification-type-badge.qr_generated {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-secondary);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+        }
+        
+        .notification-type-badge.reservation_canceled {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+        
+        .notification-type-badge.swap_result {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--accent-success);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        
+        .notification-type-badge.payment_success {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--accent-success);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        
+        .notification-type-badge.payment_failed {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+        
+        .notification-type-badge.ticket_response,
+        .notification-type-badge.feedback_response {
+            background: rgba(250, 204, 21, 0.2);
+            color: var(--accent-warning);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+        
+        .notification-link {
+            color: var(--accent-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .notification-link:hover {
+            text-decoration: underline;
+        }
+        
+        .notification-empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+        
+        .notification-empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Thông báo</span>
+            <h1 class="page-title">Thông báo của bạn</h1>
+            <p class="page-hint" th:text="${'Xin chào ' + driverName + '! Xem tất cả thông báo và cập nhật mới nhất.'}">
+                Xem tất cả thông báo và cập nhật mới nhất.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+    <div class="notifications-header">
+        <h2>
+            Thông báo 
+            <span th:if="${unreadCount > 0}" style="color: var(--accent-primary); font-size: 0.8em;">
+                (<span th:text="${unreadCount}">0</span> chưa đọc)
+            </span>
+        </h2>
+        <div class="notification-actions" th:if="${notifications != null and !notifications.isEmpty()}">
+            <form th:action="@{/notifications/mark-all-read}" method="post" style="display: inline;">
+                <button type="submit" class="btn ghost small">Đánh dấu tất cả đã đọc</button>
+            </form>
+            <form th:action="@{/notifications/delete-read}" method="post" style="display: inline;">
+                <button type="submit" class="btn ghost small" onclick="return confirm('Bạn có chắc muốn xóa tất cả thông báo đã đọc?');">
+                    Xóa đã đọc
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification-list" th:if="${notifications != null and !notifications.isEmpty()}">
+        <article th:each="noti : ${notifications}" 
+                 class="notification-item" 
+                 th:classappend="${!noti.isRead ? 'unread' : ''}"
+                 th:attr="data-noti-id=${noti.notiId}"
+                 onclick="markAsRead([[${noti.notiId}]])">
+            <div class="notification-header">
+                <h3 class="notification-title" th:text="${noti.title}">Thông báo</h3>
+                <span class="notification-time" th:text="${#temporals.format(noti.sentAt, 'dd/MM/yyyy HH:mm')}">
+                    10/06/2024 08:30
+                </span>
+            </div>
+            <div class="notification-meta">
+                <span class="notification-type-badge" 
+                      th:text="${noti.type == 'reservation_created' ? 'Đặt lịch' : 
+                               (noti.type == 'reservation_confirmed' ? 'Xác nhận' : 
+                               (noti.type == 'reservation_canceled' ? 'Hủy lịch' : 
+                               (noti.type == 'swap_result' ? 'Đổi pin' : 
+                               (noti.type == 'payment_success' ? 'Thanh toán' : 
+                               (noti.type == 'payment_failed' ? 'Thanh toán' : 
+                               (noti.type == 'qr_generated' ? 'QR Code' : 
+                               (noti.type == 'ticket_response' ? 'Hỗ trợ' : 
+                               (noti.type == 'feedback_response' ? 'Phản hồi' : 'Khác'))))))))}"
+                      th:class="${'notification-type-badge ' + noti.type}">
+                    Loại
+                </span>
+                <span th:if="${noti.stationName != null}" style="color: var(--text-muted); font-size: 13px;">
+                    📍 <span th:text="${noti.stationName}">Trạm</span>
+                </span>
+            </div>
+            <a th:if="${noti.reservationId != null}" 
+               th:href="@{|/reservations/${noti.reservationId}|}" 
+               class="notification-link"
+               onclick="event.stopPropagation();">
+                Xem chi tiết đặt lịch →
+            </a>
+        </article>
+    </div>
+
+    <div class="notification-empty" th:if="${notifications == null or notifications.isEmpty()}">
+        <div class="notification-empty-icon">🔔</div>
+        <h3>Chưa có thông báo nào</h3>
+        <p>Bạn sẽ nhận được thông báo khi có cập nhật về đặt lịch, thanh toán hoặc các hoạt động khác.</p>
+    </div>
+</main>
+
+<script>
+    function markAsRead(notiId) {
+        fetch('/notifications/' + notiId + '/read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove unread class
+                const item = document.querySelector(`[data-noti-id="${notiId}"]`);
+                if (item) {
+                    item.classList.remove('unread');
+                }
+                
+                // Update unread count if displayed
+                if (data.unreadCount !== undefined) {
+                    const countEl = document.querySelector('.notifications-header h2 span');
+                    if (countEl && data.unreadCount === 0) {
+                        countEl.style.display = 'none';
+                    } else if (countEl) {
+                        countEl.querySelector('span').textContent = data.unreadCount;
+                    }
+                }
+            }
+        })
+        .catch(error => console.error('Error marking notification as read:', error));
+    }
+</script>
+
+</body>
+</html>
+

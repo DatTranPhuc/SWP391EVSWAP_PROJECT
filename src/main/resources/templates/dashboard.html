@@ -38,6 +38,14 @@
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Hỗ trợ">Hỗ trợ</button>
         </nav>
         <div class="auth-area" th:if="${loggedIn}">
+            <a th:href="@{/notifications}" class="notification-badge-link" style="position: relative; margin-right: 12px;">
+                <span style="font-size: 1.4rem;">🔔</span>
+                <span th:if="${unreadNotificationCount > 0}" 
+                      class="notification-badge" 
+                      th:text="${unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}"
+                      style="position: absolute; top: -6px; right: -8px; background: var(--accent-primary); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);">
+                </span>
+            </a>
             <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
             <form th:action="@{/logout}" method="post">
                 <button class="btn ghost" type="submit">Đăng xuất</button>

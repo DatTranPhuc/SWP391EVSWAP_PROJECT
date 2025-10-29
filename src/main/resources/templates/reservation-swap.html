@@ -36,12 +36,16 @@
         <div class="reservation-map-panel booking-details" style="display:flex; align-items:center; justify-content:center;">
             <div style="text-align:center;">
                 <h2>Mã QR Check-in</h2>
+                <div th:if="${reservedStart != null}" style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    <div>Thời gian đặt lịch: <strong th:text="${#temporals.format(reservedStart, 'dd/MM/yyyy HH:mm')}">10/06/2024 14:00</strong></div>
+                    <div style="margin-top: 0.25rem;">Thời gian dự kiến đổi pin: <strong th:text="${#temporals.format(reservedStart, 'HH:mm')}">14:00</strong> - <strong th:text="${#temporals.format(reservedStart.plusSeconds(900), 'HH:mm')}">14:15</strong></div>
+                </div>
                 <div class="qr-token" style="font-size: 1.1rem; word-break: break-all;" th:text="${qrToken}">QR-TOKEN</div>
                 <div class="countdown" id="countdown">15:00</div>
                 <div style="margin-top:.5rem;">
                     <button class="btn" id="copyBtn" type="button">Sao chép token</button>
                 </div>
-                <p class="map-caption">Trình mã này cho nhân viên trạm để check-in. Mã sẽ hết hạn sau thời gian đếm ngược.</p>
+                <p class="map-caption">Trình mã này cho nhân viên trạm để check-in. Mã sẽ hết hạn sau thời gian đếm ngược từ thời gian đặt lịch.</p>
             </div>
         </div>
         <aside class="reservation-sidebar booking-form">
@@ -70,14 +74,31 @@
         });
     }
 
-    const expiresAt = new Date("[[${#temporals.format(qrExpiresAt, 'yyyy-MM-dd''T''HH:mm:ssXXX')}]]").getTime();
+    // Tính thời gian hết hạn: reservedStart + 15 phút (nếu có reservedStart)
+    const reservedStartStr = "[[${reservedStart != null ? #temporals.format(reservedStart, 'yyyy-MM-dd''T''HH:mm:ssXXX') : ''}]]";
+    let expiresAt;
+    if (reservedStartStr && reservedStartStr.trim() !== '') {
+        const reservedStartTime = new Date(reservedStartStr).getTime();
+        // QR hết hạn vào reservedStart + 15 phút
+        expiresAt = reservedStartTime + (15 * 60 * 1000);
+    } else {
+        // Fallback: dùng qrExpiresAt nếu không có reservedStart
+        expiresAt = new Date("[[${#temporals.format(qrExpiresAt, 'yyyy-MM-dd''T''HH:mm:ssXXX')}]]").getTime();
+    }
+    
     const countdownEl = document.getElementById('countdown');
     const timer = setInterval(() => {
         const now = Date.now();
         const diff = Math.max(0, Math.floor((expiresAt - now) / 1000));
         const m = String(Math.floor(diff / 60)).padStart(2, '0');
         const s = String(diff % 60).padStart(2, '0');
-        if (countdownEl) countdownEl.textContent = `${m}:${s}`;
+        if (countdownEl) {
+            countdownEl.textContent = `${m}:${s}`;
+            if (diff <= 0) {
+                countdownEl.textContent = '00:00';
+                countdownEl.style.color = '#f87171';
+            }
+        }
         if (diff <= 0) clearInterval(timer);
     }, 500);
 

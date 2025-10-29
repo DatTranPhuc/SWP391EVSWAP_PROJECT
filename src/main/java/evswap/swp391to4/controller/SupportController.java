@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import evswap.swp391to4.dto.TicketSupportRequest;
 import evswap.swp391to4.dto.TicketSupportResponse;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.NotificationService;
 import evswap.swp391to4.service.TicketSupportService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class SupportController {
 
     private final TicketSupportService ticketService;
+    private final NotificationService notificationService;
 
     /**
      * Hiển thị trang support (form + danh sách ticket của driver)
@@ -51,6 +53,9 @@ public class SupportController {
 
         // Form object
         model.addAttribute("ticket", new TicketSupportRequest());
+        
+        // Thông báo chưa đọc
+        model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
 
         return "support";
     }
@@ -218,6 +223,9 @@ public class SupportController {
             }
             
             model.addAttribute("ticket", ticket);
+            
+            // Thông báo chưa đọc
+            model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
             
             // Load comments for display
             try {

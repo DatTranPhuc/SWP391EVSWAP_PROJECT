@@ -18,6 +18,7 @@ import evswap.swp391to4.dto.FeedbackResponse;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.FeedbackService;
+import evswap.swp391to4.service.NotificationService;
 import evswap.swp391to4.service.StationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class FeedbackController {
 
     private final FeedbackService feedbackService;
     private final StationService stationService;
+    private final NotificationService notificationService;
 
     /**
      * Hiển thị trang feedback (form + danh sách feedback của driver)
@@ -51,6 +53,9 @@ public class FeedbackController {
 
         // Form object
         model.addAttribute("feedback", new FeedbackRequest());
+        
+        // Thông báo chưa đọc
+        model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
 
         return "feedback";
     }
@@ -80,6 +85,7 @@ public class FeedbackController {
             List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByDriver(driver.getDriverId());
             model.addAttribute("feedbackList", feedbackList);
             model.addAttribute("feedback", feedback);
+            model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
             return "feedback";
         }
 
@@ -97,6 +103,7 @@ public class FeedbackController {
         model.addAttribute("stations", stations);
         List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByDriver(driver.getDriverId());
         model.addAttribute("feedbackList", feedbackList);
+        model.addAttribute("unreadNotificationCount", notificationService.getUnreadCount(driver.getDriverId()));
 
         return "feedback";
     }

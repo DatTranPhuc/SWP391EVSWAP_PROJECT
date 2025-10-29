@@ -24,6 +24,7 @@ import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.SwapTransactionRepository;
 import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import evswap.swp391to4.repository.VehicleRepository;
+import evswap.swp391to4.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,6 +38,7 @@ public class SwapService {
     private final NotificationRepository notificationRepo;
     private final VehicleRepository vehicleRepo;
     private final VehicleBatteryCompatibilityRepository compatibilityRepo;
+    private final NotificationService notificationService;
 
     @Transactional
     public Reservation generateQrForReservation(Integer reservationId, Driver driver) {
@@ -50,8 +52,26 @@ public class SwapService {
         reservation.setQrNonce(nonce);
         reservation.setQrToken(token);
         reservation.setQrStatus("active");
-        reservation.setQrExpiresAt(Instant.now().plus(15, ChronoUnit.MINUTES));
-        return reservationRepo.save(reservation);
+        // QR hết hạn vào thời gian đặt lịch (reservedStart) + 15 phút
+        Instant expiryTime;
+        if (reservation.getReservedStart() != null && reservation.getReservedStart().isAfter(Instant.now())) {
+            // Nếu thời gian đặt lịch trong tương lai, QR hết hạn vào reservedStart + 15 phút
+            expiryTime = reservation.getReservedStart().plus(15, ChronoUnit.MINUTES);
+        } else {
+            // Nếu thời gian đặt lịch đã qua hoặc null, QR hết hạn 15 phút từ bây giờ
+            expiryTime = Instant.now().plus(15, ChronoUnit.MINUTES);
+        }
+        reservation.setQrExpiresAt(expiryTime);
+        Reservation saved = reservationRepo.save(reservation);
+        
+        // Gửi thông báo QR đã được tạo
+        try {
+            notificationService.notifyQrGenerated(driver.getDriverId(), saved.getReservationId(), saved.getStation().getName());
+        } catch (Exception e) {
+            System.err.println("Failed to send QR notification: " + e.getMessage());
+        }
+        
+        return saved;
     }
 
     @Transactional
@@ -80,7 +100,16 @@ public class SwapService {
         }
         reservation.setStatus("confirmed");
         reservation.setQrStatus("used");
-        return reservationRepo.save(reservation);
+        Reservation saved = reservationRepo.save(reservation);
+        
+        // Gửi thông báo xác nhận check-in
+        try {
+            notificationService.notifyReservationConfirmed(reservation.getDriver().getDriverId(), saved.getReservationId(), saved.getStation().getName());
+        } catch (Exception e) {
+            System.err.println("Failed to send check-in notification: " + e.getMessage());
+        }
+        
+        return saved;
     }
 
     @Transactional
