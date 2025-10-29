@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+  <link rel="stylesheet" th:href="@{/css/support.css}">
 </head>
 <body class="dashboard-body">
 <div class="background-gradient"></div>
@@ -196,605 +197,6 @@
     </div>
 </footer>
 
-<style>
-/* 
- * ========================================
- * SUPPORT PAGE STYLES
- * ========================================
- */
-.support-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 0;
-}
-
-.ticket-form-section, 
-.ticket-history-section {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.ticket-form-section h2, 
-.ticket-history-section h2 {
-    color: #f3f4f6;
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    color: #f3f4f6;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.ticket-form textarea {
-    width: 100%;
-    padding: 0.875rem;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    color: #f3f4f6;
-    font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(15px);
-    resize: vertical;
-    min-height: 100px;
-}
-
-.ticket-form textarea:focus {
-    outline: none;
-    border-color: rgba(34, 197, 94, 0.4);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08), 0 6px 20px rgba(34, 197, 94, 0.12);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-    transform: translateY(-2px);
-}
-
-.ticket-form textarea::placeholder {
-    color: rgba(243, 244, 246, 0.6);
-    font-style: italic;
-}
-
-.form-error {
-    color: #f87171;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-.form-actions {
-    margin-top: 1.5rem;
-}
-
-/* Custom Select Styles */
-.custom-select-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.custom-select {
-    position: relative;
-    width: 100%;
-}
-
-.custom-select-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.875rem 1rem;
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.5) 0%,
-        rgba(15, 50, 30, 0.5) 100%
-    );
-    border: 1px solid rgba(67, 56, 202, 0.5);
-    border-radius: 16px;
-    color: #f3f4f6;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(15px);
-}
-
-.custom-select-trigger:hover {
-    border-color: rgba(67, 56, 202, 0.7);
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.7) 0%,
-        rgba(15, 50, 30, 0.7) 100%
-    );
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.custom-select-trigger.active {
-    border-color: rgba(67, 56, 202, 0.8);
-    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.25), 0 6px 20px rgba(67, 56, 202, 0.3);
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.9) 0%,
-        rgba(15, 50, 30, 0.9) 100%
-    );
-    transform: translateY(-2px);
-}
-
-.arrow {
-    transition: transform 0.3s ease;
-    background: linear-gradient(135deg, 
-        rgba(67, 56, 202, 0.8) 0%,
-        rgba(34, 197, 94, 0.8) 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 0.8rem;
-}
-
-.custom-select-trigger.active .arrow {
-    transform: rotate(180deg);
-}
-
-.custom-options {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.98) 0%,
-        rgba(15, 50, 30, 0.98) 100%
-    );
-    border: 1px solid rgba(67, 56, 202, 0.6);
-    border-radius: 12px;
-    margin-top: 4px;
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-}
-
-.custom-options.open {
-    max-height: 300px; /* Giới hạn chiều cao cho 6 options */
-    opacity: 1;
-    transform: translateY(0);
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-/* Custom scrollbar cho options */
-.custom-options::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-options::-webkit-scrollbar-track {
-    background: rgba(67, 56, 202, 0.1);
-    border-radius: 3px;
-}
-
-.custom-options::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, 
-        rgba(67, 56, 202, 0.6) 0%,    /* Tím-xanh dương */
-        rgba(34, 197, 94, 0.6) 100%  /* Xanh lá */
-    );
-    border-radius: 3px;
-}
-
-.custom-options::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, 
-        rgba(67, 56, 202, 0.8) 0%,    /* Tím-xanh dương đậm hơn */
-        rgba(34, 197, 94, 0.8) 100%  /* Xanh lá đậm hơn */
-    );
-}
-
-.custom-option {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-left: 3px solid rgba(67, 56, 202, 0.6);
-    margin: 4px 8px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.4) 0%,
-        rgba(15, 50, 30, 0.4) 100%
-    );
-    border: 1px solid rgba(67, 56, 202, 0.3);
-}
-
-.custom-option:hover {
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.6) 0%,
-        rgba(15, 50, 30, 0.6) 100%
-    );
-    border-left-color: rgba(67, 56, 202, 0.8);
-    border-color: rgba(67, 56, 202, 0.6);
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-.custom-option.selected {
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.8) 0%,
-        rgba(15, 50, 30, 0.8) 100%
-    );
-    border-left-color: rgba(67, 56, 202, 1);
-    border-color: rgba(67, 56, 202, 0.7);
-    color: #ffffff;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-}
-
-.custom-option .text {
-    color: #f3f4f6;
-    font-size: 0.95rem;
-}
-
-.custom-option:hover .text,
-.custom-option.selected .text {
-    color: #ffffff;
-}
-
-.category-icon {
-    margin-right: 8px;
-    font-size: 1.1rem;
-}
-
-/* File Upload Styles */
-.file-upload-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.file-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-}
-
-.file-upload-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    border: 2px dashed rgba(67, 56, 202, 0.5);
-    border-radius: 16px;
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.3) 0%,
-        rgba(15, 50, 30, 0.3) 100%
-    );
-    color: #f3f4f6;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(15px);
-    text-align: center;
-    min-height: 120px;
-}
-
-.file-upload-label:hover {
-    border-color: rgba(67, 56, 202, 0.8);
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.5) 0%,
-        rgba(15, 50, 30, 0.5) 100%
-    );
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-}
-
-.file-upload-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.file-upload-text {
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-    display: block;
-}
-
-.file-upload-hint {
-    font-size: 0.875rem;
-    color: rgba(243, 244, 246, 0.6);
-    font-style: italic;
-    display: block;
-}
-
-.file-preview {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: linear-gradient(135deg, 
-        rgba(30, 24, 48, 0.4) 0%,
-        rgba(15, 50, 30, 0.4) 100%
-    );
-    border-radius: 12px;
-    border: 1px solid rgba(67, 56, 202, 0.3);
-    backdrop-filter: blur(15px);
-}
-
-.file-preview-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(255, 255, 255, 0.05) 100%
-    );
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.file-icon {
-    font-size: 1.25rem;
-}
-
-.file-name {
-    flex: 1;
-    color: #f3f4f6;
-    font-weight: 500;
-    font-size: 0.95rem;
-}
-
-.file-remove {
-    background: linear-gradient(135deg, 
-        rgba(239, 68, 68, 0.8) 0%,
-        rgba(185, 28, 28, 0.8) 100%
-    );
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: bold;
-    transition: all 0.2s ease;
-}
-
-.file-remove:hover {
-    background: linear-gradient(135deg, 
-        rgba(239, 68, 68, 1) 0%,
-        rgba(185, 28, 28, 1) 100%
-    );
-    transform: scale(1.1);
-}
-
-/* Ticket Actions */
-.ticket-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-/* Ticket List Styles */
-.ticket-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.ticket-item {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(15px);
-}
-
-.ticket-item:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.ticket-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-}
-
-.ticket-info h3 {
-    color: #f3f4f6;
-    margin: 0 0 0.5rem 0;
-    font-size: 1.125rem;
-}
-
-.ticket-meta {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.ticket-date {
-    color: rgba(243, 244, 246, 0.6);
-    font-size: 0.875rem;
-}
-
-.ticket-content p {
-    color: rgba(243, 244, 246, 0.8);
-    margin-bottom: 1rem;
-    line-height: 1.6;
-}
-
-.ticket-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
-}
-
-.ticket-staff {
-    color: rgba(243, 244, 246, 0.6);
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-open {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.status-in_progress {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.status-resolved {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(21, 128, 61, 0.1));
-    color: #10b981;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.status-closed {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(75, 85, 99, 0.1));
-    color: #9ca3af;
-    border: 1px solid rgba(107, 114, 128, 0.3);
-}
-
-/* Category Badges */
-.category-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: linear-gradient(135deg, rgba(67, 56, 202, 0.2), rgba(79, 70, 229, 0.1));
-    color: #a5b4fc;
-    border: 1px solid rgba(67, 56, 202, 0.3);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: rgba(243, 244, 246, 0.6);
-}
-
-.empty-state p {
-    font-size: 1.125rem;
-    margin: 0;
-}
-
-/* Alert Messages */
-.alert {
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    font-weight: 500;
-    backdrop-filter: blur(15px);
-    border: 1px solid;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.alert.success {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(21, 128, 61, 0.1));
-    border-color: rgba(34, 197, 94, 0.3);
-    color: #10b981;
-}
-
-.alert.error {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-}
-
-.alert.auto-dismiss {
-    animation: slideInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.alert.auto-dismiss.fade-out {
-    animation: slideOutUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.alert-content {
-    position: relative;
-    z-index: 2;
-}
-
-.progress-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    background: linear-gradient(90deg, 
-        rgba(34, 197, 94, 0.8) 0%, 
-        rgba(21, 128, 61, 0.8) 100%
-    );
-    border-radius: 0 0 12px 12px;
-    animation: progressBar 3s linear forwards;
-    z-index: 1;
-}
-
-.alert.error .progress-bar {
-    background: linear-gradient(90deg, 
-        rgba(239, 68, 68, 0.8) 0%, 
-        rgba(185, 28, 28, 0.8) 100%
-    );
-}
-
-/* Animations */
-@keyframes slideInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideOutUp {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-}
-
-@keyframes progressBar {
-    from {
-        width: 100%;
-    }
-    to {
-        width: 0%;
-    }
-}
-</style>
 
 <script>
 // Custom Select JavaScript
@@ -1076,8 +478,184 @@ function resetTicketForm() {
 }
 </script>
 
-<!-- Notification Polling Script -->
-<script th:src="@{/js/notification-polling.js}"></script>
+
+<!-- Notification Polling (inlined) -->
+<script>
+class NotificationPolling {
+    constructor() {
+        this.pollingInterval = 30000; // 30 seconds
+        this.isPolling = false;
+        this.lastCount = 0;
+        this.init();
+    }
+
+    init() {
+        // Start polling when page loads
+        this.startPolling();
+        
+        // Stop polling when page is hidden (tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.stopPolling();
+            } else {
+                this.startPolling();
+            }
+        });
+    }
+
+    startPolling() {
+        if (this.isPolling) return;
+        
+        this.isPolling = true;
+        this.poll();
+        
+        // Set up interval
+        this.intervalId = setInterval(() => {
+            this.poll();
+        }, this.pollingInterval);
+    }
+
+    stopPolling() {
+        if (!this.isPolling) return;
+        
+        this.isPolling = false;
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+    }
+
+    async poll() {
+        try {
+            const response = await fetch('/support/api/notifications/count', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const currentCount = data.count || 0;
+
+            // Show notification if count increased
+            if (currentCount > this.lastCount && this.lastCount > 0) {
+                this.showNotification(`Có ${currentCount - this.lastCount} ticket mới được cập nhật!`);
+            }
+
+            // Update badge
+            this.updateBadge(currentCount);
+            this.lastCount = currentCount;
+
+        } catch (error) {
+            console.error('Notification polling error:', error);
+            // Don't show error to user, just log it
+        }
+    }
+
+    updateBadge(count) {
+        // Update notification badge in navigation
+        const badge = document.getElementById('notification-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+                badge.classList.add('pulse');
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('pulse');
+            }
+        }
+
+        // Update page title if there are notifications
+        const originalTitle = document.title.replace(/^\(\d+\) /, '');
+        if (count > 0) {
+            document.title = `(${count}) ${originalTitle}`;
+        } else {
+            document.title = originalTitle;
+        }
+    }
+
+    showNotification(message) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">🔔</div>
+                <div class="toast-message">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        `;
+
+        // Add styles
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(67, 56, 202, 0.95), rgba(79, 70, 229, 0.95));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10000;
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+        `;
+
+        // Add to page
+        document.body.appendChild(toast);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'slideOutRight 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.remove();
+                    }
+                }, 500);
+            }
+        }, 5000);
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.pathname.includes('/support') ||
+        window.location.pathname.includes('/staff/tickets') ||
+        window.location.pathname.includes('/admin/tickets')) {
+        new NotificationPolling();
+    }
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOutRight {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(100%); }
+    }
+    .toast-content { display: flex; align-items: center; gap: 0.75rem; }
+    .toast-icon { font-size: 1.25rem; }
+    .toast-message { flex: 1; font-weight: 500; }
+    .toast-close { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background-color 0.2s ease; }
+    .toast-close:hover { background-color: rgba(255, 255, 255, 0.2); }
+    .notification-badge { position: absolute; top: -8px; right: -8px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+    .notification-badge.pulse { animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+`;
+document.head.appendChild(style);
+</script>
 
 </body>
 </html>

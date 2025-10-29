@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/support.css}">
 </head>
 <body class="admin-body">
 
@@ -104,103 +105,23 @@
     <div class="container"><p>© 2025 EV SWAP - Admin Control Panel.</p></div>
 </footer>
 
-<style>
-.filter-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 1rem;
-}
+<style></style>
 
-.filter-tab {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    color: rgba(243, 244, 246, 0.7);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+<script>
+class NotificationPolling {
+    constructor() { this.pollingInterval = 30000; this.isPolling = false; this.lastCount = 0; this.init(); }
+    init() { this.startPolling(); document.addEventListener('visibilitychange', () => { if (document.hidden) this.stopPolling(); else this.startPolling(); }); }
+    startPolling() { if (this.isPolling) return; this.isPolling = true; this.poll(); this.intervalId = setInterval(()=>this.poll(), this.pollingInterval); }
+    stopPolling() { if (!this.isPolling) return; this.isPolling = false; if (this.intervalId) { clearInterval(this.intervalId); this.intervalId = null; } }
+    async poll() { try { const res = await fetch('/support/api/notifications/count', { method:'GET', headers:{'Content-Type':'application/json'} }); if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`); const data = await res.json(); const currentCount = data.count || 0; if (currentCount > this.lastCount && this.lastCount > 0) { this.showNotification(`Có ${currentCount - this.lastCount} ticket mới được cập nhật!`); } this.updateBadge(currentCount); this.lastCount = currentCount; } catch (e) { console.error('Notification polling error:', e); } }
+    updateBadge(count) { const originalTitle = document.title.replace(/^\(\d+\) /, ''); if (count > 0) document.title = `(${count}) ${originalTitle}`; else document.title = originalTitle; }
+    showNotification(message) { const toast = document.createElement('div'); toast.className='toast-notification'; toast.innerHTML = `<div class="toast-content"><div class="toast-icon">🔔</div><div class="toast-message">${message}</div><button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button></div>`; toast.style.cssText = `position:fixed;top:20px;right:20px;background:linear-gradient(135deg,rgba(67,56,202,.95),rgba(79,70,229,.95));color:white;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.2);z-index:10000;animation:slideInRight .5s cubic-bezier(.4,0,.2,1);max-width:400px;`; document.body.appendChild(toast); setTimeout(()=>{ if (toast.parentElement) { toast.style.animation='slideOutRight .5s cubic-bezier(.4,0,.2,1) forwards'; setTimeout(()=>{ if (toast.parentElement) toast.remove(); }, 500); } }, 5000); }
 }
-
-.filter-tab:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    color: #f3f4f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.filter-tab.active {
-    background: linear-gradient(135deg, rgba(67, 56, 202, 0.3), rgba(79, 70, 229, 0.2));
-    color: #a5b4fc;
-    border-color: rgba(67, 56, 202, 0.4);
-    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.2);
-}
-
-.category-display {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.category-icon {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: linear-gradient(135deg, rgba(67, 56, 202, 0.2), rgba(79, 70, 229, 0.1));
-    color: #a5b4fc;
-    border: 1px solid rgba(67, 56, 202, 0.3);
-}
-
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-open {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.status-in_progress {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.status-resolved {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(21, 128, 61, 0.1));
-    color: #10b981;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.status-closed {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(75, 85, 99, 0.1));
-    color: #9ca3af;
-    border: 1px solid rgba(107, 114, 128, 0.3);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: rgba(243, 244, 246, 0.6);
-    font-style: italic;
-}
-
-.btn.small {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-</style>
+document.addEventListener('DOMContentLoaded', function(){ if (window.location.pathname.includes('/support') || window.location.pathname.includes('/staff/tickets') || window.location.pathname.includes('/admin/tickets')) { new NotificationPolling(); } });
+const styleNP = document.createElement('style');
+styleNP.textContent = `@keyframes slideInRight{from{opacity:0;transform:translateX(100%) }to{opacity:1;transform:translateX(0)}}@keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(100%)}}.toast-content{display:flex;align-items:center;gap:.75rem}.toast-icon{font-size:1.25rem}.toast-message{flex:1;font-weight:500}.toast-close{background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;padding:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background-color .2s ease}.toast-close:hover{background-color:rgba(255,255,255,.2)}`;
+document.head.appendChild(styleNP);
+</script>
 
 </body>
 </html>
