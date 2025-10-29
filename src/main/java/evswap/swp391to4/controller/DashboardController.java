@@ -17,6 +17,8 @@ public class DashboardController {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
+            model.addAttribute("driverPhone", driver.getPhone());   // ✅ Thêm dòng này
+            model.addAttribute("driverEmail", driver.getEmail());   // ✅ Thêm dòng này
             model.addAttribute("loggedIn", true);
         } else {
             model.addAttribute("loggedIn", false);
@@ -68,4 +70,3 @@ public class DashboardController {
         return "redirect:/dashboard";
     }
 }
-
