@@ -165,7 +165,7 @@
                 <h3>Trao đổi với Driver & Staff</h3>
             </div>
             
-            <div class="chat-messages" id="chatMessages">
+            <div class="chat-messages" id="chatMessages" th:attr="data-ticket-id=${ticket.ticketId}">
                 <div th:if="${comments == null or comments.isEmpty()}" class="chat-empty">
                     Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!
                 </div>
@@ -960,6 +960,71 @@ function initializeChat() {
         });
     }
 }
+</script>
+
+<script>
+// Poll chat comments every 5s for admin view
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('chatMessages');
+    const ticketId = container ? container.getAttribute('data-ticket-id') : null;
+    if (!ticketId || !container) return;
+
+    let lastRenderedCount = container.querySelectorAll('.message-wrapper').length;
+
+    async function fetchComments() {
+        try {
+            const res = await fetch(`/admin/tickets/${ticketId}/comments`, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) return;
+            const comments = await res.json();
+            if (!Array.isArray(comments)) return;
+
+            const existingItems = container.querySelectorAll('.message-wrapper').length;
+
+            if (comments.length === 0 && existingItems === 0) {
+                if (!container.querySelector('.chat-empty')) {
+                    const empty = document.createElement('div');
+                    empty.className = 'chat-empty';
+                    empty.textContent = 'Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!';
+                    container.appendChild(empty);
+                }
+                lastRenderedCount = 0;
+                return;
+            }
+
+            if (comments.length > 0) {
+                const empty = container.querySelector('.chat-empty');
+                if (empty) empty.remove();
+            }
+
+            if (comments.length > existingItems) {
+                const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 40;
+                const frag = document.createDocumentFragment();
+                for (let i = existingItems; i < comments.length; i++) {
+                    const c = comments[i];
+                    const wrapper = document.createElement('div');
+                    wrapper.className = (c.author === 'admin') ? 'message-wrapper right' : 'message-wrapper left';
+                    wrapper.innerHTML = `
+                        <div class=\"message-bubble\">
+                            <div class=\"message-author\">${c.name}</div>
+                            <div class=\"message-text\">${c.message}</div>
+                            <div class=\"message-time\">${c.timestamp}</div>
+                        </div>`;
+                    frag.appendChild(wrapper);
+                }
+                container.appendChild(frag);
+                if (nearBottom) {
+                    container.scrollTop = container.scrollHeight;
+                }
+                lastRenderedCount = comments.length;
+            }
+        } catch (e) {
+            // silent
+        }
+    }
+
+    fetchComments();
+    setInterval(fetchComments, 5000);
+});
 </script>
 
 </body>

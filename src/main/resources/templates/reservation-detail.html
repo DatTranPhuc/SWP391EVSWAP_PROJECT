@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết lịch đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detail-card { background: var(--surface); border: 1px solid rgba(148,163,184,.14); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); padding: 24px; }
+        .qr-wrap { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: 1rem; border: 2px dashed rgba(99,102,241,.35); border-radius: var(--radius-md); }
+        .qr-token { width: 140px; height: 140px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(148,163,184,.18); color: var(--text-secondary); font-weight: 700; }
+        .timeline { position: relative; padding-left: 3rem; }
+        .timeline:before { content:""; position:absolute; left: 1.5rem; top:0; bottom:0; width:2px; background: rgba(148,163,184,.25); }
+        .timeline-item { position: relative; margin-bottom: 1.5rem; padding-left: 1rem; }
+        .timeline-item .dot {
+            position:absolute; left:-.75rem; top:.25rem; width:1rem; height:1rem; border-radius: 50%;
+            background: #ffffff; border: 2px solid rgba(148,163,184,.35);
+            box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+        }
+        .timeline-item.completed .dot {
+            background: #10b981; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,.25);
+        }
+        .timeline-item.completed .dot:after {
+            content: '\2713'; /* check mark */
+            position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: .7rem; font-weight: 700;
+        }
+        .timeline-item div { line-height: 1.5; }
+        .timeline-item strong { display: block; margin-bottom: .25rem; }
+    </style>
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Quy trình đổi pin</span>
+            <h1 class="page-title">Chi tiết lịch đổi pin</h1>
+            <p class="page-hint" th:text="${'Xin chào ' + driverName + '! Xem thông tin lịch và QR để check-in tại trạm.'}">Mô tả</p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/my-reservations}">Danh sách của tôi</a>
+        <a class="btn primary" th:href="@{/dashboard}">Về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <section class="reservation-progress">
+        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+            <li class="progress-step" data-step="search">Tìm trạm</li>
+            <li class="progress-step" data-step="schedule">Đặt lịch</li>
+            <li class="progress-step" data-step="payment">Thanh toán</li>
+            <li class="progress-step" data-step="swap">Đổi pin</li>
+            <li class="progress-step" data-step="done">Hoàn tất</li>
+        </ul>
+    </section>
+
+    <section class="detail-grid">
+        <div class="detail-card">
+            <h2 style="margin-top:0">Thông tin đặt lịch</h2>
+            <div class="detail-grid" style="grid-template-columns: 1fr 1fr; margin-top: .5rem;">
+                <div>
+                    <div class="label">Mã đặt lịch</div>
+                    <div class="value">#<span th:text="${reservation.reservationId}">0</span></div>
+                </div>
+                <div>
+                    <div class="label">Trạng thái</div>
+                    <div class="value" th:text="${reservation.status}">pending</div>
+                </div>
+                <div>
+                    <div class="label">Trạm</div>
+                    <div class="value" th:text="${reservation.station.name}">EV SWAP</div>
+                </div>
+                <div>
+                    <div class="label">Thời gian</div>
+                    <div class="value" th:text="${#temporals.format(reservation.reservedStart, 'dd/MM/yyyy HH:mm')}">--</div>
+                </div>
+                <div>
+                    <div class="label">Phí đặt lịch</div>
+                    <div class="value" th:text="${#numbers.formatDecimal(reservation.priceAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">25,000 VND</div>
+                </div>
+                <div>
+                    <div class="label">Phương tiện</div>
+                    <div class="value" th:text="${reservation.vehicle.model + ' - ' + (reservation.vehicle.plateNumber == null ? reservation.vehicle.vin : reservation.vehicle.plateNumber)}">Xe</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <h2 style="margin-top:0">QR Code Check-in</h2>
+            <div class="qr-wrap">
+                <div class="qr-token" th:text="${reservation.qrToken}">QR_CODE</div>
+                <div class="label" th:if="${reservation.qrExpiresAt != null}">Hết hạn:
+                    <span class="value" th:text="${#temporals.format(reservation.qrExpiresAt, 'dd/MM/yyyy HH:mm')}">--</span>
+                </div>
+                <div class="label">Trạng thái QR: <span class="value" th:text="${reservation.qrStatus}">active</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-card" style="margin-top: 1rem;">
+        <h2 style="margin-top:0">Tiến trình</h2>
+        <div class="timeline">
+            <div class="timeline-item completed">
+                <div class="dot"></div>
+                <div><strong>Đặt lịch</strong><div class="label">Tạo lịch thành công</div></div>
+            </div>
+            <div class="timeline-item" th:classappend="${reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed'} ? ' completed' : ''">
+                <div class="dot"></div>
+                <div><strong>Xác nhận</strong><div class="label">Trạm xác nhận lịch</div></div>
+            </div>
+            <div class="timeline-item" th:classappend="${reservation.status == 'checked_in' or reservation.status == 'completed'} ? ' completed' : ''">
+                <div class="dot"></div>
+                <div><strong>Check-in</strong><div class="label">Quét QR tại trạm</div></div>
+            </div>
+            <div class="timeline-item" th:classappend="${reservation.status == 'completed'} ? ' completed' : ''">
+                <div class="dot"></div>
+                <div><strong>Hoàn tất</strong><div class="label">Đổi pin thành công</div></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const progressSteps = document.getElementById('progressSteps');
+    if (progressSteps) {
+        const order = ['search', 'schedule', 'payment', 'swap', 'done'];
+        const currentStep = progressSteps.dataset.step || 'schedule';
+        const currentIndex = order.indexOf(currentStep);
+        Array.from(progressSteps.children).forEach(item => {
+            const step = item.getAttribute('data-step');
+            const index = order.indexOf(step);
+            if (index < currentIndex) { item.classList.add('is-complete'); }
+            else if (index === currentIndex) { item.classList.add('is-current'); }
+        });
+    }
+</script>
+
+</body>
+</html>
+
+

@@ -8,10 +8,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.WalletService;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
 
 @Controller
+@RequiredArgsConstructor
 public class DashboardController {
+
+    private final WalletService walletService;
 
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
@@ -19,6 +25,14 @@ public class DashboardController {
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("loggedIn", true);
+            
+            // Load wallet balance for logged in users
+            try {
+                BigDecimal balance = walletService.getBalance(driver.getDriverId());
+                model.addAttribute("walletBalance", balance);
+            } catch (Exception e) {
+                model.addAttribute("walletBalance", BigDecimal.ZERO);
+            }
         } else {
             model.addAttribute("loggedIn", false);
         }

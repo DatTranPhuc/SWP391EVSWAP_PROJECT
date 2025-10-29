@@ -99,11 +99,19 @@
                     <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
                     <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
                 </div>
-                <span class="reservation-status"
-                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
-                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
-                    Đang chờ xác nhận
-                </span>
+                <div class="reservation-item-actions">
+                    <span class="reservation-status"
+                          th:classappend="${reservation.status() == 'pending'} ? ' pending'"
+                          th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
+                        Đang chờ xác nhận
+                    </span>
+                    <div class="reservation-quick-actions">
+                        <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}" class="btn primary small">Chi tiết</a>
+                        <form th:action="@{/reservations/{id}/cancel(id=${reservation.reservationId()})}" method="post" th:if="${reservation.status() == 'pending' or reservation.status() == 'confirmed'}" style="display: inline;">
+                            <button type="submit" class="btn warning small" onclick="return confirm('Bạn có chắc muốn hủy lịch này?')">Hủy lịch</button>
+                        </form>
+                    </div>
+                </div>
             </article>
         </div>
     </section>

@@ -57,6 +57,9 @@
                     
                     <div class="form-group">
                         <label for="stationId">Chọn trạm</label>
+                        <div class="form-error" th:if="${#lists.isEmpty(stations)}">
+                            Không có trạm đủ điều kiện để đánh giá (trong 15 ngày gần đây).
+                        </div>
                         <div class="custom-select-wrapper">
                             <div class="custom-select" id="station-select">
                                 <div class="custom-select-trigger">
@@ -128,7 +131,7 @@
 
                     <div class="form-actions">
                         <button type="button" class="btn ghost" onclick="resetForm()">Tạo mới</button>
-                        <button type="submit" class="btn primary">Gửi báo cáo</button>
+                        <button type="submit" class="btn primary" th:attr="disabled=${#lists.isEmpty(stations)}">Gửi báo cáo</button>
                     </div>
                 </form>
             </section>

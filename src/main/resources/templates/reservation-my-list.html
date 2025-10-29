@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch đổi pin của tôi - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Quản lý lịch đổi pin</span>
+            <h1 class="page-title">Lịch đổi pin của tôi</h1>
+            <p class="page-hint" th:text="${'Xin chào ' + driverName + '! Quản lý các lịch đổi pin của bạn.'}">
+                Quản lý các lịch đổi pin của bạn.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/schedule}">Đặt lịch mới</a>
+        <a class="btn primary" th:href="@{/dashboard}">Về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+    <section class="reservation-filters">
+        <div class="filter-tabs">
+            <a th:href="@{/reservations/my-reservations}" 
+               th:classappend="${currentStatus == null or currentStatus == 'all'} ? 'active' : ''"
+               class="filter-tab">Tất cả</a>
+            <a th:href="@{/reservations/my-reservations(status='pending')}" 
+               th:classappend="${currentStatus == 'pending'} ? 'active' : ''"
+               class="filter-tab">Chờ xác nhận</a>
+            <a th:href="@{/reservations/my-reservations(status='confirmed')}" 
+               th:classappend="${currentStatus == 'confirmed'} ? 'active' : ''"
+               class="filter-tab">Đã xác nhận</a>
+            <a th:href="@{/reservations/my-reservations(status='checked_in')}" 
+               th:classappend="${currentStatus == 'checked_in'} ? 'active' : ''"
+               class="filter-tab">Đã check-in</a>
+            <a th:href="@{/reservations/my-reservations(status='completed')}" 
+               th:classappend="${currentStatus == 'completed'} ? 'active' : ''"
+               class="filter-tab">Hoàn tất</a>
+            <a th:href="@{/reservations/my-reservations(status='canceled')}" 
+               th:classappend="${currentStatus == 'canceled'} ? 'active' : ''"
+               class="filter-tab">Đã hủy</a>
+        </div>
+    </section>
+
+    <section class="reservation-list-section">
+        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
+            <div class="empty-state">
+                <div class="empty-icon">📅</div>
+                <h3>Chưa có lịch đổi pin nào</h3>
+                <p>Bạn chưa có lịch đổi pin nào. Hãy đặt lịch để bắt đầu!</p>
+                <a class="btn primary" th:href="@{/reservations/schedule}">Đặt lịch ngay</a>
+            </div>
+        </div>
+
+        <div class="reservation-grid" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
+            <div class="reservation-card" th:each="reservation : ${upcomingReservations}">
+                <div class="reservation-header">
+                    <div class="reservation-id">#<span th:text="${reservation.reservationId()}">123</span></div>
+                    <div class="reservation-status" 
+                         th:classappend="${reservation.status() == 'pending' ? 'pending' : (reservation.status() == 'confirmed' ? 'confirmed' : (reservation.status() == 'checked_in' ? 'checked-in' : (reservation.status() == 'completed' ? 'completed' : (reservation.status() == 'canceled' ? 'canceled' : 'default'))))}"
+                         th:text="${reservation.status() == 'pending' ? 'Chờ xác nhận' : (reservation.status() == 'confirmed' ? 'Đã xác nhận' : (reservation.status() == 'checked_in' ? 'Đã check-in' : (reservation.status() == 'completed' ? 'Hoàn tất' : (reservation.status() == 'canceled' ? 'Đã hủy' : reservation.status()))))}">
+                        Chờ xác nhận
+                    </div>
+                </div>
+                
+                <div class="reservation-content">
+                    <div class="reservation-info">
+                        <div class="info-item">
+                            <span class="label">Trạm:</span>
+                            <span class="value" th:text="${reservation.stationName()}">EV Swap Station</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Thời gian:</span>
+                            <span class="value" th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Phí đặt lịch:</span>
+                            <span class="value">25,000 VND</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reservation-actions">
+                    <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}"
+                       class="btn primary small">Chi tiết</a>
+
+                    <form th:action="@{/reservations/{id}/cancel(id=${reservation.reservationId()})}"
+                          method="post" th:if="${reservation.status() == 'pending' or reservation.status() == 'confirmed'}"
+                          style="display: inline;">
+                        <button type="submit" class="btn warning small"
+                                onclick="return confirm('Bạn có chắc muốn hủy lịch này?')">Hủy lịch</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Xem QR được chuyển hướng sang trang chi tiết thanh toán thành công -->
+
+<style>
+.reservation-filters { margin-bottom: 2rem; }
+
+.filter-tabs {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    padding: 0.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+.filter-tab {
+    padding: 0.75rem 1.5rem; border-radius: 999px; text-decoration: none;
+    color: rgba(243,244,246,.8); font-weight: 600; transition: all .25s ease; white-space: nowrap;
+    background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.12);
+}
+.filter-tab:hover { transform: translateY(-1px); color: #fff; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.filter-tab.active {
+    background: linear-gradient(135deg, rgba(67,56,202,.5), rgba(34,197,94,.35));
+    color: #fff; border-color: rgba(67,56,202,.6);
+}
+
+.reservation-list-section {
+    background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    border-radius: 16px; padding: 2rem; border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 12px 36px rgba(0,0,0,.25);
+}
+
+.empty-state { text-align: center; padding: 3rem 1rem; color: rgba(243,244,246,.75); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state h3 { margin: 0 0 .5rem 0; color: #f3f4f6; }
+.empty-state p { margin: 0 0 1.5rem 0; }
+
+.reservation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+
+.reservation-card {
+    border: 1px solid rgba(67,56,202,.3); border-radius: 12px; padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(30,24,48,.35), rgba(15,50,30,.35)); transition: all .25s;
+    backdrop-filter: blur(12px);
+}
+.reservation-card:hover { box-shadow: 0 12px 30px rgba(0,0,0,.25); transform: translateY(-2px); border-color: rgba(67,56,202,.6); }
+
+.reservation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.reservation-id { font-weight: 700; color: #f3f4f6; font-size: 1.1rem; }
+
+.reservation-status { padding: .25rem .75rem; border-radius: 20px; font-size: .8rem; font-weight: 700; text-transform: uppercase; }
+.reservation-status.pending { background: linear-gradient(135deg, rgba(245,158,11,.2), rgba(217,119,6,.1)); color: #fbbf24; border: 1px solid rgba(245,158,11,.3); }
+.reservation-status.confirmed { background: linear-gradient(135deg, rgba(59,130,246,.2), rgba(37,99,235,.1)); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+.reservation-status.checked-in { background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(21,128,61,.1)); color: #10b981; border: 1px solid rgba(34,197,94,.3); }
+.reservation-status.completed { background: linear-gradient(135deg, rgba(107,114,128,.2), rgba(75,85,99,.1)); color: #9ca3af; border: 1px solid rgba(107,114,128,.3); }
+.reservation-status.canceled { background: linear-gradient(135deg, rgba(239,68,68,.2), rgba(185,28,28,.1)); color: #f87171; border: 1px solid rgba(239,68,68,.35); }
+
+.reservation-content { margin-bottom: 1rem; }
+.reservation-info { display: flex; flex-direction: column; gap: .5rem; }
+.info-item { display: flex; justify-content: space-between; align-items: center; }
+.label { font-weight: 600; color: rgba(243,244,246,.75); font-size: .9rem; }
+.value { color: #f3f4f6; font-weight: 700; }
+
+.reservation-actions { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
+.btn.small { padding: .5rem 1rem; font-size: .85rem; }
+.btn.warning { background: linear-gradient(135deg, #ffc107, #fd7e14); color: white; }
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.qr-placeholder {
+    margin-top: 1rem;
+}
+
+.qr-code {
+    width: 150px;
+    height: 150px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #666;
+    margin: 0 auto 1rem;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .reservation-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-tabs {
+        flex-direction: column;
+    }
+    
+    .reservation-actions {
+        flex-direction: column;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+}
+</style>
+
+</body>
+</html>

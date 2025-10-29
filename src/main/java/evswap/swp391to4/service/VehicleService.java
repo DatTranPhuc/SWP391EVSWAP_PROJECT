@@ -1,14 +1,15 @@
 package evswap.swp391to4.service;
 
+import java.time.Instant;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

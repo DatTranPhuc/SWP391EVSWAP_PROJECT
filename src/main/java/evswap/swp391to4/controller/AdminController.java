@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import evswap.swp391to4.dto.FeedbackResponse;
@@ -350,6 +351,20 @@ public class AdminController {
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
             return "redirect:/admin/tickets";
+        }
+    }
+
+    /**
+     * API: Lấy danh sách comments (JSON) cho admin
+     */
+    @GetMapping("/tickets/{id}/comments")
+    @ResponseBody
+    public List<TicketSupportService.Comment> getCommentsJson(@PathVariable Integer id, HttpSession session) {
+        try {
+            checkAdminLogin(session);
+            return ticketService.getCommentsByTicketId(id);
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
         }
     }
 

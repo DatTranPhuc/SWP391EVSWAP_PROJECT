@@ -1,6 +1,7 @@
 package evswap.swp391to4.service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import evswap.swp391to4.dto.FeedbackRequest;
 import evswap.swp391to4.dto.FeedbackResponse;
+import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Feedback;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.repository.FeedbackRepository;
 import evswap.swp391to4.repository.StationRepository;
+import evswap.swp391to4.repository.SwapTransactionRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,6 +25,7 @@ public class FeedbackService {
 
     private final FeedbackRepository feedbackRepo;
     private final StationRepository stationRepo;
+    private final SwapTransactionRepository swapTxRepo;
 
     /**
      * Tạo feedback mới từ driver
@@ -37,6 +41,16 @@ public class FeedbackService {
             throw new IllegalArgumentException("Rating phải từ 1 đến 5");
         }
 
+        // Chỉ cho phép feedback nếu có giao dịch swap thành công trong 15 ngày tại trạm này
+        Instant to = Instant.now();
+        Instant from = to.minus(15, ChronoUnit.DAYS);
+        boolean eligible = swapTxRepo
+                .existsByReservationDriverDriverIdAndStationStationIdAndResultAndSwappedAtBetween(
+                        driver.getDriverId(), request.getStationId(), "success", from, to);
+        if (!eligible) {
+            throw new IllegalArgumentException("Chỉ được đánh giá trạm đã đổi pin thành công trong 15 ngày");
+        }
+
         // Tạo feedback entity
         Feedback feedback = Feedback.builder()
                 .driver(driver)
@@ -48,6 +62,23 @@ public class FeedbackService {
 
         Feedback saved = feedbackRepo.save(feedback);
         return mapToResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StationResponse> getEligibleStationsForFeedback(Integer driverId) {
+        Instant to = Instant.now();
+        Instant from = to.minus(15, ChronoUnit.DAYS);
+        List<Station> stations = swapTxRepo.findEligibleStations(driverId, from, to);
+        return stations.stream()
+                .map(s -> StationResponse.builder()
+                        .stationId(s.getStationId())
+                        .name(s.getName())
+                        .address(s.getAddress())
+                        .latitude(s.getLatitude())
+                        .longitude(s.getLongitude())
+                        .status(s.getStatus())
+                        .build())
+                .toList();
     }
 
     /**

@@ -190,6 +190,25 @@ public class SupportController {
     }
 
     /**
+     * API: Lấy danh sách comments (JSON) cho driver
+     */
+    @GetMapping("/{id}/comments")
+    @ResponseBody
+    public List<TicketSupportService.Comment> getCommentsJson(@PathVariable Integer id, HttpSession session) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            return java.util.Collections.emptyList();
+        }
+
+        TicketSupportResponse ticket = ticketService.getTicketById(id);
+        if (ticket.getDriverId() == null || !ticket.getDriverId().equals(driver.getDriverId())) {
+            return java.util.Collections.emptyList();
+        }
+
+        return ticketService.getCommentsByTicketId(id);
+    }
+
+    /**
      * Thêm comment vào ticket
      */
     @PostMapping("/{id}/comment")

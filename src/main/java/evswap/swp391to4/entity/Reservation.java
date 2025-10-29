@@ -2,6 +2,7 @@ package evswap.swp391to4.entity;
 
 
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import jakarta.persistence.Column;
@@ -32,6 +33,17 @@ public class Reservation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_battery_id")
+    private Battery assignedBattery;
+
+    @Column(name = "price_amount", precision = 12, scale = 2)
+    private BigDecimal priceAmount;
 
     @Column(name = "reserved_start")
     private Instant reservedStart;
