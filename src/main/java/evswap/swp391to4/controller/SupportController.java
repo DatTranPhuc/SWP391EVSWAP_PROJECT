@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -52,6 +53,60 @@ public class SupportController {
         model.addAttribute("ticket", new TicketSupportRequest());
 
         return "support";
+    }
+
+    /**
+     * API: Lấy comments mới hơn mốc thời gian (ms) cho driver đang sở hữu ticket
+     */
+    @GetMapping("/{id}/comments")
+    @ResponseBody
+    public Object getCommentsSince(@PathVariable Integer id,
+                                   @RequestParam(value = "since", required = false) Long since,
+                                   HttpSession session) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            return java.util.Map.of("error", "UNAUTHORIZED");
+        }
+
+        try {
+            TicketSupportResponse ticket = ticketService.getTicketById(id);
+            if (ticket.getDriverId() == null || !ticket.getDriverId().equals(driver.getDriverId())) {
+                return java.util.Map.of("error", "FORBIDDEN");
+            }
+
+            java.time.Instant sinceInstant = since != null ? java.time.Instant.ofEpochMilli(since) : java.time.Instant.EPOCH;
+            java.util.List<TicketSupportService.Comment> comments = ticketService.getCommentsSince(id, sinceInstant);
+            return comments;
+        } catch (Exception e) {
+            return java.util.Map.of("error", e.getMessage());
+        }
+    }
+
+    /**
+     * API: Thêm comment (JSON) và trả về comment vừa thêm cho driver
+     */
+    @PostMapping("/{id}/comments")
+    @ResponseBody
+    public Object postCommentJson(@PathVariable Integer id,
+                                  @RequestBody java.util.Map<String, String> body,
+                                  HttpSession session) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            return java.util.Map.of("error", "UNAUTHORIZED");
+        }
+
+        try {
+            TicketSupportResponse ticket = ticketService.getTicketById(id);
+            if (ticket.getDriverId() == null || !ticket.getDriverId().equals(driver.getDriverId())) {
+                return java.util.Map.of("error", "FORBIDDEN");
+            }
+
+            String message = body != null ? body.get("message") : null;
+            TicketSupportService.Comment saved = ticketService.addCommentAndReturn(id, "driver", driver.getFullName(), message);
+            return saved;
+        } catch (Exception e) {
+            return java.util.Map.of("error", e.getMessage());
+        }
     }
 
     /**

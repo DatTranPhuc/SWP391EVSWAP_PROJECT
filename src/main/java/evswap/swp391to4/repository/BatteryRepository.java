@@ -1,11 +1,12 @@
 package evswap.swp391to4.repository;
 
-import evswap.swp391to4.entity.Battery;
-import evswap.swp391to4.entity.Station;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import evswap.swp391to4.entity.Battery;
+import evswap.swp391to4.entity.Station;
 
 @Repository
 public interface BatteryRepository extends JpaRepository<Battery, Integer> {
@@ -24,6 +25,8 @@ public interface BatteryRepository extends JpaRepository<Battery, Integer> {
      * 'ContainingIgnoreCase' cho phép tìm kiếm linh hoạt (ví dụ: "full" sẽ khớp "full").
      */
     List<Battery> findByStationAndStateContainingIgnoreCase(Station station, String state);
+
+    List<Battery> findByStationAndState(Station station, String state);
 
     // ===== HÀM MỚI (Cho Dashboard) =====
     /**

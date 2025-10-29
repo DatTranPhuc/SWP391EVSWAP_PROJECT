@@ -264,6 +264,7 @@ public class TicketSupportService {
         java.time.ZoneId vietnamZone = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
         String formattedTimestamp = Instant.now().atZone(vietnamZone).format(formatter);
         newComment.setTimestamp(formattedTimestamp);
+        newComment.setCreatedAtMs(Instant.now().toEpochMilli());
         
         comments.add(newComment);
         
@@ -308,6 +309,61 @@ public class TicketSupportService {
         TicketSupport ticket = ticketRepo.findById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ticket"));
         return getComments(ticket);
+    }
+
+    /**
+     * Lấy comments mới hơn một mốc thời gian (ms)
+     */
+    @Transactional(readOnly = true)
+    public List<Comment> getCommentsSince(Integer ticketId, Instant since) {
+        List<Comment> all = getCommentsByTicketId(ticketId);
+        long sinceMs = since != null ? since.toEpochMilli() : 0L;
+        List<Comment> result = new ArrayList<>();
+        for (Comment c : all) {
+            long t = c.getCreatedAtMs() != null ? c.getCreatedAtMs() : 0L;
+            if (t > sinceMs) {
+                result.add(c);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Thêm comment và trả về comment vừa thêm
+     */
+    @Transactional
+    public Comment addCommentAndReturn(Integer ticketId, String author, String authorName, String message) {
+        TicketSupport ticket = ticketRepo.findById(ticketId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ticket"));
+
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message không được để trống");
+        }
+
+        List<Comment> comments = getComments(ticket);
+
+        Comment newComment = new Comment();
+        newComment.setAuthor(author.trim());
+        newComment.setName(authorName.trim());
+        newComment.setMessage(message.trim());
+
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        java.time.ZoneId vietnamZone = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+        Instant now = Instant.now();
+        String formattedTimestamp = now.atZone(vietnamZone).format(formatter);
+        newComment.setTimestamp(formattedTimestamp);
+        newComment.setCreatedAtMs(now.toEpochMilli());
+
+        comments.add(newComment);
+
+        try {
+            String commentHistoryJson = objectMapper.writeValueAsString(comments);
+            ticket.setCommentHistory(commentHistoryJson);
+            ticketRepo.save(ticket);
+            return newComment;
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi lưu comment: " + e.getMessage());
+        }
     }
 
     /**
@@ -447,6 +503,7 @@ public class TicketSupportService {
         private String name;
         private String message;
         private String timestamp;
+        private Long createdAtMs;
 
         // Getters and Setters
         public String getAuthor() { return author; }
@@ -457,5 +514,7 @@ public class TicketSupportService {
         public void setMessage(String message) { this.message = message; }
         public String getTimestamp() { return timestamp; }
         public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+        public Long getCreatedAtMs() { return createdAtMs; }
+        public void setCreatedAtMs(Long createdAtMs) { this.createdAtMs = createdAtMs; }
     }
 }

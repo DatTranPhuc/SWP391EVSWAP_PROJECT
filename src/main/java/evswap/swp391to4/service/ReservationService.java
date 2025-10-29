@@ -1,5 +1,12 @@
 package evswap.swp391to4.service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.entity.Station;
@@ -7,12 +14,6 @@ import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -62,4 +63,38 @@ public class ReservationService {
                                      Instant reservedStart,
                                      String status) {
     }
+    
+    @Transactional(readOnly = true)
+    public Reservation getById(Integer reservationId) {
+        return reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đặt lịch"));
+    }
+
+    @Transactional(readOnly = true)
+    public Reservation findByIdOrThrow(Integer reservationId) {
+        return getById(reservationId);
+    }
+
+    @Transactional
+    public Reservation cancelReservation(Integer reservationId, Integer driverId) {
+        Reservation reservation = reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đặt lịch"));
+        
+        if (!reservation.getDriver().getDriverId().equals(driverId)) {
+            throw new IllegalStateException("Bạn không có quyền hủy đặt lịch này");
+        }
+        
+        String status = reservation.getStatus() != null ? reservation.getStatus().toLowerCase() : "";
+        if ("completed".equals(status) || "canceled".equals(status) || "failed".equals(status)) {
+            throw new IllegalStateException("Không thể hủy đặt lịch đã hoàn tất hoặc đã hủy");
+        }
+        
+        if ("in_progress".equals(status)) {
+            throw new IllegalStateException("Không thể hủy đặt lịch đang được xử lý");
+        }
+        
+        reservation.setStatus("canceled");
+        return reservationRepo.save(reservation);
+    }
 }
+

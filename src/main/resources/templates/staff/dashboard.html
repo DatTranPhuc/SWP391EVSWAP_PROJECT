@@ -25,6 +25,7 @@
             <a th:href="@{/staff/dashboard}" class="nav-link-button active">Tổng quan</a>
             <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
             <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
+            <a th:href="@{/staff/swaps}" class="nav-link-button">Đổi pin</a>
             <a href="#" class="nav-link-button">Giao dịch</a>
         </nav>
 
@@ -148,13 +149,13 @@
             <span class="card-link">Đi đến &rarr;</span>
         </a>
 
-        <a href="#" class="staff-card">
+        <a th:href="@{/staff/swaps}" class="staff-card">
             <div class="card-icon">
                 <i class="fas fa-history"></i>
             </div>
-            <h3 class="card-title">Lịch sử Giao dịch</h3>
+            <h3 class="card-title">Đổi pin</h3>
             <p class="card-description">
-                Xem lại các lượt đổi pin, thanh toán và các hoạt động đã diễn ra tại trạm của bạn.
+                Xử lý đặt lịch trong ngày, check-in QR, bắt đầu và hoàn tất đổi pin.
             </p>
             <span class="card-link">Đi đến &rarr;</span>
         </a>

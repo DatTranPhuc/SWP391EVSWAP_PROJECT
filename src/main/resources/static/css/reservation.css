@@ -553,34 +553,167 @@ body.reservation-body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.reservation-item:hover {
+    border-color: rgba(148, 163, 184, 0.24);
+    transform: translateY(-1px);
 }
 
 .reservation-info {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
 
 .reservation-info strong {
     font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.reservation-right {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 32px;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.reservation-status-col {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 160px;
+    max-width: 200px;
+}
+
+.reservation-actions-col {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 180px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.action-buttons form {
+    margin: 0;
+    display: inline-block;
+}
+
+.action-buttons .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-detail {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--text-primary);
+    border: 1px solid rgba(99, 102, 241, 0.24);
+}
+
+.btn-detail:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.36);
+    color: var(--accent-secondary);
+}
+
+.btn-cancel {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.24);
+}
+
+.btn-cancel:hover {
+    background: rgba(248, 113, 113, 0.2);
+    border-color: rgba(248, 113, 113, 0.36);
+    color: #fca5a5;
 }
 
 .reservation-status {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 999px;
     background: rgba(99, 102, 241, 0.2);
     color: var(--accent-secondary);
     border: 1px solid rgba(99, 102, 241, 0.32);
+    white-space: nowrap;
+    font-weight: 600;
+    flex-shrink: 0;
+    display: inline-block;
 }
 
 .reservation-status.pending {
     color: var(--accent-warning);
     background: rgba(250, 204, 21, 0.16);
     border-color: rgba(250, 204, 21, 0.28);
+}
+
+.reservation-status.confirmed {
+    color: var(--accent-secondary);
+    background: rgba(34, 211, 238, 0.16);
+    border-color: rgba(34, 211, 238, 0.28);
+}
+
+.reservation-status.in-progress {
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.32);
+}
+
+.reservation-status.completed {
+    color: var(--accent-success);
+    background: rgba(74, 222, 128, 0.16);
+    border-color: rgba(74, 222, 128, 0.28);
+}
+
+.reservation-status.canceled {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.16);
+    border-color: rgba(248, 113, 113, 0.28);
+}
+
+.reservation-detail-content {
+    margin-top: 24px;
+}
+
+.qr-token {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: var(--radius-sm);
+    word-break: break-all;
+    margin-top: 8px;
+}
+
+.qr-expiry {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.swap-transaction-info {
+    margin-top: 16px;
 }
 
 .reservation-empty {
@@ -692,6 +825,40 @@ body.reservation-body {
 
     .progress-step::after {
         display: none;
+    }
+
+    .reservation-right {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .reservation-status-col {
+        min-width: unset;
+        max-width: none;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .reservation-actions-col {
+        min-width: unset;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .reservation-status {
+        align-self: flex-start;
     }
 }
 

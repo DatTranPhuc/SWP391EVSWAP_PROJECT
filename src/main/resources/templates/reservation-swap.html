@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bước Đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div>
+        <span class="subtitle">Bước 3: Đổi pin</span>
+        <h1 class="page-title">Chuẩn bị tại trạm</h1>
+        <p class="page-hint" th:text="${'Đến trạm ' + stationName + ' - ' + stationAddress}">Đến trạm ...</p>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/schedule}">Quay về</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <section class="reservation-progress">
+        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+            <li class="progress-step" data-step="search">Tìm trạm</li>
+            <li class="progress-step" data-step="schedule">Đặt lịch</li>
+            <li class="progress-step" data-step="payment">Thanh toán</li>
+            <li class="progress-step" data-step="swap">Đổi pin</li>
+            <li class="progress-step" data-step="done">Hoàn tất</li>
+        </ul>
+    </section>
+
+    <section class="reservation-layout">
+        <div class="reservation-map-panel booking-details" style="display:flex; align-items:center; justify-content:center;">
+            <div style="text-align:center;">
+                <h2>Mã QR Check-in</h2>
+                <div class="qr-token" style="font-size: 1.1rem; word-break: break-all;" th:text="${qrToken}">QR-TOKEN</div>
+                <div class="countdown" id="countdown">15:00</div>
+                <div style="margin-top:.5rem;">
+                    <button class="btn" id="copyBtn" type="button">Sao chép token</button>
+                </div>
+                <p class="map-caption">Trình mã này cho nhân viên trạm để check-in. Mã sẽ hết hạn sau thời gian đếm ngược.</p>
+            </div>
+        </div>
+        <aside class="reservation-sidebar booking-form">
+            <h2>Hướng dẫn nhanh</h2>
+            <ol class="steps">
+                <li>Đến đúng trạm đã đặt.</li>
+                <li>Mở trang này, đưa mã cho nhân viên quét hoặc nhập.</li>
+                <li>Chờ bắt đầu và hoàn tất đổi pin.</li>
+            </ol>
+            <div class="alert info">Nếu mã hết hạn, tải lại trang để nhận mã mới.</div>
+        </aside>
+    </section>
+</main>
+
+<script>
+    const progressSteps = document.getElementById('progressSteps');
+    if (progressSteps) {
+        const order = ['search', 'schedule', 'payment', 'swap', 'done'];
+        const currentStep = progressSteps.dataset.step || 'swap';
+        const currentIndex = order.indexOf(currentStep);
+        Array.from(progressSteps.children).forEach(item => {
+            const step = item.getAttribute('data-step');
+            const index = order.indexOf(step);
+            if (index < currentIndex) item.classList.add('is-complete');
+            else if (index === currentIndex) item.classList.add('is-current');
+        });
+    }
+
+    const expiresAt = new Date("[[${#temporals.format(qrExpiresAt, 'yyyy-MM-dd''T''HH:mm:ssXXX')}]]").getTime();
+    const countdownEl = document.getElementById('countdown');
+    const timer = setInterval(() => {
+        const now = Date.now();
+        const diff = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        const m = String(Math.floor(diff / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        if (countdownEl) countdownEl.textContent = `${m}:${s}`;
+        if (diff <= 0) clearInterval(timer);
+    }, 500);
+
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const txt = document.querySelector('.qr-token')?.textContent || '';
+            navigator.clipboard.writeText(txt);
+            copyBtn.textContent = 'Đã sao chép';
+            setTimeout(() => copyBtn.textContent = 'Sao chép token', 1500);
+        });
+    }
+</script>
+
+</body>
+</html>
+
+

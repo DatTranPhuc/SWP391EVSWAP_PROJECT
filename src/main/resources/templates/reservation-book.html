@@ -84,6 +84,14 @@
                     <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
                 </div>
             </form>
+            <div class="qr-block" th:if="${qrToken}">
+                <h3>Mã QR check-in</h3>
+                <p>Đưa mã này cho nhân viên trạm để quét khi đến nơi. Mã hết hạn trong 15 phút.</p>
+                <div class="qr-token" th:text="${qrToken}">QR-TOKEN</div>
+                <div class="form-actions" style="margin-top: .75rem;">
+                    <a class="btn" th:if="${reservationId}" th:href="@{|/reservations/swap?reservationId=${reservationId}|}">Đi đến bước Đổi pin</a>
+                </div>
+            </div>
         </aside>
     </section>
 
@@ -99,11 +107,27 @@
                     <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
                     <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
                 </div>
-                <span class="reservation-status"
-                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
-                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
-                    Đang chờ xác nhận
-                </span>
+                <div class="reservation-right">
+                    <div class="reservation-status-col">
+                        <span class="reservation-status"
+                              th:classappend="${reservation.status() == 'pending' ? ' pending' : (reservation.status() == 'confirmed' ? ' confirmed' : (reservation.status() == 'completed' ? ' completed' : (reservation.status() == 'in_progress' ? ' in-progress' : (reservation.status() == 'canceled' ? ' canceled' : ''))))}"
+                              th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : (reservation.status() == 'confirmed' ? 'Đã xác nhận' : (reservation.status() == 'completed' ? 'Hoàn tất' : (reservation.status() == 'in_progress' ? 'Đang xử lý' : (reservation.status() == 'canceled' ? 'Đã hủy' : reservation.status()))))}">
+                            Đang chờ xác nhận
+                        </span>
+                    </div>
+                    <div class="reservation-actions-col">
+                        <div class="action-buttons">
+                            <a class="btn ghost btn-detail" th:href="@{|/reservations/${reservation.reservationId()}|}">Chi tiết</a>
+                            <form th:if="${reservation.status() == 'pending' or reservation.status() == 'confirmed'}" 
+                                  th:action="@{|/reservations/${reservation.reservationId()}/cancel|}" 
+                                  method="post" 
+                                  class="cancel-form"
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt lịch này?');">
+                                <button class="btn ghost btn-cancel" type="submit">Hủy</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </article>
         </div>
     </section>

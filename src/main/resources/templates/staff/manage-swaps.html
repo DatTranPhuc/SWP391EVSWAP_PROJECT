@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đổi pin - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/staff.css}">
+</head>
+<body class="staff-body">
+
+<header class="staff-top-nav">
+    <div class="container nav-inner">
+        <a th:href="@{/staff/dashboard}" class="brand">
+            <i class="fas fa-charging-station brand-icon"></i>
+            <span th:text="${stationName ?: 'Staff'}">Tên Trạm</span>
+        </a>
+        <nav class="nav-links">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
+            <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
+            <a th:href="@{/staff/swaps}" class="nav-link-button active">Đổi pin</a>
+        </nav>
+        <div class="auth-area">
+            <form th:action="@{/logout}" method="POST" style="margin: 0;">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <header class="staff-header">
+        <h1 class="staff-title">Quản lý đổi pin</h1>
+        <p class="staff-subtitle">Xử lý đặt lịch trong ngày: quét QR, bắt đầu, hoàn tất đổi pin.</p>
+    </header>
+
+    <div class="staff-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1rem;">
+        <div class="staff-card" style="text-align:center;">
+            <h2 style="margin:0; font-weight:800; color: var(--accent-primary);" th:text="${reservations != null ? reservations.size() : 0}">0</h2>
+            <div class="card-title">Đơn hôm nay</div>
+        </div>
+        <div class="staff-card" style="text-align:center;">
+            <h2 style="margin:0; font-weight:800; color: var(--success-green);"
+                th:text="${reservations != null ? reservations.?[checkedInAt != null].size() : 0}">0</h2>
+            <div class="card-title">Đã check-in</div>
+        </div>
+        <div class="staff-card" style="text-align:center;">
+            <h2 style="margin:0; font-weight:800; color: var(--text-dark);"
+                th:text="${reservations != null ? reservations.?[status == 'completed'].size() : 0}">0</h2>
+            <div class="card-title">Đã hoàn tất</div>
+        </div>
+    </div>
+
+    <div th:if="${successMessage}" class="staff-alert success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="staff-alert error" th:text="${errorMessage}"></div>
+
+    <section class="staff-card">
+        <h2 class="card-title">Check-in bằng QR</h2>
+        <form th:action="@{/staff/swaps/checkin/qr}" method="post" class="form-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Mã QR/Token</label>
+                <input class="form-input" type="text" name="token" placeholder="Dán token QR từ ứng dụng của tài xế" autocomplete="off">
+                <div class="form-hint">Mã QR có hiệu lực 15 phút kể từ lúc tạo.</div>
+            </div>
+            <div class="form-actions" style="grid-column: 1 / -1;">
+                <button class="btn primary" type="submit" title="Xác nhận check-in bằng QR">Check-in</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="staff-content-card">
+        <div class="content-header">
+            <h2>Đặt lịch hôm nay</h2>
+        </div>
+        <div class="empty-state" th:if="${reservations == null or reservations.isEmpty()}">
+            Không có đặt lịch nào trong ngày.
+        </div>
+        <table class="staff-table" th:if="${reservations != null and !reservations.isEmpty()}">
+            <thead>
+            <tr>
+                <th>Thời gian</th>
+                <th>Tài xế</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${reservations}">
+                <td th:text="${#temporals.format(r.reservedStart, 'HH:mm')}">09:00</td>
+                <td th:text="${r.driver.fullName}">Nguyễn Văn A</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${r.status == 'completed'} ? ' success' : (${r.status == 'confirmed'} ? ' info' : (${r.status == 'in_progress'} ? ' warning' : (${r.status == 'canceled' || r.status == 'failed'} ? ' error' : ' info')))"
+                          th:text="${r.status == 'pending' ? 'Đang chờ' : (r.status == 'confirmed' ? 'Đã xác nhận' : (r.status == 'in_progress' ? 'Đang xử lý' : (r.status == 'completed' ? 'Hoàn tất' : (r.status == 'canceled' ? 'Đã hủy' : (r.status == 'failed' ? 'Thất bại' : r.status))))) }">Trạng thái</span>
+                </td>
+                <td>
+                    <form th:action="@{/staff/swaps/start}" method="post" style="display:inline-block">
+                        <input type="hidden" name="reservationId" th:value="${r.reservationId}" />
+                        <button class="btn ghost" type="submit"
+                                th:disabled="${r.status == 'completed' 
+                                    or (currentInProgressId != null) 
+                                    or (firstEligibleId != null and r.reservationId != firstEligibleId)}"
+                                title="Chỉ có thể bắt đầu đơn sớm nhất khi không có giao dịch đang diễn ra">Bắt đầu</button>
+                    </form>
+                    <details style="display:inline-block; margin-left:.5rem;">
+                        <summary class="btn primary" th:classappend="${r.status == 'completed'} ? ' disabled'">Hoàn tất</summary>
+                        <form th:action="@{/staff/swaps/complete}" method="post" class="details-modal" th:attr="aria-disabled=${r.status == 'completed'}">
+                            <input type="hidden" name="reservationId" th:value="${r.reservationId}" />
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Pin trả (đang trên xe)</label>
+                                    <select class="form-select" name="batteryOutId">
+                                        <option value="">Không ghi nhận</option>
+                                        <option th:each="b : ${fullBatteries}" th:value="${b.batteryId}" th:text="${'#'+b.batteryId + ' - ' + b.model}"></option>
+                                    </select>
+                                    <div class="form-hint">Không bắt buộc nếu không kiểm kê pin trả.</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pin nhận (từ trạm)</label>
+                                    <select class="form-select" name="batteryInId">
+                                        <option value="">Không ghi nhận</option>
+                                        <option th:each="b : ${chargingBatteries}" th:value="${b.batteryId}" th:text="${'#'+b.batteryId + ' - ' + b.model}"></option>
+                                    </select>
+                                    <div class="form-hint">Ưu tiên pin đã sạc đầy/sẵn sàng.</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kết quả</label>
+                                    <select class="form-select" name="result">
+                                        <option value="success" selected>Thành công</option>
+                                        <option value="failed">Thất bại</option>
+                                        <option value="aborted">Hủy</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="align-self:end;">
+                                    <label class="form-label">Thanh toán</label>
+                                    <label class="inline"><input type="checkbox" name="recordCash" /> Ghi nhận tiền mặt</label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn ghost" type="button" onclick="this.closest('details').open=false">Huỷ</button>
+                                <button class="btn primary" type="submit" th:disabled="${r.status == 'completed'}">Xác nhận hoàn tất</button>
+                            </div>
+                        </form>
+                    </details>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+</body>
+</html>
+
+

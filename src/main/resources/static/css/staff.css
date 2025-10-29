@@ -193,6 +193,22 @@
     box-shadow: 0 24px 56px rgba(34, 211, 238, 0.28);
 }
 
+/* Better disabled states (readable but muted) */
+.btn[disabled], .btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    filter: grayscale(10%);
+}
+.btn.ghost[disabled], .btn.ghost.disabled {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+.btn.primary[disabled], .btn.primary.disabled {
+    background: linear-gradient(135deg, rgba(99,102,241,.55), rgba(34,211,238,.55));
+    color: #0b1220;
+}
+
 /* 6. Nội dung chính (Main Content) (ĐỔI TÊN CLASS)
 ------------------------------------------ */
 main.container {
@@ -322,6 +338,36 @@ main.container {
     text-align: right;
 }
 
+/* 10.1. Form utilities for inputs/selects aligned to dark theme */
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-family);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(15, 20, 30, 0.72);
+    color: var(--text-dark);
+    box-sizing: border-box;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+.form-input:focus, .form-select:focus {
+    border-color: var(--accent-secondary);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
+    outline: none;
+}
+.form-hint { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem; }
+.form-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+/* 12.1. Details modal for inline forms */
+.details-modal {
+    padding: 0.75rem;
+    background: rgba(11, 15, 26, 0.95);
+    border: 1px solid #1d2433;
+    border-radius: 12px;
+    min-width: 540px;
+}
+
 /* 11. Card cho Table (List) (ĐỔI TÊN CLASS)
 ------------------------------------------ */
 .staff-content-card { /* <--- ĐÃ ĐỔI TÊN */
@@ -390,6 +436,24 @@ main.container {
     background-color: rgba(24, 32, 45, 0.6);
 }
 /* (Các class chung như .status-badge, .action-links... giữ nguyên) */
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: .2px;
+    border: 1px solid var(--border-color);
+    color: #ffffff;
+    background: rgba(24, 32, 45, 0.65);
+}
+.badge.success { background-color: rgba(34,197,94,.18); border-color: rgba(34,197,94,.38); color: #bbf7d0; }
+.badge.info { background-color: rgba(99,102,241,.18); border-color: rgba(99,102,241,.38); color: #c7d2fe; }
+.badge.warning { background-color: rgba(250,204,21,.18); border-color: rgba(250,204,21,.4); color: #fde68a; }
+.badge.error { background-color: rgba(248,113,113,.18); border-color: rgba(248,113,113,.38); color: #fecaca; }
+
+/* Make action column buttons text darker for readability; primary already black */
+.staff-table td:nth-child(4) .btn.primary { color: #0b1220; }
 .status-badge {
     padding: 0.25rem 0.6rem;
     border-radius: 12px;

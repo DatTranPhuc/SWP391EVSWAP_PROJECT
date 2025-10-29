@@ -100,7 +100,7 @@
                 <h3>Trao đổi với Driver</h3>
             </div>
             
-            <div class="chat-messages" id="chatMessages">
+            <div class="chat-messages" id="chatMessages" th:data-ticket-id="${ticket.ticketId}">
                 <div th:if="${comments == null or comments.isEmpty()}" class="chat-empty">
                     Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!
                 </div>
@@ -116,7 +116,7 @@
             </div>
             
             <div class="chat-input-container">
-                <form th:action="@{/staff/tickets/{id}/comment(id=${ticket.ticketId})}" method="post" class="chat-form">
+                <form th:action="@{/staff/tickets/{id}/comment(id=${ticket.ticketId})}" method="post" class="chat-form" id="chatForm">
                     <textarea name="message" 
                               placeholder="Nhập tin nhắn của bạn..." 
                               maxlength="500" 
@@ -802,6 +802,7 @@
     border-radius: 12px;
     animation: messageSlide 0.3s ease;
 }
+.message-bubble.pending { opacity: 0.7; }
 
 .message-wrapper.left .message-bubble {
     background: linear-gradient(135deg, rgba(107, 114, 128, 0.3), rgba(75, 85, 99, 0.2));
@@ -1150,6 +1151,10 @@ function removeFileStaff() {
 function initializeChat() {
     const chatMessages = document.getElementById('chatMessages');
     const textarea = document.querySelector('.chat-form textarea');
+    const form = document.getElementById('chatForm');
+    const ticketId = chatMessages ? chatMessages.getAttribute('data-ticket-id') : null;
+    const endpointBase = ticketId ? `/staff/tickets/${ticketId}/comments` : null;
+    let lastTimestampMs = Date.now();
     
     // Auto-scroll to bottom on page load
     if (chatMessages) {
@@ -1167,12 +1172,97 @@ function initializeChat() {
         textarea.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                const form = this.closest('form');
-                if (form) {
-                    form.submit();
-                }
+                if (form) form.dispatchEvent(new Event('submit', { cancelable: true }));
             }
         });
+    }
+
+    // Optimistic send via fetch JSON
+    if (form && endpointBase) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const message = textarea.value.trim();
+            if (!message) return;
+
+            const pendingEl = appendMessage({ author: 'staff', name: 'Bạn', message, timestamp: 'Đang gửi...', pending: true });
+            textarea.value = '';
+            textarea.style.height = 'auto';
+
+            try {
+                const res = await fetch(endpointBase, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                if (data && !data.error) {
+                    if (pendingEl) {
+                        const bubble = pendingEl.querySelector('.message-bubble');
+                        if (bubble) {
+                            bubble.querySelector('.message-author').textContent = data.name || 'Bạn';
+                            bubble.querySelector('.message-text').textContent = data.message || message;
+                            bubble.querySelector('.message-time').textContent = data.timestamp || '';
+                            bubble.classList.remove('pending');
+                        }
+                    }
+                    if (data.createdAtMs) lastTimestampMs = Math.max(lastTimestampMs, data.createdAtMs);
+                } else {
+                    markAsFailed(pendingEl);
+                }
+            } catch (err) {
+                markAsFailed(pendingEl);
+            }
+        });
+    }
+
+    // Polling new messages every 3s
+    if (endpointBase) {
+        setInterval(async () => {
+            try {
+                const url = `${endpointBase}?since=${lastTimestampMs}`;
+                const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+                if (!res.ok) return;
+                const list = await res.json();
+                if (Array.isArray(list) && list.length > 0) {
+                    list.forEach(item => {
+                        appendMessage({ author: item.author, name: item.name, message: item.message, timestamp: item.timestamp });
+                        if (item.createdAtMs) lastTimestampMs = Math.max(lastTimestampMs, item.createdAtMs);
+                    });
+                    if (chatMessages && Math.abs(chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight) < 48) {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+            } catch (e) { /* silent */ }
+        }, 3000);
+    }
+
+    function appendMessage({ author, name, message, timestamp, pending }) {
+        if (!chatMessages) return null;
+        const wrapper = document.createElement('div');
+        wrapper.className = `message-wrapper ${author === 'staff' ? 'right' : 'left'}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        if (pending) bubble.classList.add('pending');
+        bubble.innerHTML = `
+            <div class="message-author">${name || ''}</div>
+            <div class="message-text"></div>
+            <div class="message-time">${timestamp || ''}</div>
+        `;
+        bubble.querySelector('.message-text').textContent = message || '';
+        wrapper.appendChild(bubble);
+        const empty = chatMessages.querySelector('.chat-empty');
+        if (empty) empty.remove();
+        chatMessages.appendChild(wrapper);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return wrapper;
+    }
+
+    function markAsFailed(el) {
+        if (!el) return;
+        const timeEl = el.querySelector('.message-time');
+        if (timeEl) timeEl.textContent = 'Gửi thất bại';
+        const bubble = el.querySelector('.message-bubble');
+        if (bubble) bubble.style.opacity = '0.7';
     }
 }
 </script>

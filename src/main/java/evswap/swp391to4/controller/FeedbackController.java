@@ -41,8 +41,8 @@ public class FeedbackController {
             return "redirect:/login";
         }
 
-        // Lấy danh sách trạm cho dropdown
-        List<StationResponse> stations = stationService.getAllStations();
+        // Lấy danh sách trạm 15 ngày gần đây theo giao dịch
+        List<StationResponse> stations = feedbackService.getRecentStationsForDriver(driver.getDriverId());
         model.addAttribute("stations", stations);
 
         // Lấy feedback của driver này
@@ -75,7 +75,7 @@ public class FeedbackController {
             }
             
             // Load lại dữ liệu cần thiết
-            List<StationResponse> stations = stationService.getAllStations();
+            List<StationResponse> stations = feedbackService.getRecentStationsForDriver(driver.getDriverId());
             model.addAttribute("stations", stations);
             List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByDriver(driver.getDriverId());
             model.addAttribute("feedbackList", feedbackList);
@@ -93,7 +93,7 @@ public class FeedbackController {
         }
 
         // Load lại dữ liệu
-        List<StationResponse> stations = stationService.getAllStations();
+        List<StationResponse> stations = feedbackService.getRecentStationsForDriver(driver.getDriverId());
         model.addAttribute("stations", stations);
         List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByDriver(driver.getDriverId());
         model.addAttribute("feedbackList", feedbackList);

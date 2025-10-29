@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đặt lịch - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Chi tiết đặt lịch</span>
+            <h1 class="page-title">Thông tin đặt lịch đổi pin</h1>
+            <p class="page-hint" th:text="${'Xin chào ' + driverName + '! Xem chi tiết đặt lịch và theo dõi tiến trình đổi pin.'}">
+                Xem chi tiết đặt lịch và theo dõi tiến trình đổi pin.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/schedule}">Quay về</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-layout">
+        <div class="reservation-map-panel booking-details">
+            <div class="panel-heading">
+                <div>
+                    <h2 th:text="${reservation.station.name}">EV Swap Station</h2>
+                    <p class="map-caption">Thông tin chi tiết về đặt lịch đổi pin của bạn.</p>
+                </div>
+            </div>
+            
+            <div class="reservation-detail-content">
+                <dl class="station-summary">
+                    <div>
+                        <dt>Mã đặt lịch</dt>
+                        <dd th:text="${'#' + reservation.reservationId}">#12345</dd>
+                    </div>
+                    <div>
+                        <dt>Trạng thái</dt>
+                        <dd>
+                            <span class="reservation-status"
+                                  th:classappend="${reservation.status == 'pending' ? ' pending' : (reservation.status == 'confirmed' ? ' confirmed' : (reservation.status == 'completed' ? ' completed' : (reservation.status == 'in_progress' ? ' in-progress' : (reservation.status == 'canceled' ? ' canceled' : ''))))}"
+                                  th:text="${reservation.status == 'pending' ? 'Đang chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'in_progress' ? 'Đang xử lý' : (reservation.status == 'completed' ? 'Hoàn tất' : (reservation.status == 'canceled' ? 'Đã hủy' : reservation.status))))}">
+                                Đang chờ xác nhận
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Thời gian đặt lịch</dt>
+                        <dd th:text="${#temporals.format(reservation.reservedStart, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</dd>
+                    </div>
+                    <div>
+                        <dt>Địa chỉ trạm</dt>
+                        <dd th:text="${reservation.station.address}">123 Nguyễn Văn Cừ, Q.5</dd>
+                    </div>
+                    <div th:if="${reservation.createdAt != null}">
+                        <dt>Ngày tạo</dt>
+                        <dd th:text="${#temporals.format(reservation.createdAt, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:00</dd>
+                    </div>
+                    <div th:if="${reservation.checkedInAt != null}">
+                        <dt>Thời gian check-in</dt>
+                        <dd th:text="${#temporals.format(reservation.checkedInAt, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</dd>
+                    </div>
+                    <div th:if="${reservation.qrToken != null}">
+                        <dt>Mã QR check-in</dt>
+                        <dd>
+                            <div class="qr-token" th:text="${reservation.qrToken}">QR-TOKEN</div>
+                            <div th:if="${reservation.qrExpiresAt != null}" class="qr-expiry">
+                                <span th:if="${reservation.qrExpiresAt.isBefore(T(java.time.Instant).now())}" style="color: #f87171;">Đã hết hạn</span>
+                                <span th:unless="${reservation.qrExpiresAt.isBefore(T(java.time.Instant).now())}" 
+                                      th:text="${'Hết hạn lúc: ' + #temporals.format(reservation.qrExpiresAt, 'dd/MM/yyyy HH:mm')}">Hết hạn lúc: 10/06/2024 08:45</span>
+                            </div>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <aside class="reservation-sidebar booking-form">
+            <h2>Thông tin giao dịch</h2>
+            <div th:if="${swapTransaction == null}">
+                <p class="map-caption">Chưa có giao dịch đổi pin cho đặt lịch này.</p>
+            </div>
+            <div th:if="${swapTransaction != null}" class="swap-transaction-info">
+                <dl class="station-summary">
+                    <div>
+                        <dt>Mã giao dịch</dt>
+                        <dd th:text="${'#' + swapTransaction.swapId}">#12345</dd>
+                    </div>
+                    <div>
+                        <dt>Kết quả</dt>
+                        <dd>
+                            <span class="reservation-status"
+                                  th:classappend="${swapTransaction.result == 'success' ? ' completed' : (swapTransaction.result == 'failed' ? ' canceled' : (swapTransaction.result == 'aborted' ? ' canceled' : ''))}"
+                                  th:text="${swapTransaction.result == 'success' ? 'Thành công' : (swapTransaction.result == 'failed' ? 'Thất bại' : 'Đã hủy')}">
+                                Thành công
+                            </span>
+                        </dd>
+                    </div>
+                    <div th:if="${swapTransaction.swappedAt != null}">
+                        <dt>Thời gian đổi pin</dt>
+                        <dd th:text="${#temporals.format(swapTransaction.swappedAt, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:35</dd>
+                    </div>
+                    <div th:if="${swapTransaction.batteryOut != null}">
+                        <dt>Pin trả</dt>
+                        <dd th:text="${swapTransaction.batteryOut.batteryId + ' - ' + (swapTransaction.batteryOut.model != null ? swapTransaction.batteryOut.model : 'N/A')}">BAT-001 - Model A</dd>
+                    </div>
+                    <div th:if="${swapTransaction.batteryIn != null}">
+                        <dt>Pin nhận</dt>
+                        <dd th:text="${swapTransaction.batteryIn.batteryId + ' - ' + (swapTransaction.batteryIn.model != null ? swapTransaction.batteryIn.model : 'N/A')}">BAT-002 - Model A</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="form-actions" style="margin-top: 24px;">
+                <a class="btn ghost" th:href="@{/reservations/schedule}">Quay về</a>
+                <a th:if="${reservation.status == 'pending' or reservation.status == 'confirmed'}" 
+                   class="btn ghost" 
+                   th:href="@{|/reservations/swap?reservationId=${reservation.reservationId}|}"
+                   style="color: var(--accent-secondary);">
+                    Đi đến bước Đổi pin
+                </a>
+                <form th:if="${reservation.status == 'pending' or reservation.status == 'confirmed'}" 
+                      th:action="@{|/reservations/${reservation.reservationId}/cancel|}" 
+                      method="post" 
+                      style="display: inline-block;"
+                      onsubmit="return confirm('Bạn có chắc chắn muốn hủy đặt lịch này?');">
+                    <button class="btn ghost" type="submit" style="color: #f87171;">Hủy đặt lịch</button>
+                </form>
+            </div>
+        </aside>
+    </section>
+</main>
+
+</body>
+</html>
+

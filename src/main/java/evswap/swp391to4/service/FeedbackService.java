@@ -1,6 +1,7 @@
 package evswap.swp391to4.service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import evswap.swp391to4.dto.FeedbackRequest;
 import evswap.swp391to4.dto.FeedbackResponse;
+import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Feedback;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.repository.FeedbackRepository;
 import evswap.swp391to4.repository.StationRepository;
+import evswap.swp391to4.repository.SwapTransactionRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,6 +25,7 @@ public class FeedbackService {
 
     private final FeedbackRepository feedbackRepo;
     private final StationRepository stationRepo;
+    private final SwapTransactionRepository swapRepo;
 
     /**
      * Tạo feedback mới từ driver
@@ -31,6 +35,20 @@ public class FeedbackService {
         // Kiểm tra station có tồn tại không
         Station station = stationRepo.findById(request.getStationId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy trạm"));
+
+        // Rule: chỉ cho phép tạo feedback khi có giao dịch swap trong 15 ngày
+        Instant since = Instant.now().minus(15, ChronoUnit.DAYS);
+        boolean allowed = swapRepo.existsByReservation_Driver_DriverIdAndSwappedAtAfter(driver.getDriverId(), since);
+        if (!allowed) {
+            throw new IllegalStateException("Chỉ tạo feedback khi có giao dịch trong 15 ngày");
+        }
+
+        // Rule: chỉ cho phép chọn trạm đã giao dịch trong 15 ngày
+        List<Integer> recentStationIds = swapRepo.findByReservation_Driver_DriverIdAndSwappedAtAfter(driver.getDriverId(), since)
+                .stream().map(tx -> tx.getStation().getStationId()).distinct().toList();
+        if (!recentStationIds.contains(station.getStationId())) {
+            throw new IllegalStateException("Chỉ có thể chọn trạm đã giao dịch trong 15 ngày");
+        }
 
         // Kiểm tra rating hợp lệ
         if (request.getRating() == null || request.getRating() < 1 || request.getRating() > 5) {
@@ -48,6 +66,28 @@ public class FeedbackService {
 
         Feedback saved = feedbackRepo.save(feedback);
         return mapToResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StationResponse> getRecentStationsForDriver(Integer driverId) {
+        Instant since = Instant.now().minus(15, ChronoUnit.DAYS);
+        return swapRepo.findByReservation_Driver_DriverIdAndSwappedAtAfter(driverId, since)
+                .stream()
+                .map(tx -> tx.getStation())
+                .distinct()
+                .map(this::toStationResponse)
+                .toList();
+    }
+
+    private StationResponse toStationResponse(Station station) {
+        return StationResponse.builder()
+                .stationId(station.getStationId())
+                .name(station.getName())
+                .address(station.getAddress())
+                .status(station.getStatus())
+                .latitude(station.getLatitude())
+                .longitude(station.getLongitude())
+                .build();
     }
 
     /**
