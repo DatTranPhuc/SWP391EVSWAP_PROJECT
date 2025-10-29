@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+    <script src="/js/api-client.js" defer></script>
+    <script src="/js/auth.js" defer></script>
 </head>
 <body>
 <header class="auth-nav">
@@ -63,11 +65,12 @@
             <p>Đăng nhập vào hệ thống EV SWAP để bắt đầu hành trình của bạn.</p>
         </div>
 
-        <div th:if="${loginError}" class="alert-message alert-error" th:text="${loginError}"></div>
-        <div th:if="${loginSuccess}" class="alert-message alert-success" th:text="${loginSuccess}"></div>
-        <div th:if="${logoutMessage}" class="alert-message alert-success" th:text="${logoutMessage}"></div>
+        <div id="loginFeedback" class="alert-message" style="display:none;"></div>
 
-        <form class="auth-form" th:action="@{/login}" method="post">
+        <form class="auth-form"
+              data-api-endpoint="/api/auth/login"
+              data-api-method="POST"
+              data-feedback-target="loginFeedback">
             <div class="auth-field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" placeholder="example@email.com" required>
