@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/dashboard")
+@RequestMapping("/api/dashboard")
 public class DashboardController {
 
     @GetMapping
@@ -36,7 +36,7 @@ public class DashboardController {
                                                                                   HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            Map<String, String> data = Map.of("next", "/login");
+            Map<String, String> data = Map.of("next", "/api/auth/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Map<String, String>>failure("Vui lòng đăng nhập để sử dụng chức năng.").withData(data));
         }
@@ -46,17 +46,17 @@ public class DashboardController {
         data.put("selected", normalizedFeature);
 
         if ("Tổng quan".equalsIgnoreCase(normalizedFeature)) {
-            data.put("next", "/dashboard");
+            data.put("next", "/api/dashboard");
             return ResponseEntity.ok(ApiResponse.success("Bạn đang ở trang tổng quan EV SWAP.", data));
         }
 
         if ("Phương tiện".equalsIgnoreCase(normalizedFeature)) {
-            data.put("next", "/vehicles");
+            data.put("next", "/api/vehicles");
             return ResponseEntity.ok(ApiResponse.success("Đi tới trang quản lý phương tiện.", data));
         }
 
         if ("Đổi pin".equalsIgnoreCase(normalizedFeature) || "Tìm trạm".equalsIgnoreCase(normalizedFeature)) {
-            data.put("next", "/reservations/schedule");
+            data.put("next", "/api/reservations/schedule");
             return ResponseEntity.ok(ApiResponse.success("Đi tới đặt lịch đổi pin.", data));
         }
 

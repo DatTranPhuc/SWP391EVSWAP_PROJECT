@@ -30,7 +30,7 @@ import java.util.Random;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final DriverService driverService;
@@ -44,7 +44,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> loginPage() {
         Map<String, Object> data = Map.of(
                 "requiredFields", new String[]{"email", "password"},
-                "submit", "POST /login"
+                "submit", "POST /api/auth/login"
         );
         return ResponseEntity.ok(ApiResponse.success("Hiển thị form đăng nhập ở FE.", data));
     }
@@ -64,7 +64,7 @@ public class AuthController {
             session.setAttribute("loggedInDriver", driver);
             Map<String, Object> data = new HashMap<>();
             data.put("role", "DRIVER");
-            data.put("next", "/dashboard");
+            data.put("next", "/api/dashboard");
             data.put("displayName", driver.getFullName());
             return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
         } catch (Exception ignored) {
@@ -76,7 +76,7 @@ public class AuthController {
             session.setAttribute("loggedInStaff", staff);
             Map<String, Object> data = new HashMap<>();
             data.put("role", "STAFF");
-            data.put("next", "/staff/dashboard");
+            data.put("next", "/api/staff/dashboard");
             data.put("displayName", staff.getFullName());
             return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
         } catch (Exception ignored) {
@@ -88,7 +88,7 @@ public class AuthController {
             session.setAttribute("loggedInAdmin", admin);
             Map<String, Object> data = new HashMap<>();
             data.put("role", "ADMIN");
-            data.put("next", "/admin/dashboard");
+            data.put("next", "/api/admin/dashboard");
             data.put("displayName", admin.getFullName());
             return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
         } catch (Exception adminException) {
@@ -107,7 +107,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerPage() {
         Map<String, Object> data = Map.of(
                 "requiredFields", new String[]{"email", "password", "fullName", "phone"},
-                "submit", "POST /register"
+                "submit", "POST /api/auth/register"
         );
         return ResponseEntity.ok(ApiResponse.success("Hiển thị form đăng ký ở FE.", data));
     }
@@ -135,7 +135,7 @@ public class AuthController {
 
         Map<String, Object> data = new HashMap<>();
         data.put("email", email);
-        data.put("next", "/verify-otp");
+        data.put("next", "/api/auth/verify-otp");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP.", data));
     }
@@ -144,7 +144,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> verifyPage() {
         Map<String, Object> data = Map.of(
                 "requiredFields", new String[]{"email", "otp"},
-                "submit", "POST /verify-otp"
+                "submit", "POST /api/auth/verify-otp"
         );
         return ResponseEntity.ok(ApiResponse.success("Nhập OTP đã gửi tới email.", data));
     }
@@ -161,7 +161,7 @@ public class AuthController {
         Driver driver = driverService.verifyOtp(email, otp);
         Map<String, Object> data = new HashMap<>();
         data.put("driverId", driver.getDriverId());
-        data.put("next", "/vehicles/register");
+        data.put("next", "/api/vehicles/register");
         return ResponseEntity.ok(ApiResponse.success("Xác minh email thành công!", data));
     }
 
@@ -169,7 +169,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> forgotPasswordForm() {
         Map<String, Object> data = Map.of(
                 "requiredFields", new String[]{"email"},
-                "submit", "POST /forgot-password"
+                "submit", "POST /api/auth/forgot-password"
         );
         return ResponseEntity.ok(ApiResponse.success("Nhập email cần đặt lại mật khẩu.", data));
     }
@@ -209,7 +209,7 @@ public class AuthController {
 
         Map<String, Object> data = new HashMap<>();
         data.put("email", email);
-        data.put("next", "/reset-password");
+        data.put("next", "/api/auth/reset-password");
         return ResponseEntity.ok(ApiResponse.success("Đã gửi mã xác thực đến email.", data));
     }
 
@@ -217,7 +217,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> resetPasswordForm() {
         Map<String, Object> data = Map.of(
                 "requiredFields", new String[]{"email", "otp", "newPassword"},
-                "submit", "POST /reset-password"
+                "submit", "POST /api/auth/reset-password"
         );
         return ResponseEntity.ok(ApiResponse.success("Nhập email, OTP và mật khẩu mới.", data));
     }

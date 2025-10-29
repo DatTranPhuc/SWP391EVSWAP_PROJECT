@@ -29,13 +29,13 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/vehicles")
+@RequestMapping("/api/vehicles")
 public class VehicleController {
 
     private final DriverService driverService;
     private final VehicleService vehicleService;
 
-    @PostMapping("/api/drivers/{driverId}/vehicles")
+    @PostMapping("/drivers/{driverId}")
     public ResponseEntity<ApiResponse<Vehicle>> addVehicle(@PathVariable Integer driverId,
                                                            @RequestBody VehicleRequest request) {
         Vehicle vehicle = Vehicle.builder()
@@ -73,7 +73,7 @@ public class VehicleController {
         vehicleService.addVehicleToDriver(driverId, vehicle);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("next", "/login");
+        data.put("next", "/api/auth/login");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Đăng ký phương tiện thành công! Vui lòng đăng nhập.", data));
     }
@@ -82,7 +82,7 @@ public class VehicleController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> manageVehicles(HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            Map<String, Object> data = Map.of("next", "/login");
+            Map<String, Object> data = Map.of("next", "/api/auth/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Map<String, Object>>failure("Vui lòng đăng nhập để quản lý phương tiện.").withData(data));
         }

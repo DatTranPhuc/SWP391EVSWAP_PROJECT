@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/reservations")
+@RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 public class ReservationController {
 
@@ -40,7 +40,7 @@ public class ReservationController {
             HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            Map<String, Object> data = Map.of("next", "/login");
+            Map<String, Object> data = Map.of("next", "/api/auth/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Map<String, Object>>failure("Vui lòng đăng nhập để đặt lịch đổi pin.").withData(data));
         }
@@ -65,7 +65,7 @@ public class ReservationController {
                                                                             HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            Map<String, Object> data = Map.of("next", "/login");
+            Map<String, Object> data = Map.of("next", "/api/auth/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Map<String, Object>>failure("Vui lòng đăng nhập để đặt lịch đổi pin.").withData(data));
         }
@@ -87,7 +87,7 @@ public class ReservationController {
                                                                               HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            Map<String, Object> data = Map.of("next", "/login");
+            Map<String, Object> data = Map.of("next", "/api/auth/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.<Map<String, Object>>failure("Vui lòng đăng nhập để đặt lịch đổi pin.").withData(data));
         }

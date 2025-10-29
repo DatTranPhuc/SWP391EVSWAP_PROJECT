@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -50,7 +50,7 @@ public class AdminController {
         Admin admin = checkAdminLogin(session);
         Map<String, Object> data = Map.of(
                 "adminName", admin.getFullName(),
-                "next", List.of("/admin/staff", "/admin/stations")
+                "next", List.of("/api/admin/staff", "/api/admin/stations")
         );
         return ResponseEntity.ok(ApiResponse.success("Thông tin dashboard admin.", data));
     }
