@@ -1,5 +1,6 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.ApiResponse;
 import evswap.swp391to4.dto.VehicleRegistrationForm;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
@@ -7,159 +8,124 @@ import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.VehicleService;
 import jakarta.servlet.http.HttpSession;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
-@RequestMapping("/vehicles") // Đường dẫn chung cho tất cả các request trong controller này
+@RequestMapping("/api/vehicles")
 public class VehicleController {
 
     private final DriverService driverService;
     private final VehicleService vehicleService;
 
-    // API này có thể giữ nguyên hoặc thay đổi tùy theo cấu trúc API của bạn
-    @PostMapping("/api/drivers/{driverId}/vehicles")
-    public ResponseEntity<Vehicle> addVehicle(@PathVariable Integer driverId,
-                                              @RequestBody VehicleRequest request) {
+    @PostMapping("/drivers/{driverId}")
+    public ResponseEntity<ApiResponse<Vehicle>> addVehicle(@PathVariable Integer driverId,
+                                                           @RequestBody VehicleRequest request) {
         Vehicle vehicle = Vehicle.builder()
                 .vin(request.vin())
                 .plateNumber(request.plateNumber())
                 .model(request.model())
                 .build();
         Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
-        return ResponseEntity.ok(savedVehicle);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Thêm phương tiện thành công.", savedVehicle));
     }
 
-    /**
-     * Hiển thị form đăng ký phương tiện.
-     * URL: GET /vehicles/register
-     */
     @GetMapping("/register")
-    public String showRegistrationForm(@RequestParam("driverId") Integer driverId,
-                                       Model model,
-                                       RedirectAttributes redirect) {
-        try {
-            Driver driver = driverService.getDriverById(driverId);
+    public ResponseEntity<ApiResponse<Map<String, Object>>> showRegistrationForm(@RequestParam("driverId") Integer driverId) {
+        Driver driver = driverService.getDriverById(driverId);
 
-            model.addAttribute("driverId", driver.getDriverId());
-            model.addAttribute("driverName", driver.getFullName());
-            model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+        Map<String, Object> data = new HashMap<>();
+        data.put("driverId", driver.getDriverId());
+        data.put("driverName", driver.getFullName());
+        data.put("driverInitial", extractInitial(driver.getFullName()));
+        data.put("requiredFields", List.of("model", "vin", "plateNumber"));
 
-            if (!model.containsAttribute("vehicleForm")) {
-                model.addAttribute("vehicleForm", new VehicleRegistrationForm());
-            }
-
-            return "vehicle-register";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
-        }
+        return ResponseEntity.ok(ApiResponse.success("Thông tin đăng ký phương tiện.", data));
     }
 
-    /**
-     * Xử lý việc đăng ký phương tiện mới.
-     * URL: POST /vehicles/register
-     */
     @PostMapping("/register")
-    public String registerVehicle(@RequestParam("driverId") Integer driverId,
-                                  @ModelAttribute("vehicleForm") VehicleRegistrationForm form,
-                                  RedirectAttributes redirect) {
-        try {
-            Vehicle vehicle = Vehicle.builder()
-                    .model(form.getModel())
-                    .vin(form.getVin())
-                    .plateNumber(form.getPlateNumber())
-                    .build();
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerVehicle(@RequestParam("driverId") Integer driverId,
+                                                                            @RequestBody VehicleRegistrationForm form) {
+        Vehicle vehicle = Vehicle.builder()
+                .model(form.getModel())
+                .vin(form.getVin())
+                .plateNumber(form.getPlateNumber())
+                .build();
 
-            vehicleService.addVehicleToDriver(driverId, vehicle);
-            redirect.addFlashAttribute("loginSuccess", "Đăng ký phương tiện thành công! Vui lòng đăng nhập.");
-            return "redirect:/login";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("vehicleError", e.getMessage());
-            redirect.addFlashAttribute("vehicleForm", form);
-            redirect.addAttribute("driverId", driverId);
-            return "redirect:/vehicles/register";
-        }
+        vehicleService.addVehicleToDriver(driverId, vehicle);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("next", "/api/auth/login");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng ký phương tiện thành công! Vui lòng đăng nhập.", data));
     }
 
-    /**
-     * Hiển thị trang quản lý phương tiện cho tài xế đã đăng nhập.
-     * URL: GET /vehicles
-     */
     @GetMapping
-    public String manageVehicles(HttpSession session,
-                                 Model model,
-                                 RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> manageVehicles(HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
-            return "redirect:/login";
+            Map<String, Object> data = Map.of("next", "/api/auth/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.<Map<String, Object>>failure("Vui lòng đăng nhập để quản lý phương tiện.").withData(data));
         }
 
-        var vehicleCards = buildVehicleCards(driver.getDriverId());
-        model.addAttribute("driverName", driver.getFullName());
-        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("vehicleCards", vehicleCards);
-        model.addAttribute("totalVehicles", vehicleCards.size());
-        model.addAttribute("lastUpdatedAt", vehicleCards.stream()
-                .map(VehicleCardView::createdAt)
+        List<VehicleCardView> vehicleCards = buildVehicleCards(driver.getDriverId());
+        Map<String, Object> data = new HashMap<>();
+        data.put("driverName", driver.getFullName());
+        data.put("driverInitial", extractInitial(driver.getFullName()));
+        data.put("vehicleCards", vehicleCards);
+        data.put("totalVehicles", vehicleCards.size());
+        data.put("lastUpdatedAt", vehicleCards.stream()
+                .map(VehicleCardView::getCreatedAt)
                 .filter(java.util.Objects::nonNull)
                 .findFirst()
                 .orElse(null));
 
-        if (!model.containsAttribute("vehicleForm")) {
-            model.addAttribute("vehicleForm", new VehicleRegistrationForm());
-        }
-
-        return "vehicle-manage";
+        return ResponseEntity.ok(ApiResponse.success("Danh sách phương tiện", data));
     }
 
-    /**
-     * Xử lý việc thêm phương tiện mới từ trang quản lý.
-     * URL: POST /vehicles
-     */
     @PostMapping
-    public String addVehicleFromManager(@ModelAttribute("vehicleForm") VehicleRegistrationForm form,
-                                        HttpSession session,
-                                        RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<List<VehicleCardView>>> addVehicleFromManager(@RequestBody VehicleRegistrationForm form,
+                                                                                    HttpSession session) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
-            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để quản lý phương tiện");
-            return "redirect:/login";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.<List<VehicleCardView>>failure("Vui lòng đăng nhập để quản lý phương tiện."));
         }
 
-        try {
-            Vehicle vehicle = Vehicle.builder()
-                    .model(form.getModel())
-                    .vin(form.getVin())
-                    .plateNumber(form.getPlateNumber())
-                    .build();
+        Vehicle vehicle = Vehicle.builder()
+                .model(form.getModel())
+                .vin(form.getVin())
+                .plateNumber(form.getPlateNumber())
+                .build();
 
-            vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
+        vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
 
-            Driver refreshed = driverService.getDriverById(driver.getDriverId());
-            session.setAttribute("loggedInDriver", refreshed);
+        Driver refreshed = driverService.getDriverById(driver.getDriverId());
+        session.setAttribute("loggedInDriver", refreshed);
 
-            redirect.addFlashAttribute("vehicleSuccess", "Thêm phương tiện mới thành công!");
-            return "redirect:/vehicles"; // Chuyển hướng về trang quản lý
-        } catch (Exception e) {
-            redirect.addFlashAttribute("vehicleError", e.getMessage());
-            redirect.addFlashAttribute("vehicleForm", form);
-            return "redirect:/vehicles"; // Chuyển hướng về trang quản lý
-        }
+        List<VehicleCardView> updatedCards = buildVehicleCards(driver.getDriverId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Thêm phương tiện mới thành công!", updatedCards));
     }
-
-    // --- CÁC PHƯƠNG THỨC HỖ TRỢ (PRIVATE) ---
 
     private String extractInitial(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) {
@@ -171,7 +137,7 @@ public class VehicleController {
     public record VehicleRequest(String vin, String plateNumber, String model) {
     }
 
-    // Lớp nội bộ để hiển thị dữ liệu trên view, giữ nguyên
+    @Getter
     @Builder
     private static class VehicleCardView {
         private final Integer vehicleId;
@@ -187,24 +153,8 @@ public class VehicleController {
         private final int batteryPercent;
         private final String healthLabel;
         private final String healthDescription;
-
-        // Các phương thức getter giữ nguyên...
-        public Integer vehicleId() { return vehicleId; }
-        public String vehicleName() { return vehicleName; }
-        public String plateNumber() { return plateNumber; }
-        public String vin() { return vin; }
-        public String model() { return model; }
-        public Instant createdAt() { return createdAt; }
-        public String statusLabel() { return statusLabel; }
-        public String statusBadge() { return statusBadge; }
-        public String batteryModel() { return batteryModel; }
-        public String batteryStatus() { return batteryStatus; }
-        public int batteryPercent() { return batteryPercent; }
-        public String healthLabel() { return healthLabel; }
-        public String healthDescription() { return healthDescription; }
     }
 
-    // Phương thức build card view, giữ nguyên
     private List<VehicleCardView> buildVehicleCards(Integer driverId) {
         List<Vehicle> vehicles = vehicleService.getVehiclesForDriver(driverId);
         List<VehicleCardView> cards = new ArrayList<>();
@@ -252,7 +202,6 @@ public class VehicleController {
         return cards;
     }
 
-    // Phương thức đoán model pin, giữ nguyên
     private String guessBatteryModel(String vehicleModel) {
         if (vehicleModel == null) {
             return "EVS Pack 48V";

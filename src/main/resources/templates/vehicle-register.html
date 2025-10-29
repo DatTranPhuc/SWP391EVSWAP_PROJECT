@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+    <script src="/js/api-client.js" defer></script>
+    <script src="/js/auth.js" defer></script>
 </head>
 <body>
 <header class="auth-nav">
@@ -65,24 +67,28 @@
             <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
         </div>
 
-        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
-        <div th:if="${vehicleError}" class="alert-message alert-error" th:text="${vehicleError}"></div>
+        <div id="vehicleRegisterFeedback" class="alert-message" style="display:none;"></div>
 
-        <form class="auth-form vehicle-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+        <form class="auth-form vehicle-form"
+              data-api-endpoint="/api/vehicles/register"
+              data-api-method="POST"
+              data-feedback-target="vehicleRegisterFeedback"
+              data-prefill-query="driverId"
+              data-query-params="driverId">
             <input type="hidden" name="driverId" th:value="${driverId}">
 
             <div class="vehicle-form-grid">
                 <div class="auth-field">
                     <label for="model">Model xe</label>
-                    <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
+                    <input id="model" name="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
                 </div>
                 <div class="auth-field">
                     <label for="vin">Số VIN</label>
-                    <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
+                    <input id="vin" name="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
                 </div>
                 <div class="auth-field">
                     <label for="plateNumber">Biển số</label>
-                    <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
+                    <input id="plateNumber" name="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
                 </div>
             </div>
 

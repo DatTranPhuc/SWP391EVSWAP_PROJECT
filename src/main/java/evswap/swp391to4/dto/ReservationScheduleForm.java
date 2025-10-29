@@ -1,7 +1,7 @@
 package evswap.swp391to4.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -10,9 +10,9 @@ import java.time.LocalTime;
 public class ReservationScheduleForm {
     private Integer stationId;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
-    @DateTimeFormat(pattern = "HH:mm")
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime time;
 }

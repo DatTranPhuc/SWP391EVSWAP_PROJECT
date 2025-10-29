@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/auth.css}" href="/css/auth.css">
+    <script src="/js/api-client.js" defer></script>
+    <script src="/js/auth.js" defer></script>
 </head>
 <body>
 <header class="auth-nav">
@@ -70,13 +72,16 @@
             <p>Điền địa chỉ email đã đăng ký và mã OTP gồm 6 chữ số để hoàn tất kích hoạt.</p>
         </div>
 
-        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
-        <div th:if="${verifyError}" class="alert-message alert-error" th:text="${verifyError}"></div>
+        <div id="verifyFeedback" class="alert-message" style="display:none;"></div>
 
-        <form class="auth-form verification-form" th:action="@{/verify-otp}" method="post">
+        <form class="auth-form verification-form"
+              data-api-endpoint="/api/auth/verify-otp"
+              data-api-method="POST"
+              data-feedback-target="verifyFeedback"
+              data-prefill-query="email">
             <div class="auth-field">
                 <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="example@email.com" th:value="${email}" required readonly>
+                <input id="email" name="email" type="email" placeholder="example@email.com" th:value="${email}" required>
             </div>
             <div class="auth-field">
                 <label for="otp">Mã OTP</label>

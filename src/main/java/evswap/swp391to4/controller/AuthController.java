@@ -1,5 +1,6 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.dto.ApiResponse;
 import evswap.swp391to4.entity.Admin;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Staff;
@@ -8,23 +9,28 @@ import evswap.swp391to4.service.AdminService;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.StaffService;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class AuthController {
 
     private final DriverService driverService;
@@ -34,124 +40,152 @@ public class AuthController {
     private final JavaMailSender mailSender;
     private final PasswordEncoder passwordEncoder;
 
-    // ===== LOGIN =====
     @GetMapping("/login")
-    public String loginPage() {
-        return "login";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> loginPage() {
+        Map<String, Object> data = Map.of(
+                "requiredFields", new String[]{"email", "password"},
+                "submit", "POST /api/auth/login"
+        );
+        return ResponseEntity.ok(ApiResponse.success("Hiển thị form đăng nhập ở FE.", data));
     }
 
-
     @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        HttpSession session,
-                        RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody Map<String, String> request,
+                                                                  HttpSession session) {
+        String email = request.getOrDefault("email", "");
+        String password = request.getOrDefault("password", "");
+        if (email.isBlank() || password.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Map<String, Object>>failure("Email và mật khẩu là bắt buộc."));
+        }
+
         try {
-            // 1. Thử đăng nhập với tư cách Driver
             Driver driver = driverService.login(email, password);
             session.setAttribute("loggedInDriver", driver);
-            redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
-            return "redirect:/dashboard";
-        } catch (Exception driverException) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("role", "DRIVER");
+            data.put("next", "/api/dashboard");
+            data.put("displayName", driver.getFullName());
+            return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
+        } catch (Exception ignored) {
+            // continue to staff/admin
+        }
 
-            // 2. NẾU DRIVER THẤT BẠI, thử đăng nhập với tư cách Staff
-            try {
-                Staff staff = staffService.login(email, password); // <-- LOGIC MỚI CỦA STAFF
-                session.setAttribute("loggedInStaff", staff);
-                redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + staff.getFullName());
-                return "redirect:/staff/dashboard"; // <-- CHUYỂN HƯỚNG TỚI TRANG CỦA STAFF
+        try {
+            Staff staff = staffService.login(email, password);
+            session.setAttribute("loggedInStaff", staff);
+            Map<String, Object> data = new HashMap<>();
+            data.put("role", "STAFF");
+            data.put("next", "/api/staff/dashboard");
+            data.put("displayName", staff.getFullName());
+            return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
+        } catch (Exception ignored) {
+            // continue to admin
+        }
 
-            } catch (Exception staffException) {
-
-                // 3. NẾU STAFF CŨNG THẤT BẠI, thử đăng nhập với tư cách Admin
-                try {
-                    Admin admin = adminService.login(email, password);
-                    session.setAttribute("loggedInAdmin", admin);
-                    redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
-                    return "redirect:/admin/dashboard";
-
-                } catch (Exception adminException) {
-                    // 4. CẢ 3 ĐỀU THẤT BẠI
-                    // Hiển thị lỗi của lần đăng nhập thất bại cuối cùng (Admin)
-                    redirect.addFlashAttribute("loginError", adminException.getMessage());
-                    return "redirect:/login";
-                }
-            }
+        try {
+            Admin admin = adminService.login(email, password);
+            session.setAttribute("loggedInAdmin", admin);
+            Map<String, Object> data = new HashMap<>();
+            data.put("role", "ADMIN");
+            data.put("next", "/api/admin/dashboard");
+            data.put("displayName", admin.getFullName());
+            return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công!", data));
+        } catch (Exception adminException) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.<Map<String, Object>>failure(adminException.getMessage()));
         }
     }
 
-    // ===== LOGOUT =====
     @PostMapping("/logout")
-    public String logout(HttpSession session, RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpSession session) {
         session.invalidate();
-        redirect.addFlashAttribute("logoutMessage", "Bạn đã đăng xuất thành công.");
-        return "redirect:/login";
+        return ResponseEntity.ok(ApiResponse.<Void>success("Đăng xuất thành công."));
     }
 
-    // ===== REGISTER =====
     @GetMapping("/register")
-    public String registerPage() {
-        return "register";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerPage() {
+        Map<String, Object> data = Map.of(
+                "requiredFields", new String[]{"email", "password", "fullName", "phone"},
+                "submit", "POST /api/auth/register"
+        );
+        return ResponseEntity.ok(ApiResponse.success("Hiển thị form đăng ký ở FE.", data));
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String email,
-                           @RequestParam String password,
-                           @RequestParam String fullName,
-                           @RequestParam(required = false) String phone,
-                           RedirectAttributes redirect) {
-        try {
-            Driver driver = Driver.builder()
-                    .email(email)
-                    .passwordHash(password)
-                    .fullName(fullName)
-                    .phone(phone)
-                    .build();
+    public ResponseEntity<ApiResponse<Map<String, Object>>> register(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "").trim();
+        String password = request.getOrDefault("password", "").trim();
+        String fullName = request.getOrDefault("fullName", "").trim();
+        String phone = request.get("phone");
 
-            driverService.register(driver);
-            redirect.addFlashAttribute("registerSuccess", "Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP");
-            redirect.addFlashAttribute("email", email);
-            return "redirect:/verify";
-        } catch (Exception e) {
-            redirect.addFlashAttribute("registerError", e.getMessage());
-            return "redirect:/register";
+        if (email.isEmpty() || password.isEmpty() || fullName.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Map<String, Object>>failure("Email, mật khẩu và họ tên là bắt buộc."));
         }
+
+        Driver driver = Driver.builder()
+                .email(email)
+                .passwordHash(password)
+                .fullName(fullName)
+                .phone(phone)
+                .build();
+
+        driverService.register(driver);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("email", email);
+        data.put("next", "/api/auth/verify-otp");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Đăng ký thành công! Vui lòng kiểm tra email để lấy OTP.", data));
     }
 
-    // ===== VERIFY OTP =====
     @GetMapping("/verify")
-    public String verifyPage() {
-        return "verify";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> verifyPage() {
+        Map<String, Object> data = Map.of(
+                "requiredFields", new String[]{"email", "otp"},
+                "submit", "POST /api/auth/verify-otp"
+        );
+        return ResponseEntity.ok(ApiResponse.success("Nhập OTP đã gửi tới email.", data));
     }
 
     @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam String email,
-                            @RequestParam String otp,
-                            RedirectAttributes redirect) {
-        try {
-            Driver driver = driverService.verifyOtp(email, otp);
-            redirect.addFlashAttribute("verifySuccess", "Xác minh email thành công! Vui lòng đăng ký phương tiện.");
-            return "redirect:/vehicles/register?driverId=" + driver.getDriverId();
-        } catch (Exception e) {
-            redirect.addFlashAttribute("verifyError", e.getMessage());
-            redirect.addFlashAttribute("email", email);
-            return "redirect:/verify";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> verifyOtp(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "");
+        String otp = request.getOrDefault("otp", "");
+        if (email.isBlank() || otp.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Map<String, Object>>failure("Email và OTP là bắt buộc."));
         }
+
+        Driver driver = driverService.verifyOtp(email, otp);
+        Map<String, Object> data = new HashMap<>();
+        data.put("driverId", driver.getDriverId());
+        data.put("next", "/api/vehicles/register");
+        return ResponseEntity.ok(ApiResponse.success("Xác minh email thành công!", data));
     }
 
-    // ===== FORGOT PASSWORD =====
     @GetMapping("/forgot-password")
-    public String forgotPasswordForm() {
-        return "forgot-password";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> forgotPasswordForm() {
+        Map<String, Object> data = Map.of(
+                "requiredFields", new String[]{"email"},
+                "submit", "POST /api/auth/forgot-password"
+        );
+        return ResponseEntity.ok(ApiResponse.success("Nhập email cần đặt lại mật khẩu.", data));
     }
 
     @PostMapping("/forgot-password")
-    public String handleForgotPassword(@RequestParam("email") @NotBlank String email,
-                                       RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleForgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "");
+        if (email.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Map<String, Object>>failure("Email là bắt buộc."));
+        }
+
         Optional<Driver> opt = driverRepository.findByEmail(email);
         if (opt.isEmpty()) {
-            redirect.addFlashAttribute("error", "Không tìm thấy tài khoản với email này.");
-            return "redirect:/forgot-password";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<Map<String, Object>>failure("Không tìm thấy tài khoản với email này."));
         }
 
         Driver driver = opt.get();
@@ -169,31 +203,40 @@ public class AuthController {
                     + "\nMã có hiệu lực trong 10 phút.\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.\n\nTrân trọng,\nEV SWAP Team");
             mailSender.send(msg);
         } catch (Exception ex) {
-            redirect.addFlashAttribute("error", "Không thể gửi email: " + ex.getMessage());
-            return "redirect:/forgot-password";
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.<Map<String, Object>>failure("Không thể gửi email: " + ex.getMessage()));
         }
 
-        redirect.addFlashAttribute("success", "Đã gửi mã xác thực đến email. Vui lòng kiểm tra hộp thư.");
-        return "redirect:/reset-password?email=" + email;
+        Map<String, Object> data = new HashMap<>();
+        data.put("email", email);
+        data.put("next", "/api/auth/reset-password");
+        return ResponseEntity.ok(ApiResponse.success("Đã gửi mã xác thực đến email.", data));
     }
 
-    // ===== RESET PASSWORD =====
     @GetMapping("/reset-password")
-    public String resetPasswordForm(@RequestParam(value = "email", required = false) String email,
-                                    Model model) {
-        model.addAttribute("email", email);
-        return "reset-password";
+    public ResponseEntity<ApiResponse<Map<String, Object>>> resetPasswordForm() {
+        Map<String, Object> data = Map.of(
+                "requiredFields", new String[]{"email", "otp", "newPassword"},
+                "submit", "POST /api/auth/reset-password"
+        );
+        return ResponseEntity.ok(ApiResponse.success("Nhập email, OTP và mật khẩu mới.", data));
     }
 
     @PostMapping("/reset-password")
-    public String handleResetPassword(@RequestParam("email") @NotBlank String email,
-                                      @RequestParam("otp") @NotBlank String otp,
-                                      @RequestParam("newPassword") @NotBlank String newPassword,
-                                      RedirectAttributes redirect) {
+    public ResponseEntity<ApiResponse<Void>> handleResetPassword(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "");
+        String otp = request.getOrDefault("otp", "");
+        String newPassword = request.getOrDefault("newPassword", "");
+
+        if (email.isBlank() || otp.isBlank() || newPassword.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<Void>failure("Email, OTP và mật khẩu mới là bắt buộc."));
+        }
+
         Optional<Driver> opt = driverRepository.findByEmail(email);
         if (opt.isEmpty()) {
-            redirect.addFlashAttribute("error", "Email không hợp lệ.");
-            return "redirect:/reset-password?email=" + email;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<Void>failure("Email không hợp lệ."));
         }
 
         Driver driver = opt.get();
@@ -201,8 +244,8 @@ public class AuthController {
         if (driver.getEmailOtp() == null || driver.getOtpExpiry() == null
                 || Instant.now().isAfter(driver.getOtpExpiry())
                 || !driver.getEmailOtp().equals(otp)) {
-            redirect.addFlashAttribute("error", "Mã OTP không hợp lệ hoặc đã hết hạn.");
-            return "redirect:/reset-password?email=" + email;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Void>failure("Mã OTP không hợp lệ hoặc đã hết hạn."));
         }
 
         driver.setPasswordHash(passwordEncoder.encode(newPassword));
@@ -210,11 +253,9 @@ public class AuthController {
         driver.setOtpExpiry(null);
         driverRepository.save(driver);
 
-        redirect.addFlashAttribute("success", "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
-        return "redirect:/login";
+        return ResponseEntity.ok(ApiResponse.<Void>success("Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới."));
     }
 
-    // ===== UTIL =====
     private String generateOtp() {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
