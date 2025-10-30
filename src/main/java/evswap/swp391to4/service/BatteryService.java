@@ -19,9 +19,12 @@ public class BatteryService {
 
     private final BatteryRepository batteryRepo;
 
+    /**
+     * Tìm kiếm pin tại trạm
+     */
     @Transactional(readOnly = true)
     public List<Battery> searchBatteriesForStation(Station station, String searchType, String searchTerm) {
-        // (Code của bạn đã rất tốt, giữ nguyên)
+        // (Giữ nguyên code của bạn, đã tốt)
         if (searchTerm == null || searchTerm.isBlank() || searchType == null || searchType.isBlank()) {
             return batteryRepo.findByStation(station);
         }
@@ -42,22 +45,19 @@ public class BatteryService {
         }
     }
 
-    // ===============================================
-    // ===== HÀM MỚI (BỊ THIẾU) ĐƯỢC THÊM VÀO =====
-    // ===============================================
     /**
-     * Lấy TẤT CẢ pin tại trạm (dùng cho đếm tổng và load lỗi)
+     * Lấy TẤT CẢ pin tại trạm
      */
     @Transactional(readOnly = true)
     public List<Battery> getAllBatteriesForStation(Station station) {
         return batteryRepo.findByStation(station);
     }
-    // ===============================================
 
-
+    /**
+     * Cập nhật trạng thái thủ công (VD: Maintenance, Retired)
+     */
     @Transactional
     public void updateBatteryState(Integer batteryId, String newState, Staff staff) {
-        // (Code của bạn đã rất tốt, giữ nguyên)
         Battery battery = batteryRepo.findById(batteryId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy pin với ID: " + batteryId));
 
@@ -65,27 +65,60 @@ public class BatteryService {
             throw new IllegalStateException("Bạn không có quyền sửa pin không thuộc trạm của mình.");
         }
 
-        List<String> validStates = List.of("full", "charging", "maintenance", "retired");
+        List<String> validStates = List.of("maintenance", "retired");
         if (!validStates.contains(newState.toLowerCase())) {
-            throw new IllegalArgumentException("Trạng thái mới không hợp lệ: " + newState);
+            throw new IllegalStateException("Bạn chỉ có thể cập nhật trạng thái thủ công thành 'maintenance' hoặc 'retired'.");
         }
 
         battery.setState(newState.toLowerCase());
         batteryRepo.save(battery);
     }
 
+    /**
+     * Bắt đầu sạc một pin (do Staff yêu cầu).
+     * (SỬA LẠI ĐỂ DÙNG INTEGER)
+     */
+    @Transactional
+    public void startChargingBattery(Integer batteryId, Staff staff) {
+        Battery battery = batteryRepo.findById(batteryId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy pin với ID: " + batteryId));
+
+        // 1. Kiểm tra quyền
+        if (!battery.getStation().getStationId().equals(staff.getStation().getStationId())) {
+            throw new IllegalStateException("Bạn không có quyền sửa pin không thuộc trạm của mình.");
+        }
+
+        // 2. Kiểm tra logic
+        String currentState = battery.getState();
+        if (!currentState.equals("maintenance") && !currentState.equals("retired")) {
+            throw new IllegalStateException("Chỉ có thể bắt đầu sạc cho pin đang ở trạng thái 'maintenance' hoặc 'retired'. Pin này đang '" + currentState + "'.");
+        }
+
+        // 3. "Bật công tắc": Đặt trạng thái và reset SOC
+        battery.setState("charging");
+        battery.setSocPercent(0); // <-- Sửa thành số nguyên (Integer)
+
+        batteryRepo.save(battery);
+    }
+
+    /**
+     * Đếm pin theo trạng thái (Dùng cho Dashboard)
+     */
     @Transactional(readOnly = true)
     public long countBatteriesByState(Station station, String state) {
-        // (Code của bạn đã rất tốt, giữ nguyên)
         if (state == null || state.isBlank()) {
             return 0;
         }
         return batteryRepo.countByStationAndState(station, state);
     }
 
+
+    /**
+     * Tạo pin mới (SỬA LẠI ĐỂ DÙNG INTEGER)
+     * Giả định BatteryCreateRequest của bạn cũng dùng Integer
+     */
     @Transactional
     public void createBatteries(BatteryCreateRequest dto, Staff staff) {
-        // (Code của bạn đã rất tốt, giữ nguyên)
         Station staffStation = staff.getStation();
         if (staffStation == null) {
             throw new IllegalStateException("Tài khoản staff của bạn chưa được gán trạm.");
@@ -96,6 +129,14 @@ public class BatteryService {
             throw new IllegalArgumentException("Trạng thái ban đầu không hợp lệ.");
         }
 
+        // (Sửa) Kiểm tra SOH/SOC (dưới dạng Integer)
+        if (dto.getSohPercent() < 0 || dto.getSohPercent() > 100) {
+            throw new IllegalArgumentException("SOH phải ở trong khoảng 0 đến 100");
+        }
+        if (dto.getSocPercent() < 0 || dto.getSocPercent() > 100) {
+            throw new IllegalArgumentException("SOC phải ở trong khoảng 0 đến 100");
+        }
+
         List<Battery> newBatteries = new ArrayList<>();
         int quantity = dto.getQuantity();
 
@@ -104,6 +145,7 @@ public class BatteryService {
                     .model(dto.getModel())
                     .station(staffStation)
                     .state(dto.getState().toLowerCase())
+                    // (Sửa) Đảm bảo DTO truyền vào là Integer
                     .sohPercent(dto.getSohPercent())
                     .socPercent(dto.getSocPercent())
                     .build();

@@ -23,7 +23,9 @@ public class StaffController {
 
     private final BatteryService batteryService;
 
-    // (Hàm checkStaffLogin giữ nguyên)
+    /**
+     * Hàm helper kiểm tra login (Code của bạn đã tốt)
+     */
     private Staff checkStaffLogin(HttpSession session) {
         Staff staff = (Staff) session.getAttribute("loggedInStaff");
         if (staff == null) {
@@ -36,7 +38,7 @@ public class StaffController {
     }
 
     /**
-     * Trang Dashboard (ĐÃ SỬA LẠI DÒNG ĐẾM TỔNG)
+     * Trang Dashboard (Code của bạn đã tốt)
      */
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model, RedirectAttributes redirect) {
@@ -54,9 +56,7 @@ public class StaffController {
             model.addAttribute("chargingCount", batteryService.countBatteriesByState(station, "charging"));
             model.addAttribute("maintenanceCount", batteryService.countBatteriesByState(station, "maintenance"));
             model.addAttribute("retiredCount", batteryService.countBatteriesByState(station, "retired"));
-
-            // ===== SỬA DÒNG NÀY =====
-            model.addAttribute("totalCount", batteryService.getAllBatteriesForStation(station).size());
+            model.addAttribute("totalCount", batteryService.getAllBatteriesForStation(station).size()); // Giữ theo yêu cầu
 
             return "staff/dashboard";
 
@@ -70,7 +70,7 @@ public class StaffController {
     }
 
     /**
-     * Trang Quản lý Pin (Code của bạn đã đúng)
+     * Trang Quản lý Pin (Tất cả pin) (Code của bạn đã tốt)
      */
     @GetMapping("/batteries")
     public String manageBatteriesPage(
@@ -104,8 +104,43 @@ public class StaffController {
         }
     }
 
+    // ===============================================
+    // ===== HÀM MỚI (ĐỂ HIỂN THỊ TRANG SẠC PIN) =====
+    // ===============================================
     /**
-     * Xử lý Thêm Pin Mới (Code của bạn đã đúng)
+     * Hiển thị trang "Trạm Sạc" chuyên dụng.
+     * Chỉ liệt kê các pin sẵn sàng để sạc (state = 'maintenance').
+     */
+    @GetMapping("/charge-station")
+    public String chargeStationPage(HttpSession session, Model model, RedirectAttributes redirect) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            Station station = staff.getStation();
+
+            // 1. Lấy pin CHỜ SẠC (state = 'maintenance')
+            List<Battery> chargeableBatteries = batteryService.searchBatteriesForStation(station, "state", "maintenance");
+
+            // 2. (MỚI) Lấy pin ĐANG SẠC (state = 'charging')
+            List<Battery> chargingBatteries = batteryService.searchBatteriesForStation(station, "state", "charging");
+
+            model.addAttribute("chargeableBatteries", chargeableBatteries);
+            model.addAttribute("chargingBatteries", chargingBatteries); // <-- Thêm dòng này
+            model.addAttribute("stationName", station.getName());
+
+            return "staff/charge-station";
+
+        } catch (IllegalStateException authError) {
+            redirect.addFlashAttribute("loginError", authError.getMessage());
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/staff/dashboard";
+        }
+    }
+    // ===============================================
+
+    /**
+     * Xử lý Thêm Pin Mới (Code của bạn đã tốt)
      */
     @PostMapping("/batteries/add")
     public String handleCreateBattery(
@@ -122,13 +157,14 @@ public class StaffController {
         }
 
         if (bindingResult.hasErrors()) {
+            // Lỗi validation, load lại trang 'manage-batteries'
             return loadPageForError(model, staff, "Thông tin nhập không hợp lệ. Vui lòng kiểm tra lại.");
         }
 
         try {
             batteryService.createBatteries(dto, staff);
             redirect.addFlashAttribute("successMessage", "Đã thêm " + dto.getQuantity() + " pin (Model: " + dto.getModel() + ") thành công!");
-            return "redirect:/staff/batteries";
+            return "redirect:/staff/batteries"; // Redirect về trang quản lý chung
 
         } catch (Exception logicError) {
             return loadPageForError(model, staff, logicError.getMessage());
@@ -136,20 +172,20 @@ public class StaffController {
     }
 
     /**
-     * HÀM HELPER (Code của bạn đã đúng)
+     * HÀM HELPER (Code của bạn đã tốt)
+     * Dùng khi thêm pin bị lỗi validation
      */
     private String loadPageForError(Model model, Staff staff, String errorMessage) {
-        // Hàm này giờ sẽ chạy đúng vì batteryService đã có getAllBatteriesForStation
         List<Battery> batteryList = batteryService.getAllBatteriesForStation(staff.getStation());
         model.addAttribute("batteryList", batteryList);
         model.addAttribute("stationName", staff.getStation().getName());
         model.addAttribute("createError", errorMessage);
-
-        return "staff/manage-batteries";
+        return "staff/manage-batteries"; // Trả về trang quản lý
     }
 
     /**
-     * Xử lý Cập nhật Trạng thái (Code của bạn đã đúng)
+     * Xử lý Cập nhật Trạng thái thủ công (Maintenance, Retired)
+     * (Code của bạn đã tốt)
      */
     @PostMapping("/batteries/update")
     public String handleUpdateBatteryState(
@@ -158,8 +194,8 @@ public class StaffController {
             HttpSession session, RedirectAttributes redirect) {
 
         try {
-            checkStaffLogin(session);
-            batteryService.updateBatteryState(batteryId, newState, (Staff) session.getAttribute("loggedInStaff"));
+            Staff staff = checkStaffLogin(session);
+            batteryService.updateBatteryState(batteryId, newState, staff);
             redirect.addFlashAttribute("successMessage", "Đã cập nhật Pin #" + batteryId + " thành công!");
 
         } catch (IllegalStateException authError) {
@@ -169,6 +205,34 @@ public class StaffController {
             redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
 
-        return "redirect:/staff/batteries";
+        return "redirect:/staff/batteries"; // Redirect về trang quản lý chung
+    }
+
+
+    /**
+     * Xử lý Bắt đầu Sạc Pin (cho nút "Sạc Pin")
+     * (SỬA LẠI REDIRECT)
+     */
+    @PostMapping("/batteries/start-charge")
+    public String handleStartCharging(
+            @RequestParam("batteryId") Integer batteryId,
+            HttpSession session,
+            RedirectAttributes redirect) {
+
+        try {
+            Staff staff = checkStaffLogin(session);
+            batteryService.startChargingBattery(batteryId, staff);
+            redirect.addFlashAttribute("successMessage", "Đã bắt đầu sạc cho Pin #" + batteryId + ".");
+
+        } catch (IllegalStateException authError) {
+            redirect.addFlashAttribute("loginError", authError.getMessage());
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+
+        // ===== SỬA LẠI REDIRECT =====
+        // Redirect về trang "Trạm Sạc" nơi staff vừa bấm nút
+        return "redirect:/staff/charge-station";
     }
 }

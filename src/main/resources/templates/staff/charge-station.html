@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Trạm Sạc Pin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/staff.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* (Giữ nguyên style) */
+        .table-scroll-container { max-height: 600px; overflow-y: auto; overflow-x: auto; }
+        .btn.success { background-color: #4ade80; color: #020817; }
+        .btn.success:hover { background-color: #22c55e; }
+        .progress-bar-container { width: 100%; height: 24px; background-color: rgba(15, 20, 30, 0.72); border-radius: 6px; border: 1px solid var(--border-color); overflow: hidden; position: relative; }
+        .progress-bar-fill { height: 100%; width: 0%; background: var(--accent-gradient); transition: width 0.5s ease-in-out; border-radius: 4px; }
+        .progress-bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; color: var(--text-dark); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .time-left { font-size: 0.9rem; color: var(--text-light); font-weight: 500; }
+        .section-divider { margin-top: 3rem; margin-bottom: 2rem; border: 0; border-top: 1px solid var(--border-color); }
+    </style>
+</head>
+
+<body class="staff-body">
+
+<header class="staff-top-nav">
+    <div class="container nav-inner">
+        <a th:href="@{/staff/dashboard}" class="brand">
+            <i class="fas fa-charging-station brand-icon"></i>
+            <span th:text="${stationName ?: 'Staff'}">Tên Trạm</span>
+        </a>
+        <nav class="nav-links">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button"> <i class="fas fa-tachometer-alt"></i> Tổng quan
+            </a>
+            <a th:href="@{/staff/charge-station}" class="nav-link-button active"> <i class="fas fa-bolt"></i> Trạm Sạc
+            </a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button"> <i class="fas fa-list"></i> Quản lý (Tất cả)
+            </a>
+            <a href="#" class="nav-link-button">Giao dịch</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome" th:if="${session.loggedInStaff}">
+                Chào, <strong th:text="${session.loggedInStaff.fullName}"></strong>
+            </span>
+            <form th:action="@{/logout}" method="POST" style="margin: 0;">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+<main class="container">
+    <header class="staff-header" style="margin-bottom: 2rem;">
+        <h1 class="staff-title">Trạm Sạc</h1>
+        <p class="staff-subtitle">Quản lý pin đang sạc và bắt đầu sạc pin mới.</p>
+    </header>
+    <div th:if="${successMessage}" class="staff-alert success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="staff-alert error" th:text="${errorMessage}"></div>
+    <div class="staff-content-card" style="padding: 2rem;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Pin đang sạc</h2>
+        <div class="table-scroll-container">
+            <table class="staff-table">
+                <thead>
+                <tr><th>ID</th><th>Model</th><th>Tiến trình (SOC)</th><th>Dự kiến đầy</th><th>Hành động</th></tr>
+                </thead>
+                <tbody id="charging-batteries-list">
+                <tr th:each="battery : ${chargingBatteries}" class="charging-row" th:attr="data-battery-id=${battery.batteryId}, data-current-soc=${battery.socPercent}">
+                    <td th:text="${battery.batteryId}"></td><td th:text="${battery.model}"></td>
+                    <td style="min-width: 200px;">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" th:style="'width:' + ${battery.socPercent} + '%;'"></div>
+                            <div class="progress-bar-text" th:text="${battery.socPercent} + '%'"></div>
+                        </div>
+                    </td>
+                    <td class="time-left">Đang tính...</td>
+                    <td>
+                        <form th:action="@{/staff/batteries/update}" method="POST">
+                            <input type="hidden" name="batteryId" th:value="${battery.batteryId}"><input type="hidden" name="newState" value="maintenance">
+                            <button type="submit" class="btn warning" style="padding: 0.5rem 1rem;"><i class="fas fa-pause"></i> Dừng</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${chargingBatteries == null || chargingBatteries.isEmpty()}"><td colspan="5" class="empty-state">Không có pin nào đang sạc.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr class="section-divider" />
+    <div class="staff-content-card" style="padding: 2rem;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Pin đang chờ sạc (Maintenance)</h2>
+        <div class="table-scroll-container">
+            <table class="staff-table">
+                <thead><tr><th>ID</th><th>Model</th><th>SOH</th><th>SOC</th><th>Hành động</th></tr></thead>
+                <tbody>
+                <tr th:each="battery : ${chargeableBatteries}">
+                    <td th:text="${battery.batteryId}"></td><td th:text="${battery.model}"></td>
+                    <td th:text="${battery.sohPercent + '%'}"></td><td th:text="${battery.socPercent + '%'}"></td>
+                    <td>
+                        <form th:action="@{/staff/batteries/start-charge}" method="POST">
+                            <input type="hidden" name="batteryId" th:value="${battery.batteryId}" />
+                            <button type="submit" class="btn success" style="padding: 0.5rem 1rem;"><i class="fas fa-play"></i> Bắt đầu Sạc</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${chargeableBatteries == null || chargeableBatteries.isEmpty()}"><td colspan="5" class="empty-state">Không có pin nào đang chờ sạc.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="staff-footer">
+    © 2024 EV SWAP - Staff Portal.
+</footer>
+
+<script>
+    const CHARGE_RATE_PER_INTERVAL = 20;
+    const UPDATE_INTERVAL_MS = 1000;
+    function formatTime(totalSeconds) { if (totalSeconds <= 0) { return "Sắp đầy!"; } const minutes = Math.floor(totalSeconds / 60); const seconds = Math.floor(totalSeconds % 60); if (minutes > 0) { return `~ ${minutes} phút ${seconds} giây`; } else { return `~ ${seconds} giây`; } }
+    function updateSingleBattery(rowElement) { let currentSoc = parseInt(rowElement.dataset.currentSoc, 10); if (currentSoc >= 100) { rowElement.querySelector('.progress-bar-fill').style.width = '100%'; rowElement.querySelector('.progress-bar-text').textContent = '100% (Đầy)'; rowElement.querySelector('.time-left').textContent = 'Đã đầy!'; return 100; } let newSoc = currentSoc + CHARGE_RATE_PER_INTERVAL; if (newSoc >= 100) { newSoc = 100; rowElement.querySelector('.progress-bar-fill').style.width = '100%'; rowElement.querySelector('.progress-bar-text').textContent = '100% (Đầy)'; rowElement.querySelector('.time-left').textContent = 'Đã đầy!'; setTimeout(() => { window.location.reload(); }, 2000); } else { rowElement.dataset.currentSoc = newSoc; rowElement.querySelector('.progress-bar-fill').style.width = newSoc + '%'; rowElement.querySelector('.progress-bar-text').textContent = newSoc + '%'; const remainingSoc = 100 - newSoc; const intervalsLeft = Math.ceil(remainingSoc / CHARGE_RATE_PER_INTERVAL); const secondsLeft = intervalsLeft * (UPDATE_INTERVAL_MS / 1000); rowElement.querySelector('.time-left').textContent = formatTime(secondsLeft); } return newSoc; }
+    document.addEventListener('DOMContentLoaded', () => { const chargingRows = document.querySelectorAll('#charging-batteries-list .charging-row'); if (chargingRows.length === 0) return; chargingRows.forEach(row => { if (parseInt(row.dataset.currentSoc, 10) < 100) { updateSingleBattery(row); } const randomDelay = Math.random() * 500; const intervalId = setInterval(() => { const newSoc = updateSingleBattery(row); if (newSoc >= 100) { clearInterval(intervalId); } }, UPDATE_INTERVAL_MS + randomDelay); }); });
+</script>
+
+</body>
+</html>
