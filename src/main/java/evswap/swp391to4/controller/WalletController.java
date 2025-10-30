@@ -7,13 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.dto.WalletResponse;
+import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Payment;
 import evswap.swp391to4.repository.PaymentRepository;
 import evswap.swp391to4.service.PaymentService;
@@ -51,6 +52,7 @@ public class WalletController {
 
     @PostMapping("/topup")
     public String topUpWallet(@RequestParam("amount") BigDecimal amount,
+                             @RequestParam(value = "method", defaultValue = "wallet") String method,
                              HttpSession session,
                              RedirectAttributes redirect) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
@@ -64,14 +66,67 @@ public class WalletController {
             return "redirect:/wallet";
         }
 
+        // Validate minimum amount
+        if (amount.compareTo(new BigDecimal("10000")) < 0) {
+            redirect.addFlashAttribute("error", "Số tiền nạp tối thiểu là 10,000 VND");
+            return "redirect:/wallet";
+        }
+
         try {
-            paymentService.simulateTopUp(driver, amount);
-            redirect.addFlashAttribute("success", "Nạp tiền thành công! Số tiền: " + 
-                String.format("%,.0f", amount) + " VND");
+            if ("payos".equalsIgnoreCase(method)) {
+                // Nạp tiền qua PayOS (thanh toán thật)
+                Payment payment = paymentService.createPayOsTopUpRequest(driver, amount);
+                // Lưu paymentId vào session để có thể redirect sau khi thanh toán thành công
+                session.setAttribute("pendingPaymentId", payment.getPaymentId());
+                redirect.addFlashAttribute("payosPayment", true);
+                redirect.addFlashAttribute("paymentId", payment.getPaymentId());
+                redirect.addFlashAttribute("success", "Đang chuyển đến cổng thanh toán PayOS...");
+                return "redirect:/wallet/topup/payos/" + payment.getPaymentId();
+            } else {
+                redirect.addFlashAttribute("error", "Phương thức này đã bị vô hiệu hóa. Vui lòng chọn PayOS.");
+            }
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Lỗi nạp tiền: " + e.getMessage());
         }
 
+        return "redirect:/wallet";
+    }
+
+    @GetMapping("/topup/payos/{paymentId}")
+    public String payOsTopUpPage(@PathVariable Integer paymentId,
+                                HttpSession session,
+                                Model model,
+                                RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            Payment payment = paymentService.getPaymentByIdAndDriver(paymentId, driver);
+            model.addAttribute("payment", payment);
+            model.addAttribute("checkoutUrl", payment.getCheckoutUrl());
+            model.addAttribute("driverName", driver.getFullName());
+            model.addAttribute("amount", payment.getAmount());
+            return "wallet-payos-payment";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Không tìm thấy yêu cầu thanh toán");
+            return "redirect:/wallet";
+        }
+    }
+
+    @GetMapping("/topup-success")
+    public String topUpSuccess(@org.springframework.web.bind.annotation.RequestParam(name = "orderCode", required = false) Long orderCode,
+                               RedirectAttributes redirect) {
+        // Trang này cho phép truy cập công khai từ PayOS returnUrl
+        if (orderCode != null) {
+            try {
+                paymentService.reconcileByOrderCode(orderCode);
+            } catch (Exception ignored) {
+            }
+        }
+        redirect.addFlashAttribute("success", "Nạp tiền thành công!");
         return "redirect:/wallet";
     }
 

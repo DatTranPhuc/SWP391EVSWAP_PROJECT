@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán PayOS - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/wallet}" class="nav-link-button">← Về ví</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    </div>
+
+    <section class="payment-section container">
+        <div class="payment-container">
+            <div class="payment-header">
+                <div class="payment-icon">💳</div>
+                <h1>Thanh toán PayOS</h1>
+                <p class="payment-subtitle">Thanh toán nạp tiền vào ví của bạn</p>
+            </div>
+
+            <div class="payment-info-card">
+                <div class="info-row">
+                    <span class="info-label">Số tiền:</span>
+                    <span class="info-value amount" th:text="${#numbers.formatDecimal(amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mã giao dịch:</span>
+                    <span class="info-value" th:text="${payment.paymentId}">#12345</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Trạng thái:</span>
+                    <span class="info-value status pending" th:text="${payment.status}">pending</span>
+                </div>
+            </div>
+
+            <!-- QR code không có trong entity Payment; dùng checkoutUrl để mở trang thanh toán -->
+            <div class="payment-qrcode" th:if="${checkoutUrl != null}">
+                <p>Nhấn nút bên dưới để mở trang thanh toán PayOS.</p>
+                <p><a class="btn" th:href="${checkoutUrl}" target="_blank">Mở trang PayOS</a></p>
+            </div>
+
+            <div class="payment-actions">
+                <button class="btn primary btn-large" id="pay-btn" th:onclick="|window.location.href='@{' + ${checkoutUrl} + '}'|" th:unless="${#strings.isEmpty(checkoutUrl)}">
+                    <span id="pay-btn-text">Thanh toán qua PayOS</span>
+                    <span id="pay-btn-loading" style="display: none;">⏳ Đang chuyển hướng...</span>
+                </button>
+                
+                <button class="btn ghost btn-large" th:onclick="|window.location.href='@{/wallet}'|">
+                    Hủy và quay lại
+                </button>
+            </div>
+
+            <div class="payment-help">
+                <h3>Hướng dẫn thanh toán</h3>
+                <ol>
+                    <li>Nhấn nút "Thanh toán qua PayOS" bên trên</li>
+                    <li>Bạn sẽ được chuyển đến trang thanh toán PayOS</li>
+                    <li>Chọn phương thức thanh toán (Banking, Momo, VNPay, v.v.)</li>
+                    <li>Hoàn tất thanh toán theo hướng dẫn</li>
+                    <li>Sau khi thanh toán thành công, bạn sẽ được chuyển lại trang thành công</li>
+                    <li>Số dư sẽ tự động cập nhật vào ví của bạn</li>
+                </ol>
+            </div>
+
+            <div class="payment-note">
+                <p><strong>Lưu ý:</strong> Giao dịch sẽ tự động cập nhật sau khi thanh toán thành công. Vui lòng không đóng trình duyệt trong quá trình thanh toán.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+.payment-section {
+    padding: 3rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.payment-container {
+    max-width: 600px;
+    width: 100%;
+    background: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.payment-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.payment-header h1 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.payment-subtitle {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.payment-info-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.info-value.amount {
+    font-size: 1.3rem;
+    color: #667eea;
+}
+
+.info-value.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.info-value.status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.info-value.status.succeed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.payment-qrcode {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.payment-qrcode p {
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.payment-qrcode img {
+    max-width: 250px;
+    height: auto;
+}
+
+.payment-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.payment-help {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.payment-help h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.payment-help ol {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.payment-help li {
+    margin-bottom: 0.5rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+.payment-note {
+    background: #fff3cd;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.payment-note p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 2rem 1.5rem;
+    }
+    
+    .payment-icon {
+        font-size: 3rem;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .info-value.amount {
+        font-size: 1.2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const payBtn = document.getElementById('pay-btn');
+    const payBtnText = document.getElementById('pay-btn-text');
+    const payBtnLoading = document.getElementById('pay-btn-loading');
+    
+    if (payBtn) {
+        payBtn.addEventListener('click', function(e) {
+            // Show loading state
+            payBtn.disabled = true;
+            payBtnText.style.display = 'none';
+            payBtnLoading.style.display = 'inline';
+        });
+    }
+    
+    // Auto redirect after 3 seconds if checkout URL is available
+    const checkoutUrl = /*[[${checkoutUrl != null ? checkoutUrl : null}]]*/ null;
+    if (checkoutUrl && checkoutUrl !== 'null' && payBtn) {
+        setTimeout(function() {
+            if (!payBtn.disabled) {
+                payBtn.click();
+            }
+        }, 3000);
+    }
+});
+</script>
+
+</body>
+</html>
+

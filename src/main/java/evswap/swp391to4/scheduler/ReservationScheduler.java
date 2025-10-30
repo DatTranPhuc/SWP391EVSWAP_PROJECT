@@ -46,10 +46,16 @@ public class ReservationScheduler {
                     reservation.setStatus("no_show");
                     reservationRepository.save(reservation);
 
-                    // Hoàn tiền 0% (hoặc có thể hoàn 60% tùy business logic)
-                    // paymentService.simulateRefund(reservation.getDriver(), reservation, BigDecimal.ZERO);
+                    // Hoàn tiền 60% theo yêu cầu: khi người dùng đặt lịch mà không đến
+                    java.math.BigDecimal price = reservation.getPriceAmount();
+                    if (price == null) {
+                        price = new java.math.BigDecimal("25000"); // Giá mặc định
+                    }
+                    java.math.BigDecimal refundAmount = price.multiply(new java.math.BigDecimal("0.6"));
+                    paymentService.createPayment(reservation.getDriver(), reservation, refundAmount, "wallet", "refunded");
                     
-                    log.info("Auto-cancelled overdue reservation: {}", reservation.getReservationId());
+                    log.info("Auto-cancelled overdue reservation: {} and refunded 60%: {} VND", 
+                        reservation.getReservationId(), refundAmount);
                 } catch (Exception e) {
                     log.error("Error auto-cancelling reservation {}: {}", reservation.getReservationId(), e.getMessage());
                 }

@@ -65,8 +65,8 @@ public class DataSeeder implements CommandLineRunner {
                             .balance(BigDecimal.ZERO)
                             .build();
                     d = driverRepository.save(d);
-                    // Top-up wallet via payment record (used by WalletService)
-                    paymentService.simulateTopUp(d, new BigDecimal("200000")); // 200,000 VND
+                    // Seed initial wallet balance via successful payment record
+                    paymentService.createPayment(d, null, new BigDecimal("200000"), "wallet", "succeed"); // 200,000 VND
                     return d;
                 });
 

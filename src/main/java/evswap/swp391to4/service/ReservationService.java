@@ -124,8 +124,8 @@ public class ReservationService {
         // Tạo QR code cho reservation
         generateQrCode(reservation);
 
-        // Tạo payment ghi nợ ví (giả lập thanh toán)
-        paymentService.simulatePay(driver, reservation, price);
+        // Ghi nhận thanh toán ví cho đặt lịch
+        paymentService.createPayment(driver, reservation, price, "wallet", "succeed");
 
         return reservation;
     }
@@ -154,7 +154,7 @@ public class ReservationService {
             refund = price;
         }
 
-        paymentService.simulateRefund(reservation.getDriver(), reservation, refund);
+        paymentService.createPayment(reservation.getDriver(), reservation, refund, "wallet", "refunded");
     }
 
     @Transactional(readOnly = true)

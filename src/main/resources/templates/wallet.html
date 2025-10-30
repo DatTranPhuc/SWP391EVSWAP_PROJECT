@@ -63,7 +63,27 @@
                                placeholder="Nhập số tiền..." required>
                         <small>Nạp tối thiểu 10,000 VND</small>
                     </div>
-                    <button type="submit" class="btn primary">Nạp tiền</button>
+                    
+                    <div class="payment-method-group">
+                        <label class="method-label">Phương thức thanh toán:</label>
+                        <div class="payment-methods">
+                            <label class="payment-method">
+                                <input type="radio" name="method" value="wallet" checked>
+                                <span class="method-icon">💰</span>
+                                <span class="method-name">Giả lập (Testing)</span>
+                            </label>
+                            <label class="payment-method">
+                                <input type="radio" name="method" value="payos">
+                                <span class="method-icon">💳</span>
+                                <span class="method-name">Thanh toán PayOS</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn primary" id="topup-btn">
+                        <span class="btn-loading" id="btn-loading" style="display: none;">⏳ Đang xử lý...</span>
+                        <span id="btn-text">Nạp tiền</span>
+                    </button>
                 </form>
             </div>
 
@@ -77,13 +97,20 @@
                         <div class="transaction-info">
                             <div class="transaction-type" th:text="${transaction.reservation == null ? 'Nạp tiền' : 'Đặt lịch đổi pin'}">Nạp tiền</div>
                             <div class="transaction-time" th:text="${#temporals.format(transaction.paidAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</div>
+                            <div class="transaction-method" th:if="${transaction.method}" th:text="${transaction.method == 'payos' ? '💳 PayOS' : (transaction.method == 'wallet' ? '💰 Ví điện tử' : transaction.method)}">💰 Ví</div>
                         </div>
                         <div class="transaction-amount" 
                              th:classappend="${transaction.status == 'refunded' ? 'refund' : (transaction.reservation == null ? 'credit' : 'debit')}"
                              th:text="${transaction.status == 'refunded' ? '+' : (transaction.reservation == null ? '+' : '-')} + ${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
                             + 100,000 VND
                         </div>
-                        <div class="transaction-status" th:text="${transaction.status}">succeed</div>
+                        <div class="transaction-status-wrapper">
+                            <div class="transaction-status" 
+                                 th:classappend="${transaction.status == 'succeed' ? 'status-succeed' : (transaction.status == 'pending' ? 'status-pending' : (transaction.status == 'refunded' ? 'status-refunded' : 'status-failed'))}"
+                                 th:text="${transaction.status == 'succeed' ? 'Thành công' : (transaction.status == 'pending' ? 'Đang xử lý' : (transaction.status == 'refunded' ? 'Đã hoàn' : 'Thất bại'))}">
+                                Thành công
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -264,22 +291,94 @@
     color: #17a2b8;
 }
 
+.transaction-status-wrapper {
+    display: flex;
+    align-items: center;
+}
+
 .transaction-status {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.transaction-status:contains("succeed") {
+.transaction-status.status-succeed {
     background: #d4edda;
     color: #155724;
 }
 
-.transaction-status:contains("refunded") {
+.transaction-status.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.transaction-status.status-refunded {
     background: #d1ecf1;
     color: #0c5460;
+}
+
+.transaction-status.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.payment-method-group {
+    margin-bottom: 1.5rem;
+}
+
+.method-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.payment-method:hover {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.payment-method input[type="radio"] {
+    margin: 0;
+}
+
+.payment-method input[type="radio"]:checked + .method-icon + .method-name {
+    font-weight: 600;
+}
+
+.method-icon {
+    font-size: 1.5rem;
+}
+
+.method-name {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.transaction-method {
+    font-size: 0.8rem;
+    color: #17a2b8;
+    margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {
@@ -292,8 +391,41 @@
         gap: 0.5rem;
         text-align: center;
     }
+    
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.topup-form');
+    const btn = document.getElementById('topup-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnLoading = document.getElementById('btn-loading');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = document.getElementById('amount').value;
+            const method = document.querySelector('input[name="method"]:checked').value;
+            
+            if (parseInt(amount) < 10000) {
+                alert('Số tiền nạp tối thiểu là 10,000 VND');
+                e.preventDefault();
+                return;
+            }
+            
+            // Show loading state for PayOS payments
+            if (method === 'payos') {
+                btn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+            }
+        });
+    }
+});
+</script>
 
 </body>
 </html>
