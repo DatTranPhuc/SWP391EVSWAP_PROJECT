@@ -125,17 +125,17 @@ public class PaymentService {
             String paymentLinkId = result.getPaymentLinkId();
             // Lưu payment với status pending
             Payment payment = Payment.builder()
-                .driver(driver)
-                .reservation(null)
-                .amount(amount)
-                .method("payos")
-                .status("pending")
-                .paidAt(Instant.now())
-                .currency("VND")
+                    .driver(driver)
+                    .reservation(null)
+                    .amount(amount)
+                    .method("payos")
+                    .status("pending")
+                    .paidAt(Instant.now())
+                    .currency("VND")
                 .providerTxnId(paymentLinkId)
                 .orderCode("EVSWAP" + orderCode)
                 .checkoutUrl(checkoutUrl)
-                .build();
+                    .build();
             payment = paymentRepository.save(payment);
             log.info("Created PayOS payment request [SDK]: paymentId={}, orderCode=EVSWAP{}, checkoutUrl={}", payment.getPaymentId(), orderCode, checkoutUrl);
             return payment;
@@ -181,12 +181,12 @@ public class PaymentService {
             if (signature != null && payosWebhookKey != null && !payosWebhookKey.isEmpty() && canVerify) {
                 try {
                     String dataString = PayOsUtil.createWebhookDataString(
-                            webhookRequest.getCode(),
-                            webhookRequest.getDesc(),
-                            data.getOrderCode(),
-                            data.getAmount(),
+                        webhookRequest.getCode(),
+                        webhookRequest.getDesc(),
+                        data.getOrderCode(),
+                        data.getAmount(),
                             data.getStatus());
-
+                    
                     if (!PayOsUtil.verifySignature(signature, dataString, payosWebhookKey)) {
                         log.error("Invalid webhook signature for orderCode: {}", orderCode);
                         // Không chặn tại đây; sẽ cố reconciliate theo API để đảm bảo trải nghiệm người dùng

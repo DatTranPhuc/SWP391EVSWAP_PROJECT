@@ -11,14 +11,14 @@ import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.entity.SwapTransaction;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.StationRepository;
+import evswap.swp391to4.repository.SwapTransactionRepository;
 import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import evswap.swp391to4.repository.VehicleRepository;
-import evswap.swp391to4.entity.SwapTransaction;
-import evswap.swp391to4.repository.SwapTransactionRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service

@@ -48,47 +48,19 @@
         </div>
 
         <div class="wallet-content">
-            <div class="wallet-balance-card">
-                <h2>Số dư hiện tại</h2>
-                <div class="balance-amount" th:text="${#numbers.formatDecimal(balance, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
-                <p class="balance-note">Số dư có thể được sử dụng để đặt lịch đổi pin</p>
+            <div class="wallet-left">
+                <div class="wallet-balance-card">
+                    <h2>Số dư hiện tại</h2>
+                    <div class="balance-amount" th:text="${#numbers.formatDecimal(balance, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
+                    <p class="balance-note">Số dư có thể được sử dụng để đặt lịch đổi pin</p>
+                    <button class="btn primary full" id="open-topup-modal">Nạp tiền vào ví</button>
+                </div>
             </div>
 
-            <div class="topup-section">
-                <h3>Nạp tiền vào ví</h3>
-                <form th:action="@{/wallet/topup}" method="post" class="topup-form">
-                    <div class="form-group">
-                        <label for="amount">Số tiền nạp (VND)</label>
-                        <input type="number" id="amount" name="amount" min="10000" step="1000" 
-                               placeholder="Nhập số tiền..." required>
-                        <small>Nạp tối thiểu 10,000 VND</small>
-                    </div>
-                    
-                    <div class="payment-method-group">
-                        <label class="method-label">Phương thức thanh toán:</label>
-                        <div class="payment-methods">
-                            <label class="payment-method">
-                                <input type="radio" name="method" value="wallet" checked>
-                                <span class="method-icon">💰</span>
-                                <span class="method-name">Giả lập (Testing)</span>
-                            </label>
-                            <label class="payment-method">
-                                <input type="radio" name="method" value="payos">
-                                <span class="method-icon">💳</span>
-                                <span class="method-name">Thanh toán PayOS</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn primary" id="topup-btn">
-                        <span class="btn-loading" id="btn-loading" style="display: none;">⏳ Đang xử lý...</span>
-                        <span id="btn-text">Nạp tiền</span>
-                    </button>
-                </form>
-            </div>
-
-            <div class="transactions-section">
-                <h3>Lịch sử giao dịch</h3>
+            <div class="wallet-right">
+                <div class="transactions-section">
+                <div class="transactions-header"><h3>Lịch sử giao dịch</h3></div>
+                <div class="transactions-scroll">
                 <div class="transactions-empty" th:if="${transactions == null or transactions.isEmpty()}">
                     <p>Chưa có giao dịch nào</p>
                 </div>
@@ -113,14 +85,55 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                </div>
             </div>
         </div>
     </section>
 </main>
 
+<!-- Overlay modal nạp tiền -->
+<div id="topup-modal" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Nạp tiền vào ví</h3>
+            <button class="modal-close" id="close-topup-modal">✕</button>
+        </div>
+        <div class="modal-body">
+            <form th:action="@{/wallet/topup}" method="post" class="topup-form">
+                <div class="form-group">
+                    <label for="amount">Số tiền nạp (VND)</label>
+                    <input type="number" id="amount" name="amount" min="10000" step="1000" placeholder="Nhập số tiền..." required>
+                    <small>Nạp tối thiểu 10,000 VND</small>
+                </div>
+                <div class="payment-method-group">
+                    <label class="method-label">Phương thức thanh toán:</label>
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="method" value="wallet" checked>
+                            <span class="method-icon">💰</span>
+                            <span class="method-name">Giả lập (Testing)</span>
+                        </label>
+                        <label class="payment-method">
+                            <input type="radio" name="method" value="payos">
+                            <span class="method-icon">💳</span>
+                            <span class="method-name">Thanh toán PayOS</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn primary" id="topup-btn">
+                    <span class="btn-loading" id="btn-loading" style="display: none;">⏳ Đang xử lý...</span>
+                    <span id="btn-text">Nạp tiền</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="overlay-dismiss"></div>
+</div>
+
 <style>
 .wallet-section {
-    padding: 2rem 0;
+    padding: 3rem 0;
 }
 
 .wallet-header {
@@ -148,18 +161,21 @@
 
 .wallet-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 420px 1fr;
     gap: 2rem;
     margin-bottom: 2rem;
+    align-items: start;
 }
+.wallet-left { position: sticky; top: 96px; height: fit-content; }
 
 .wallet-balance-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5b7cfa 0%, #6a5acd 100%);
     color: white;
     padding: 2rem;
     border-radius: 12px;
     text-align: center;
 }
+.btn.full { width: 100%; margin-top: 1rem; }
 
 .wallet-balance-card h2 {
     margin: 0 0 1rem 0;
@@ -180,10 +196,10 @@
 }
 
 .topup-section {
-    background: white;
+    background: #ffffff;
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 24px rgba(17, 24, 39, .06);
 }
 
 .topup-section h3 {
@@ -224,12 +240,17 @@
 }
 
 .transactions-section {
-    grid-column: 1 / -1;
-    background: white;
+    background: #ffffff;
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 24px rgba(17, 24, 39, .06);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 220px);
 }
+
+.transactions-header { flex: 0 0 auto; margin: 0 0 1rem 0; }
+.transactions-scroll { flex: 1 1 auto; overflow-y: auto; }
 
 .transactions-section h3 {
     margin: 0 0 1.5rem 0;
@@ -253,9 +274,14 @@
     grid-template-columns: 1fr auto auto;
     align-items: center;
     padding: 1rem;
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    background: #f8f9fa;
+    border: 1px solid #e9eef5;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.transaction-item:hover {
+    border-color: #cfd8ee;
+    background: #f9fbff;
 }
 
 .transaction-info {
@@ -279,13 +305,9 @@
     font-size: 1.1rem;
 }
 
-.transaction-amount.credit {
-    color: #28a745;
-}
+.transaction-amount.credit { color: #1aa251; }
 
-.transaction-amount.debit {
-    color: #dc3545;
-}
+.transaction-amount.debit { color: #dc3545; }
 
 .transaction-amount.refund {
     color: #17a2b8;
@@ -304,29 +326,38 @@
     white-space: nowrap;
 }
 
-.transaction-status.status-succeed {
-    background: #d4edda;
-    color: #155724;
-}
+.transaction-status.status-succeed { background: #d4edda; color: #155724; }
 
-.transaction-status.status-pending {
-    background: #fff3cd;
-    color: #856404;
-}
+.transaction-status.status-pending { background: #fff3cd; color: #856404; }
 
-.transaction-status.status-refunded {
-    background: #d1ecf1;
-    color: #0c5460;
-}
+.transaction-status.status-refunded { background: #d1ecf1; color: #0c5460; }
 
-.transaction-status.status-failed {
-    background: #f8d7da;
-    color: #721c24;
-}
+.transaction-status.status-failed { background: #f8d7da; color: #721c24; }
 
 .payment-method-group {
     margin-bottom: 1.5rem;
 }
+
+/* Modal overlay styles */
+.modal-backdrop { position: fixed; inset: 0; z-index: 1000; display: none; }
+.modal-backdrop.open { 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: center; 
+    /* Tỉ lệ khoảng cách trên:dưới = 2:3 */
+    padding-top: 20vh; 
+    padding-bottom: 30vh; 
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); animation: fadeIn .18s ease; }
+.modal { position: relative; z-index: 1001; width: 560px; max-width: calc(100% - 2rem); max-height: 90vh; overflow-y: auto; margin: 0 auto; background: #ffffff; color: #1f2937; border-radius: 14px; box-shadow: 0 24px 64px rgba(0,0,0,.22); transform: scale(.96); opacity: 0; animation: modalIn .18s ease forwards; }
+.modal-header { display:flex; align-items:center; justify-content: space-between; padding: 1rem 1.25rem; background: #f3f4f6; color: #111827; border-bottom: 1px solid #e5e7eb; border-top-left-radius: 14px; border-top-right-radius: 14px; }
+.modal-body { padding: 1.25rem; background: #ffffff; }
+.modal-close { background: transparent; border: 0; font-size: 1.1rem; cursor: pointer; }
+
+@keyframes modalIn { to { transform: scale(1); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .method-label {
     display: block;
@@ -347,7 +378,7 @@
     gap: 0.5rem;
     padding: 0.75rem;
     border: 2px solid #e1e5e9;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s;
     background: #f8f9fa;
@@ -382,19 +413,11 @@
 }
 
 @media (max-width: 768px) {
-    .wallet-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .transaction-item {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-        text-align: center;
-    }
-    
-    .payment-methods {
-        grid-template-columns: 1fr;
-    }
+    .wallet-content { grid-template-columns: 1fr; }
+    .wallet-left { position: static; }
+    .transactions-section { height: auto; }
+    .transaction-item { grid-template-columns: 1fr; gap: 0.5rem; text-align: center; }
+    .payment-methods { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -404,6 +427,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('topup-btn');
     const btnText = document.getElementById('btn-text');
     const btnLoading = document.getElementById('btn-loading');
+    const modal = document.getElementById('topup-modal');
+    const openBtn = document.getElementById('open-topup-modal');
+    const closeBtn = document.getElementById('close-topup-modal');
+    const overlayDismiss = document.getElementById('overlay-dismiss');
+    
+    if (openBtn && modal) {
+        openBtn.addEventListener('click', () => { 
+            modal.style.display = 'block';
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => { 
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    if (overlayDismiss) {
+        overlayDismiss.addEventListener('click', () => { 
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
     
     if (form) {
         form.addEventListener('submit', function(e) {

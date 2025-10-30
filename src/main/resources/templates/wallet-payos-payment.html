@@ -36,6 +36,10 @@
             </div>
 
             <div class="payment-info-card">
+                <div class="info-row" th:if="${driverName != null}">
+                    <span class="info-label">Khách hàng:</span>
+                    <span class="info-value" th:text="${driverName}">Nguyễn Văn A</span>
+                </div>
                 <div class="info-row">
                     <span class="info-label">Số tiền:</span>
                     <span class="info-value amount" th:text="${#numbers.formatDecimal(amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</span>
@@ -46,21 +50,23 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Trạng thái:</span>
-                    <span class="info-value status pending" th:text="${payment.status}">pending</span>
+                    <span class="info-value status"
+                          th:classappend="${payment.status}=='succeed' ? ' succeed' : (${payment.status}=='failed' ? ' failed' : ' pending')"
+                          th:text="${payment.status}=='succeed' ? 'Thành công' : (${payment.status}=='failed' ? 'Thất bại' : 'Đang xử lý')">Đang xử lý</span>
                 </div>
-            </div>
-
-            <!-- QR code không có trong entity Payment; dùng checkoutUrl để mở trang thanh toán -->
-            <div class="payment-qrcode" th:if="${checkoutUrl != null}">
-                <p>Nhấn nút bên dưới để mở trang thanh toán PayOS.</p>
-                <p><a class="btn" th:href="${checkoutUrl}" target="_blank">Mở trang PayOS</a></p>
+                
+                <div class="info-row">
+                    <span class="info-label">Thời điểm tạo:</span>
+                    <span class="info-value" th:text="${#temporals.format(payment.paidAt, 'dd/MM/yyyy HH:mm')}" >--/--/---- --:--</span>
+                </div>
+                <p class="payos-hint">Nhấn nút bên dưới để thanh toán</p>
             </div>
 
             <div class="payment-actions">
-                <button class="btn primary btn-large" id="pay-btn" th:onclick="|window.location.href='@{' + ${checkoutUrl} + '}'|" th:unless="${#strings.isEmpty(checkoutUrl)}">
+                <a class="btn primary btn-large" id="pay-btn" th:href="${checkoutUrl}" target="_blank" th:unless="${#strings.isEmpty(checkoutUrl)}">
                     <span id="pay-btn-text">Thanh toán qua PayOS</span>
                     <span id="pay-btn-loading" style="display: none;">⏳ Đang chuyển hướng...</span>
-                </button>
+                </a>
                 
                 <button class="btn ghost btn-large" th:onclick="|window.location.href='@{/wallet}'|">
                     Hủy và quay lại
@@ -188,6 +194,11 @@
     font-weight: 500;
 }
 
+.payos-hint {
+    text-align: center;
+    color: #6AA9FF;
+}
+
 .payment-qrcode img {
     max-width: 250px;
     height: auto;
@@ -204,6 +215,20 @@
     padding: 1rem 2rem;
     font-size: 1.1rem;
     font-weight: 600;
+}
+
+/* Secondary/ghost button for Cancel - high contrast, accessible */
+.btn.ghost {
+    background: #ffffff;
+    color: #3f5efb;
+    border: 2px solid #3f5efb;
+    transition: all .15s ease-in-out;
+}
+.btn.ghost:hover {
+    background: #f2f5ff;
+    color: #324ad9;
+    border-color: #324ad9;
+    box-shadow: 0 6px 18px rgba(63, 94, 251, 0.12);
 }
 
 .payment-help {
