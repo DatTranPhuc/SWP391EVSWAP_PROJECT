@@ -72,6 +72,7 @@ public class StaffController {
     /**
      * Trang Quản lý Pin (Code của bạn đã đúng)
      */
+    //abc
     @GetMapping("/batteries")
     public String manageBatteriesPage(
             @RequestParam(name = "searchType", required = false) String searchType,
