@@ -1,20 +1,9 @@
 package evswap.swp391to4.entity;
 
-
-
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serializable;
-
-@Embeddable
-@Data @NoArgsConstructor @AllArgsConstructor
-class VehicleBatteryId implements Serializable {
-    @Column(name = "vehicle_id")
-    private Integer vehicleId;
-    @Column(name = "battery_id")
-    private Integer batteryId;
-}
+// Embedded ID class moved to its own file VehicleBatteryId.java
 
 @Entity @Table(name = "vehicle_battery_compatibility")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder

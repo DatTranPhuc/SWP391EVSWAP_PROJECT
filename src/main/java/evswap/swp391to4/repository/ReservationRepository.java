@@ -1,10 +1,12 @@
 package evswap.swp391to4.repository;
 
-import evswap.swp391to4.entity.Reservation;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import evswap.swp391to4.entity.Reservation;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
     List<Reservation> findByDriverDriverIdOrderByReservedStartAsc(Integer driverId);
+    List<Reservation> findByStationStationIdOrderByReservedStartAsc(Integer stationId);
 }

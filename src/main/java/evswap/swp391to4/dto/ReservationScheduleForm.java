@@ -1,14 +1,16 @@
 package evswap.swp391to4.dto;
 
-import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import lombok.Data;
 
 @Data
 public class ReservationScheduleForm {
     private Integer stationId;
+    private Integer vehicleId;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
