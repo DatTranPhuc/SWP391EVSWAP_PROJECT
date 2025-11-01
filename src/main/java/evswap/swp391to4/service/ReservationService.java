@@ -241,15 +241,19 @@ public class ReservationService {
     public void reassignBattery(Integer reservationId, Integer newBatteryId) {
         Reservation reservation = reservationRepo.findById(reservationId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy đặt lịch"));
-        
+
         Battery newBattery = batteryService.getBatteryById(newBatteryId);
         if (newBattery == null) {
             throw new IllegalStateException("Không tìm thấy pin mới");
         }
-        
+
+        if (!newBattery.getStation().getStationId().equals(reservation.getStation().getStationId())) {
+            throw new IllegalStateException("Pin không thuộc trạm của đặt lịch");
+        }
+
         // Validate battery eligibility
-        if (!"full".equals(newBattery.getState()) || 
-            newBattery.getSocPercent() != 100 || 
+        if (!"full".equals(newBattery.getState()) ||
+            newBattery.getSocPercent() != 100 ||
             newBattery.getSohPercent() < 80) {
             throw new IllegalStateException("Pin mới không đủ điều kiện");
         }
@@ -263,9 +267,14 @@ public class ReservationService {
      * - Trạng thái chuyển sang completed
      * - Nếu chưa có assignedBattery và staff không truyền batteryId, tự chọn pin đủ điều kiện đầu tiên tại trạm phù hợp với xe
      * - Đánh dấu QR đã sử dụng
+     * - Cập nhật trạng thái pin giao/nhận và log giao dịch swap (bao gồm SOC/SOH pin trả)
      */
     @Transactional
-    public void completeSwap(Integer reservationId, Integer assignedBatteryId) {
+    public void completeSwap(Integer reservationId,
+                             Integer assignedBatteryId,
+                             Integer batteryInId,
+                             Integer batteryInSoc,
+                             Integer batteryInSoh) {
         Reservation reservation = reservationRepo.findById(reservationId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy đặt lịch"));
 
@@ -285,9 +294,11 @@ public class ReservationService {
         if (reservation.getAssignedBattery() == null) {
             Station station = reservation.getStation();
             Vehicle vehicle = reservation.getVehicle();
-
+            VehicleType type = VehicleType.UNIVERSAL;
+            if (vehicle != null && vehicle.getVehicleType() != null) {
+                type = vehicle.getVehicleType();
+            }
             List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(station);
-            VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
 
             Battery chosen = stationBatteries.stream()
                     .filter(b -> "full".equalsIgnoreCase(b.getState()))
@@ -303,6 +314,62 @@ public class ReservationService {
             }
 
             reservation.setAssignedBattery(chosen);
+        }
+
+        Battery batteryOut = reservation.getAssignedBattery();
+        if (batteryOut == null) {
+            throw new IllegalStateException("Chưa có pin giao cho khách. Vui lòng gán pin trước.");
+        }
+
+        if (!batteryOut.getStation().getStationId().equals(reservation.getStation().getStationId())) {
+            throw new IllegalStateException("Pin được gán không thuộc trạm của đặt lịch");
+        }
+
+        if (!"full".equalsIgnoreCase(batteryOut.getState()) ||
+            batteryOut.getSocPercent() == null || batteryOut.getSocPercent() < 100 ||
+            batteryOut.getSohPercent() == null || batteryOut.getSohPercent() < 80) {
+            throw new IllegalStateException("Pin giao cho khách không còn đủ điều kiện. Vui lòng chọn pin khác.");
+        }
+
+        if (batteryInSoc != null && (batteryInSoc < 0 || batteryInSoc > 100)) {
+            throw new IllegalArgumentException("SOC pin trả về phải nằm trong khoảng 0 - 100%");
+        }
+
+        if (batteryInSoh != null && (batteryInSoh < 0 || batteryInSoh > 100)) {
+            throw new IllegalArgumentException("SOH pin trả về phải nằm trong khoảng 0 - 100%");
+        }
+
+        if (batteryInId == null) {
+            throw new IllegalStateException("Vui lòng nhập hoặc chọn pin khách trả về");
+        }
+
+        Battery batteryIn = batteryService.getBatteryById(batteryInId);
+        if (batteryIn == null) {
+            throw new IllegalStateException("Không tìm thấy pin khách trả về");
+        }
+
+        if (!batteryIn.getStation().getStationId().equals(reservation.getStation().getStationId())) {
+            throw new IllegalStateException("Pin khách trả không thuộc trạm này");
+        }
+
+        String batteryInState = batteryIn.getState() == null ? "" : batteryIn.getState();
+        if (!("charging".equalsIgnoreCase(batteryInState)
+                || "in_use".equalsIgnoreCase(batteryInState)
+                || "rented".equalsIgnoreCase(batteryInState))) {
+            throw new IllegalStateException("Pin khách trả về phải đang thuộc kho hoặc trạng thái in_use/rented hợp lệ");
+        }
+
+        if (batteryIn.getBatteryId().equals(batteryOut.getBatteryId())) {
+            throw new IllegalStateException("Pin trả về không thể trùng với pin giao cho khách");
+        }
+
+        batteryOut.setState("in_use");
+        batteryIn.setState("charging");
+        if (batteryInSoc != null) {
+            batteryIn.setSocPercent(batteryInSoc);
+        }
+        if (batteryInSoh != null) {
+            batteryIn.setSohPercent(batteryInSoh);
         }
 
         // Cập nhật trạng thái hoàn tất và QR
@@ -328,7 +395,10 @@ public class ReservationService {
             tx.setResult("success");
         }
         // Optional: map batteries if needed
-        tx.setBatteryOut(reservation.getAssignedBattery());
+        tx.setBatteryOut(batteryOut);
+        tx.setBatteryIn(batteryIn);
+        tx.setBatteryInSocPercent(batteryInSoc);
+        tx.setBatteryInSohPercent(batteryInSoh);
         swapTransactionRepository.save(tx);
     }
 
