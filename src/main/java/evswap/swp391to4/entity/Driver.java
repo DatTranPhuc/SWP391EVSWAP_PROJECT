@@ -64,6 +64,7 @@ public class Driver {
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
+    //
     @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
