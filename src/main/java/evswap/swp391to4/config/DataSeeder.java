@@ -2,6 +2,8 @@ package evswap.swp391to4.config;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +68,18 @@ public class DataSeeder implements CommandLineRunner {
                     return d;
                 });
 
+        // Chuẩn hoá vehicle type cho các bản ghi cũ nếu thiếu dữ liệu
+        List<Vehicle> vehiclesNeedingType = new ArrayList<>();
+        for (Vehicle existingVehicle : vehicleRepository.findAll()) {
+            if (existingVehicle.getVehicleType() == null) {
+                existingVehicle.setVehicleType(VehicleType.UNIVERSAL);
+                vehiclesNeedingType.add(existingVehicle);
+            }
+        }
+        if (!vehiclesNeedingType.isEmpty()) {
+            vehicleRepository.saveAll(vehiclesNeedingType);
+        }
+
         // Vehicle for driver
         Vehicle vehicle = vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driver.getDriverId())
                 .stream().findFirst().orElseGet(() -> {
@@ -79,6 +93,11 @@ public class DataSeeder implements CommandLineRunner {
                             .build();
                     return vehicleRepository.save(v);
                 });
+
+        if (vehicle.getVehicleType() == null) {
+            vehicle.setVehicleType(VehicleType.CITY_48V);
+            vehicle = vehicleRepository.save(vehicle);
+        }
 
         // Batteries at station
         if (batteryRepository.findAll().isEmpty()) {

@@ -2,10 +2,11 @@ package evswap.swp391to4.entity;
 
 
 
+import java.time.Instant;
+
+import evswap.swp391to4.entity.converter.VehicleTypeConverter;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.Instant;
 
 @Entity @Table(name = "vehicle")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -27,8 +28,8 @@ public class Vehicle {
 
     private String model;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "vehicle_type")
+    @Convert(converter = VehicleTypeConverter.class)
+    @Column(name = "vehicle_type", length = 50)
     private VehicleType vehicleType;
 
     @Column(name = "created_at")
