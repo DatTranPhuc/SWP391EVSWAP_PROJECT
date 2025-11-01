@@ -21,16 +21,20 @@ import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
-import evswap.swp391to4.dto.TicketSupportResponse;
-import evswap.swp391to4.dto.TicketUpdateRequest;
-import evswap.swp391to4.entity.Admin;
-import evswap.swp391to4.service.FeedbackService;
+import evswap.swp391to4.entity.Admin; // <-- Import Admin
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
-import evswap.swp391to4.service.TicketSupportService;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession; // <-- Import Session
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 /**
  * Controller DÀNH CHO ADMIN
@@ -43,8 +47,6 @@ public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
-    private final FeedbackService feedbackService;
-    private final TicketSupportService ticketService;
 
     /**
      * HÀM HELPER (NỘI BỘ)

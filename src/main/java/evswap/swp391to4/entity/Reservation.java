@@ -9,7 +9,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-
 import java.time.Instant;
 
 @Entity @Table(name = "reservation")
