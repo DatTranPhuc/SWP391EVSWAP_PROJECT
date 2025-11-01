@@ -13,6 +13,15 @@
         .detail-card { background: var(--surface); border: 1px solid rgba(148,163,184,.14); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); padding: 24px; }
         .qr-wrap { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: 1rem; border: 2px dashed rgba(99,102,241,.35); border-radius: var(--radius-md); }
         .qr-token { width: 140px; height: 140px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(148,163,184,.18); color: var(--text-secondary); font-weight: 700; }
+        .alert { margin-bottom: 1rem; padding: .85rem 1rem; border-radius: var(--radius-md); font-weight: 600; }
+        .alert.success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.35); color: #047857; }
+        .alert.error { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.35); color: #b91c1c; }
+        .self-checkin-form { margin-top: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+        .self-checkin-input { display: flex; gap: .75rem; align-items: center; }
+        .self-checkin-input input { flex: 1; padding: .65rem .85rem; border-radius: var(--radius-md); border: 1px solid rgba(148,163,184,.4); background: rgba(15,23,42,.45); color: var(--text-primary); }
+        .self-checkin-input input::placeholder { color: rgba(148,163,184,.7); }
+        .input-label { font-weight: 600; color: var(--text-primary); }
+        .form-hint { margin: 0; font-size: .85rem; color: rgba(148,163,184,.85); }
         .timeline { position: relative; padding-left: 3rem; }
         .timeline:before { content:""; position:absolute; left: 1.5rem; top:0; bottom:0; width:2px; background: rgba(148,163,184,.25); }
         .timeline-item { position: relative; margin-bottom: 1.5rem; padding-left: 1rem; }
@@ -52,6 +61,9 @@
 </header>
 
 <main class="manage-main container">
+    <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
     <section class="reservation-progress">
         <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
             <li class="progress-step" data-step="search">Tìm trạm</li>
@@ -102,6 +114,16 @@
                 </div>
                 <div class="label">Trạng thái QR: <span class="value" th:text="${reservation.qrStatus}">active</span></div>
             </div>
+            <form th:action="@{/reservations/{id}/check-in(id=${reservation.reservationId})}"
+                  method="post" class="self-checkin-form"
+                  th:if="${reservation.status == 'confirmed'}">
+                <label class="input-label" for="qrTokenInput">Tự check-in bằng mã QR</label>
+                <div class="self-checkin-input">
+                    <input id="qrTokenInput" name="qrToken" type="text" placeholder="Quét hoặc nhập mã QR" required>
+                    <button type="submit" class="btn primary">Check-in</button>
+                </div>
+                <p class="form-hint">Bạn có thể dùng camera quét mã hoặc nhập tay nếu cần mô phỏng.</p>
+            </form>
         </div>
     </section>
 
