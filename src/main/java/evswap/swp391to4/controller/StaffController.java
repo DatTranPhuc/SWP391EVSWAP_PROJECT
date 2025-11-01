@@ -93,6 +93,7 @@ public class StaffController {
             model.addAttribute("chargingCount", batteryService.countBatteriesByState(station, "charging"));
             model.addAttribute("maintenanceCount", batteryService.countBatteriesByState(station, "maintenance"));
             model.addAttribute("retiredCount", batteryService.countBatteriesByState(station, "retired"));
+            model.addAttribute("reservedCount", batteryService.countReservedBatteries(station));
 
             // ===== SỬA DÒNG NÀY =====
             model.addAttribute("totalCount", batteryService.getAllBatteriesForStation(station).size());

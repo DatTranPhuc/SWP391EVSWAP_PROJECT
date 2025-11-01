@@ -31,6 +31,10 @@ public interface BatteryRepository extends JpaRepository<Battery, Integer> {
      * @return Số lượng (long).
      */
     long countByStationAndState(Station station, String state);
+
+    long countByStationAndStateAndReservedForReservationIdIsNull(Station station, String state);
+
+    long countByStationAndReservedForReservationIdIsNotNull(Station station);
     /**
      * Tìm pin theo ID (dù ID là duy nhất, trả về List cho đồng bộ)
      */
@@ -41,9 +45,11 @@ public interface BatteryRepository extends JpaRepository<Battery, Integer> {
      */
     List<Battery> findByStationAndModelContainingIgnoreCase(Station station, String model);
 
+    List<Battery> findByReservedForReservationId(Integer reservationId);
+
     /**
      * Tìm pin đủ điều kiện cho reservation
      */
-    List<Battery> findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
+    List<Battery> findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqualAndReservedForReservationIdIsNull(
         Integer stationId, String state, Integer socPercent, Integer sohPercent);
 }

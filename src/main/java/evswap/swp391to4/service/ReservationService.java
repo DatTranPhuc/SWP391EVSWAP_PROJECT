@@ -66,6 +66,7 @@ public class ReservationService {
         VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
 
         long eligible = stationBatteries.stream()
+                .filter(battery -> battery.getReservedForReservationId() == null)
                 .filter(b -> "full".equalsIgnoreCase(b.getState()))
                 .filter(b -> b.getSohPercent() != null && b.getSohPercent() >= 80)
                 .filter(b -> b.getSocPercent() != null && b.getSocPercent() == 100)
@@ -118,6 +119,9 @@ public class ReservationService {
                 .status("pending")
                 .createdAt(Instant.now())
                 .build();
+
+        batteryService.suggestEligibleBattery(station, vehicle)
+                .ifPresent(reservation::setProposedBattery);
         reservation = reservationRepo.save(reservation);
 
         // Tạo QR code cho reservation
@@ -140,7 +144,10 @@ public class ReservationService {
         }
 
         reservation.setStatus("canceled");
+        reservation.setProposedBattery(null);
         reservationRepo.save(reservation);
+
+        batteryService.releaseReservationHold(reservationId);
 
         // Tính % hoàn tiền
         java.math.BigDecimal price = new java.math.BigDecimal("25000");
@@ -192,11 +199,21 @@ public class ReservationService {
     public void confirmReservation(Integer reservationId) {
         Reservation reservation = reservationRepo.findById(reservationId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy đặt lịch"));
-        
+
         if (!"pending".equalsIgnoreCase(reservation.getStatus())) {
             throw new IllegalStateException("Chỉ có thể xác nhận reservation đang pending");
         }
-        
+
+        Battery proposedBattery = reservation.getProposedBattery();
+        if (proposedBattery == null) {
+            proposedBattery = batteryService
+                    .suggestEligibleBattery(reservation.getStation(), reservation.getVehicle())
+                    .orElseThrow(() -> new IllegalStateException("Không còn pin đủ điều kiện để xác nhận"));
+            reservation.setProposedBattery(proposedBattery);
+        }
+
+        Battery reservedBattery = batteryService.reserveBattery(proposedBattery.getBatteryId(), reservation.getReservationId());
+        reservation.setProposedBattery(reservedBattery);
         reservation.setStatus("confirmed");
         reservationRepo.save(reservation);
     }
@@ -258,7 +275,11 @@ public class ReservationService {
             throw new IllegalStateException("Pin mới không đủ điều kiện");
         }
         
-        reservation.setAssignedBattery(newBattery);
+        batteryService.releaseReservationHold(reservationId);
+        Battery reservedBattery = batteryService.reserveBattery(newBattery.getBatteryId(), reservationId);
+
+        reservation.setAssignedBattery(reservedBattery);
+        reservation.setProposedBattery(reservedBattery);
         reservationRepo.save(reservation);
     }
 
@@ -292,28 +313,34 @@ public class ReservationService {
 
         // Nếu vẫn chưa có pin được gán, tự chọn một pin đủ điều kiện
         if (reservation.getAssignedBattery() == null) {
-            Station station = reservation.getStation();
-            Vehicle vehicle = reservation.getVehicle();
-            VehicleType type = VehicleType.UNIVERSAL;
-            if (vehicle != null && vehicle.getVehicleType() != null) {
-                type = vehicle.getVehicleType();
+            Battery proposed = reservation.getProposedBattery();
+            if (proposed != null) {
+                reservation.setAssignedBattery(proposed);
+            } else {
+                Station station = reservation.getStation();
+                Vehicle vehicle = reservation.getVehicle();
+
+                List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(station);
+                VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
+
+                Battery chosen = stationBatteries.stream()
+                        .filter(b -> b.getReservedForReservationId() == null
+                                || b.getReservedForReservationId().equals(reservation.getReservationId()))
+                        .filter(b -> "full".equalsIgnoreCase(b.getState()))
+                        .filter(b -> b.getSohPercent() != null && b.getSohPercent() >= 80)
+                        .filter(b -> b.getSocPercent() != null && b.getSocPercent() == 100)
+                        .filter(b -> type.getCompatibleBatteryModels().isEmpty() ||
+                                type.supportsBatteryModel(b.getModel()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (chosen == null) {
+                    throw new IllegalStateException("Không còn pin phù hợp để hoàn tất đổi pin");
+                }
+
+                reservation.setAssignedBattery(chosen);
+                reservation.setProposedBattery(chosen);
             }
-            List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(station);
-
-            Battery chosen = stationBatteries.stream()
-                    .filter(b -> "full".equalsIgnoreCase(b.getState()))
-                    .filter(b -> b.getSohPercent() != null && b.getSohPercent() >= 80)
-                    .filter(b -> b.getSocPercent() != null && b.getSocPercent() == 100)
-                    .filter(b -> type.getCompatibleBatteryModels().isEmpty() ||
-                            type.supportsBatteryModel(b.getModel()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (chosen == null) {
-                throw new IllegalStateException("Không còn pin phù hợp để hoàn tất đổi pin");
-            }
-
-            reservation.setAssignedBattery(chosen);
         }
 
         Battery batteryOut = reservation.getAssignedBattery();
@@ -400,6 +427,8 @@ public class ReservationService {
         tx.setBatteryInSocPercent(batteryInSoc);
         tx.setBatteryInSohPercent(batteryInSoh);
         swapTransactionRepository.save(tx);
+
+        batteryService.releaseReservationHold(reservationId);
     }
 
     @Transactional

@@ -175,12 +175,22 @@
                         <td th:text="${battery.sohPercent + '%'}">98%</td>
                         <td th:text="${battery.socPercent + '%'}">100%</td>
                         <td>
-                                    <span class="status-badge"
-                                          th:classappend="${battery.state == 'full' || battery.state == 'charging'} ? 'active' : 'inactive'"
-                                          th:text="${battery.state}">full</span>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                <span class="status-badge"
+                                      th:classappend="${battery.state == 'full' || battery.state == 'charging'} ? 'active' : 'inactive'"
+                                      th:text="${battery.state}">full</span>
+                                <span class="status-badge reserved"
+                                      th:if="${battery.reservedForReservationId != null}">Giữ chỗ</span>
+                            </div>
+                            <small th:if="${battery.reservedForReservationId != null}" style="display: block; color: var(--text-light); margin-top: 0.35rem;">
+                                Đang giữ cho đặt lịch #<span th:text="${battery.reservedForReservationId}"></span>
+                                <span th:if="${battery.reservedAt != null}">
+                                    (từ <span th:text="${#dates.format(battery.reservedAt, 'HH:mm dd/MM')}"/>)
+                                </span>
+                            </small>
                         </td>
                         <td>
-                            <form th:action="@{/staff/batteries/update}" method="POST" style="display: flex; gap: 0.5rem; min-width: 250px;">
+                            <form th:if="${battery.reservedForReservationId == null}" th:action="@{/staff/batteries/update}" method="POST" style="display: flex; gap: 0.5rem; min-width: 250px;">
 
                                 <input type="hidden" name="batteryId" th:value="${battery.batteryId}">
 
@@ -193,6 +203,9 @@
 
                                 <button type="submit" class="btn primary" style="padding: 0.5rem 1rem;">Lưu</button>
                             </form>
+                            <div th:if="${battery.reservedForReservationId != null}" style="color: var(--text-light); font-size: 0.9rem;">
+                                Không thể cập nhật khi pin đang được giữ chỗ.
+                            </div>
                         </td>
                     </tr>
 
