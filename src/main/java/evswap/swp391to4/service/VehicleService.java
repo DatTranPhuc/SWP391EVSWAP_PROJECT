@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,10 @@ public class VehicleService {
                         }
                         throw new IllegalStateException("Biển số đã được đăng ký bởi tài khoản khác");
                     });
+        }
+
+        if (vehicle.getVehicleType() == null) {
+            vehicle.setVehicleType(VehicleType.UNIVERSAL);
         }
 
         vehicle.setVehicleId(null);

@@ -6,8 +6,9 @@ import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.BatteryRepository;
-import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
+import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ import java.util.List;
 public class BatteryService {
 
     private final BatteryRepository batteryRepo;
-    private final VehicleBatteryCompatibilityRepository compatibilityRepo;
+    private final VehicleRepository vehicleRepository;
 
     @Transactional(readOnly = true)
     public List<Battery> searchBatteriesForStation(Station station, String searchType, String searchTerm) {
@@ -130,25 +131,29 @@ public class BatteryService {
         List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
             stationId, "full", 100, 80);
 
-        // Lọc theo tương thích với xe
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy xe"));
+        VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
+        List<String> compatibleModels = type.getCompatibleBatteryModels();
+
         List<AvailableBatteryResponse> result = new ArrayList<>();
         for (Battery battery : eligibleBatteries) {
-            boolean isCompatible = compatibilityRepo.existsByVehicleVehicleIdAndBatteryModel(
-                vehicleId, battery.getModel());
-            
+            boolean isCompatible = compatibleModels.isEmpty() ||
+                    compatibleModels.stream().anyMatch(model -> model.equalsIgnoreCase(battery.getModel()));
+
             if (isCompatible) {
                 result.add(AvailableBatteryResponse.builder()
-                    .batteryId(battery.getBatteryId())
-                    .model(battery.getModel())
-                    .sohPercent(battery.getSohPercent())
-                    .socPercent(battery.getSocPercent())
-                    .state(battery.getState())
-                    .stationName(battery.getStation().getName())
-                    .stationAddress(battery.getStation().getAddress())
-                    .build());
+                        .batteryId(battery.getBatteryId())
+                        .model(battery.getModel())
+                        .sohPercent(battery.getSohPercent())
+                        .socPercent(battery.getSocPercent())
+                        .state(battery.getState())
+                        .stationName(battery.getStation().getName())
+                        .stationAddress(battery.getStation().getAddress())
+                        .build());
             }
         }
-        
+
         return result;
     }
 
