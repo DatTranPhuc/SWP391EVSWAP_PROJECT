@@ -6,6 +6,8 @@ import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Admin; // <-- Import Admin
+import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
 import jakarta.servlet.http.HttpSession; // <-- Import Session
@@ -31,6 +33,7 @@ public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
+    private final DriverService driverService;
 
     /**
      * HÀM HELPER (NỘI BỘ)
@@ -316,5 +319,57 @@ public class AdminController {
             redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/stations";
+    }
+    // ==========================================================
+    // =================== PHẦN QUẢN LÝ DRIVER (MỚI) =============
+    // ==========================================================
+
+    /**
+     * (HÀM MỚI 1) Hiển thị trang Quản lý Khách hàng (Driver)
+     */
+    @GetMapping("/drivers")
+    public String manageDriversPage(
+            @RequestParam(name = "searchType", required = false) String searchType,
+            @RequestParam(name = "searchTerm", required = false) String searchTerm,
+            Model model, HttpSession session, RedirectAttributes redirect) {
+
+        try {
+            checkAdminLogin(session); // <-- Kiểm tra Admin
+
+            List<Driver> driverList = driverService.searchDrivers(searchType, searchTerm);
+            model.addAttribute("driverList", driverList);
+            model.addAttribute("currentSearchType", searchType);
+            model.addAttribute("currentSearchTerm", searchTerm);
+
+            return "admin/manage-drivers"; // <- Trả về file HTML mới
+
+        } catch (IllegalStateException e) {
+            redirect.addFlashAttribute("loginError", e.getMessage());
+            return "redirect:/login";
+        }
+    }
+
+    /**
+     * (HÀM MỚI 2) Xử lý Cập nhật Trạng thái (Ban / Unban)
+     */
+    @PostMapping("/drivers/update-status")
+    public String handleUpdateDriverStatus(
+            @RequestParam("driverId") Integer driverId,
+            @RequestParam("newStatus") String newStatus,
+            HttpSession session, RedirectAttributes redirect) {
+
+        try {
+            checkAdminLogin(session); // <-- Kiểm tra Admin
+
+            driverService.updateDriverStatus(driverId, newStatus);
+            redirect.addFlashAttribute("successMessage", "Đã cập nhật trạng thái tài xế #" + driverId + " thành công!");
+        } catch (IllegalStateException authError) {
+            redirect.addFlashAttribute("loginError", authError.getMessage());
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/admin/drivers";
     }
 }

@@ -46,6 +46,9 @@ public class Driver {
     @Column(name = "created_at")
     private Instant createdAt;
 
+    @Column(name = "status")
+    private String status;
+
     @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
