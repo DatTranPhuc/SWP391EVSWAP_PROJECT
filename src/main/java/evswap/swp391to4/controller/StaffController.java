@@ -2,13 +2,17 @@ package evswap.swp391to4.controller;
 
 
 import evswap.swp391to4.dto.BatteryCreateRequest;
+import evswap.swp391to4.dto.SwapSimulatorResponse;
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.service.BatteryService;
+import evswap.swp391to4.service.SwapSimulatorService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +49,7 @@ public class StaffController {
 
     private final TicketSupportService ticketService;
     private final ReservationService reservationService;
+    private final SwapSimulatorService swapSimulatorService;
 
 
     // (Hàm checkStaffLogin giữ nguyên)
@@ -106,6 +112,45 @@ public class StaffController {
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Không thể tải dữ liệu dashboard: " + e.getMessage());
             return "staff/dashboard";
+        }
+    }
+
+    @GetMapping("/swap-simulator")
+    public String swapSimulatorPage(HttpSession session, Model model, RedirectAttributes redirect) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            Station station = staff.getStation();
+
+            model.addAttribute("staffName", staff.getFullName());
+            model.addAttribute("stationName", station.getName());
+            model.addAttribute("stationAddress", station.getAddress());
+            model.addAttribute("stationId", station.getStationId());
+            model.addAttribute("autoRefreshSeconds", 10);
+
+            return "staff/swap-simulator";
+
+        } catch (IllegalStateException authError) {
+            redirect.addFlashAttribute("loginError", authError.getMessage());
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Không thể tải dữ liệu giả lập: " + e.getMessage());
+            return "staff/swap-simulator";
+        }
+    }
+
+    @GetMapping("/swap-simulator/data")
+    @ResponseBody
+    public ResponseEntity<?> loadSwapSimulatorData(HttpSession session) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            SwapSimulatorResponse data = swapSimulatorService.loadDataForStation(staff.getStation());
+            return ResponseEntity.ok(data);
+        } catch (IllegalStateException authError) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", authError.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Không thể tải dữ liệu giả lập: " + e.getMessage()));
         }
     }
 
