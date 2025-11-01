@@ -38,15 +38,10 @@ public class VehicleController {
         if (model.containsAttribute("vehicleForm")) {
             Object existing = model.asMap().get("vehicleForm");
             if (existing instanceof VehicleRegistrationForm form) {
-                if (form.getVehicleType() == null || form.getVehicleType().isBlank()) {
-                    form.setVehicleType(VehicleType.CITY_48V.name());
-                }
                 return form;
             }
         }
-        VehicleRegistrationForm form = new VehicleRegistrationForm();
-        form.setVehicleType(VehicleType.CITY_48V.name());
-        return form;
+        return new VehicleRegistrationForm();
     }
 
     // API này có thể giữ nguyên hoặc thay đổi tùy theo cấu trúc API của bạn
@@ -95,6 +90,9 @@ public class VehicleController {
                                   @ModelAttribute("vehicleForm") VehicleRegistrationForm form,
                                   RedirectAttributes redirect) {
         try {
+            if (form.getVehicleType() == null || form.getVehicleType().isBlank()) {
+                throw new IllegalArgumentException("Vui lòng chọn phân loại xe phù hợp");
+            }
             VehicleType vehicleType = VehicleType.fromString(form.getVehicleType());
 
             Vehicle vehicle = Vehicle.builder()
@@ -158,6 +156,9 @@ public class VehicleController {
         }
 
         try {
+            if (form.getVehicleType() == null || form.getVehicleType().isBlank()) {
+                throw new IllegalArgumentException("Vui lòng chọn phân loại xe phù hợp");
+            }
             VehicleType vehicleType = VehicleType.fromString(form.getVehicleType());
 
             Vehicle vehicle = Vehicle.builder()

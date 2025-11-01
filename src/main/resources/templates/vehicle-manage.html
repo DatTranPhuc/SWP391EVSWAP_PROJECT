@@ -132,13 +132,14 @@
                     <span>Phân loại xe</span>
                     <select id="modalVehicleType" th:field="*{vehicleType}" class="vehicle-type-select" required
                             onchange="updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview', this)">
+                        <option value="" disabled th:selected="${vehicleForm.vehicleType == null}">-- Chọn phân loại xe --</option>
                         <option th:each="type : ${vehicleTypes}"
                                 th:value="${type.name()}"
                                 th:text="${type.displayName}"
                                 th:data-description="${type.description}"
-                                th:data-battery="${type.getCompatibleBatteryLabel()}"
-                                th:selected="${type.name() == vehicleForm.vehicleType}"></option>
+                                th:data-battery="${type.getCompatibleBatteryLabel()}"></option>
                     </select>
+                    <span class="field-hint">Chọn đúng loại xe để hệ thống tự động lọc pin phù hợp.</span>
                     <div class="vehicle-type-preview" id="modalVehicleTypePreview">
                         <strong class="preview-title"></strong>
                         <span class="preview-description"></span>
@@ -173,7 +174,7 @@
         }
 
         const option = selectElement.selectedOptions[0];
-        if (!option) {
+        if (!option || !option.value) {
             preview.classList.remove('is-visible');
             return;
         }
