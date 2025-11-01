@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BatteryRepository extends JpaRepository<Battery, Integer> {
@@ -46,4 +47,6 @@ public interface BatteryRepository extends JpaRepository<Battery, Integer> {
      */
     List<Battery> findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
         Integer stationId, String state, Integer socPercent, Integer sohPercent);
+
+    Optional<Battery> findFirstByModelIgnoreCase(String model);
 }

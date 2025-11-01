@@ -473,6 +473,72 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.vehicle-type-field {
+    display: grid;
+    gap: 12px;
+}
+
+.vehicle-type-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.vehicle-type-options {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.vehicle-type-option {
+    position: relative;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.vehicle-type-option input {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-strong);
+}
+
+.vehicle-type-content {
+    display: grid;
+    gap: 6px;
+    padding: 18px;
+    border-radius: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.vehicle-type-option:hover .vehicle-type-content,
+.vehicle-type-option:focus-within .vehicle-type-content {
+    border-color: var(--accent-strong);
+    box-shadow: 0 16px 32px rgba(34, 211, 238, 0.18);
+    background: rgba(34, 211, 238, 0.12);
+}
+
+.vehicle-type-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.vehicle-type-battery {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.vehicle-type-option input:checked + .vehicle-type-content {
+    border-color: var(--accent);
+    box-shadow: 0 18px 38px rgba(99, 102, 241, 0.28);
+    background: rgba(99, 102, 241, 0.18);
+}
+
 .vehicle-form-grid .auth-field:nth-child(3) {
     grid-column: span 2;
 }
@@ -506,6 +572,10 @@ body {
 
 @media (max-width: 992px) {
     .vehicle-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vehicle-type-options {
         grid-template-columns: 1fr;
     }
 

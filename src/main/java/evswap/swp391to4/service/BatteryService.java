@@ -6,8 +6,10 @@ import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.BatteryRepository;
 import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
+import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class BatteryService {
 
     private final BatteryRepository batteryRepo;
     private final VehicleBatteryCompatibilityRepository compatibilityRepo;
+    private final VehicleRepository vehicleRepository;
 
     @Transactional(readOnly = true)
     public List<Battery> searchBatteriesForStation(Station station, String searchType, String searchTerm) {
@@ -130,12 +133,18 @@ public class BatteryService {
         List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
             stationId, "full", 100, 80);
 
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phương tiện với ID: " + vehicleId));
+        VehicleType vehicleType = vehicle.getVehicleType();
+        String requiredModel = vehicleType != null ? vehicleType.getDefaultBatteryModel() : null;
+
         // Lọc theo tương thích với xe
         List<AvailableBatteryResponse> result = new ArrayList<>();
         for (Battery battery : eligibleBatteries) {
-            boolean isCompatible = compatibilityRepo.existsByVehicleVehicleIdAndBatteryModel(
+            boolean matchesType = requiredModel != null && battery.getModel().equalsIgnoreCase(requiredModel);
+            boolean isCompatible = matchesType || compatibilityRepo.existsByVehicleVehicleIdAndBatteryModel(
                 vehicleId, battery.getModel());
-            
+
             if (isCompatible) {
                 result.add(AvailableBatteryResponse.builder()
                     .batteryId(battery.getBatteryId())

@@ -6,8 +6,14 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleBatteryCompatibility;
+import evswap.swp391to4.entity.VehicleBatteryId;
+import evswap.swp391to4.entity.VehicleType;
+import evswap.swp391to4.repository.BatteryRepository;
 import evswap.swp391to4.repository.DriverRepository;
+import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +23,8 @@ public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
+    private final BatteryRepository batteryRepository;
+    private final VehicleBatteryCompatibilityRepository compatibilityRepository;
 
     @Transactional
     public Vehicle addVehicleToDriver(Integer driverId, Vehicle vehicle) {
@@ -29,6 +37,10 @@ public class VehicleService {
 
         if (!Boolean.TRUE.equals(driver.getEmailVerified())) {
             throw new IllegalStateException("Vui lòng xác minh email trước khi thêm phương tiện");
+        }
+
+        if (vehicle.getVehicleType() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn loại phương tiện");
         }
 
         vehicleRepository.findByVin(vehicle.getVin())
@@ -53,7 +65,9 @@ public class VehicleService {
         vehicle.setDriver(driver);
         vehicle.setCreatedAt(Instant.now());
 
-        return vehicleRepository.save(vehicle);
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        assignDefaultCompatibility(savedVehicle);
+        return savedVehicle;
     }
 
     @Transactional(readOnly = true)
@@ -67,5 +81,35 @@ public class VehicleService {
         }
 
         return vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driverId);
+    }
+
+    private void assignDefaultCompatibility(Vehicle vehicle) {
+        VehicleType type = vehicle.getVehicleType();
+        if (type == null) {
+            return;
+        }
+
+        String targetModel = type.getDefaultBatteryModel();
+        Battery representativeBattery = batteryRepository
+                .findFirstByModelIgnoreCase(targetModel)
+                .orElse(null);
+
+        if (representativeBattery == null) {
+            return;
+        }
+
+        boolean exists = compatibilityRepository
+                .existsByVehicleVehicleIdAndBatteryModel(vehicle.getVehicleId(), representativeBattery.getModel());
+        if (exists) {
+            return;
+        }
+
+        VehicleBatteryCompatibility compatibility = VehicleBatteryCompatibility.builder()
+                .id(new VehicleBatteryId(vehicle.getVehicleId(), representativeBattery.getBatteryId()))
+                .vehicle(vehicle)
+                .battery(representativeBattery)
+                .build();
+
+        compatibilityRepository.save(compatibility);
     }
 }

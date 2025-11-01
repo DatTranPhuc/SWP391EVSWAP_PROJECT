@@ -61,7 +61,7 @@
         </div>
 
         <div class="vehicle-info">
-            <h2 id="vehicle-title">Đăng ký xe máy điện</h2>
+            <h2 id="vehicle-title">Đăng ký phương tiện</h2>
             <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
         </div>
 
@@ -70,6 +70,19 @@
 
         <form class="auth-form vehicle-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
             <input type="hidden" name="driverId" th:value="${driverId}">
+
+            <div class="auth-field vehicle-type-field">
+                <span class="vehicle-type-label">Loại phương tiện</span>
+                <div class="vehicle-type-options" role="radiogroup">
+                    <label class="vehicle-type-option" th:each="type : ${vehicleTypes}">
+                        <input type="radio" th:field="*{vehicleType}" th:value="${type}" />
+                        <div class="vehicle-type-content">
+                            <span class="vehicle-type-name" th:text="${type.displayName}">Xe 2 bánh</span>
+                            <span class="vehicle-type-battery" th:text="'Pin: ' + ${type.defaultBatteryModel}">Pin: EVS Scooter Pack 48V</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
 
             <div class="vehicle-form-grid">
                 <div class="auth-field">

@@ -15,6 +15,7 @@ import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.entity.VehicleBatteryCompatibility;
 import evswap.swp391to4.entity.VehicleBatteryId;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.BatteryRepository;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.StaffRepository;
@@ -77,7 +78,8 @@ public class DataSeeder implements CommandLineRunner {
                             .driver(driver)
                             .vin("VIN-TEST-0001")
                             .plateNumber("59A1-000.01")
-                            .model("MODEL-A")
+                            .model("EVS Demo Scooter")
+                            .vehicleType(VehicleType.TWO_WHEEL)
                             .createdAt(Instant.now())
                             .build();
                     return vehicleRepository.save(v);
@@ -85,36 +87,36 @@ public class DataSeeder implements CommandLineRunner {
 
         // Batteries at station
         if (batteryRepository.findAll().isEmpty()) {
-            Battery b1 = batteryRepository.save(Battery.builder()
+            Battery scooterFull = batteryRepository.save(Battery.builder()
                     .station(station)
-                    .model("MODEL-A")
+                    .model(VehicleType.TWO_WHEEL.getDefaultBatteryModel())
                     .state("full")
                     .sohPercent(90)
                     .socPercent(100)
                     .build());
 
-            Battery b2 = batteryRepository.save(Battery.builder()
+            Battery scooterCharging = batteryRepository.save(Battery.builder()
                     .station(station)
-                    .model("MODEL-A")
+                    .model(VehicleType.TWO_WHEEL.getDefaultBatteryModel())
                     .state("charging")
                     .sohPercent(95)
                     .socPercent(50)
                     .build());
 
-            Battery b3 = batteryRepository.save(Battery.builder()
+            Battery carFull = batteryRepository.save(Battery.builder()
                     .station(station)
-                    .model("MODEL-B")
+                    .model(VehicleType.FOUR_WHEEL.getDefaultBatteryModel())
                     .state("full")
-                    .sohPercent(70)
+                    .sohPercent(88)
                     .socPercent(100)
                     .build());
 
-            // Compatibility: vehicle compatible with MODEL-A battery b1
+            // Compatibility: vehicle compatible with scooter battery
             compatibilityRepository.saveAll(List.of(
                     VehicleBatteryCompatibility.builder()
-                            .id(new VehicleBatteryId(vehicle.getVehicleId(), b1.getBatteryId()))
+                            .id(new VehicleBatteryId(vehicle.getVehicleId(), scooterFull.getBatteryId()))
                             .vehicle(vehicle)
-                            .battery(b1)
+                            .battery(scooterFull)
                             .build()
             ));
         }
@@ -137,7 +139,9 @@ public class DataSeeder implements CommandLineRunner {
                 "- Driver: " + driverEmail + " / " + driverPass + " (wallet: 200,000 VND)\n" +
                 "- Staff:  " + staffEmail + " / " + staffPass + " (station: " + station.getName() + ")\n" +
                 "- Vehicle: " + vehicle.getModel() + " (" + vehicle.getPlateNumber() + ")\n" +
-                "- Station has eligible battery MODEL-A (full, 100% SOC, SOH>=80)");
+                "- Station has eligible battery " + VehicleType.TWO_WHEEL.getDefaultBatteryModel() +
+                " (full, 100% SOC, SOH>=80)\n" +
+                "- Station also seeded a sample " + VehicleType.FOUR_WHEEL.getDefaultBatteryModel() + " pack");
     }
 }
 
