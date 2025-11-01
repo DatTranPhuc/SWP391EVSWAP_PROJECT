@@ -128,14 +128,22 @@
                     <span>Model xe</span>
                     <input type="text" th:field="*{model}" placeholder="Ví dụ: VinFast Feliz S" required>
                 </label>
-                <label>
+                <label class="vehicle-type-field">
                     <span>Phân loại xe</span>
-                    <select th:field="*{vehicleType}" required>
+                    <select id="modalVehicleType" th:field="*{vehicleType}" class="vehicle-type-select" required
+                            onchange="updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview', this)">
                         <option th:each="type : ${vehicleTypes}"
                                 th:value="${type.name()}"
-                                th:text="${type.displayName + ' – ' + type.getCompatibleBatteryLabel()}"
+                                th:text="${type.displayName}"
+                                th:data-description="${type.description}"
+                                th:data-battery="${type.getCompatibleBatteryLabel()}"
                                 th:selected="${type.name() == vehicleForm.vehicleType}"></option>
                     </select>
+                    <div class="vehicle-type-preview" id="modalVehicleTypePreview">
+                        <strong class="preview-title"></strong>
+                        <span class="preview-description"></span>
+                        <span class="preview-battery"></span>
+                    </div>
                 </label>
                 <label>
                     <span>Số VIN</span>
@@ -157,6 +165,27 @@
 <script>
     const modal = document.getElementById('vehicleModal');
 
+    function updateVehicleTypePreview(selectId, previewId, selectEl) {
+        const selectElement = selectEl || document.getElementById(selectId);
+        const preview = document.getElementById(previewId);
+        if (!selectElement || !preview) {
+            return;
+        }
+
+        const option = selectElement.selectedOptions[0];
+        if (!option) {
+            preview.classList.remove('is-visible');
+            return;
+        }
+
+        preview.querySelector('.preview-title').textContent = option.textContent.trim();
+        preview.querySelector('.preview-description').textContent = option.dataset.description || '';
+        preview.querySelector('.preview-battery').textContent = option.dataset.battery
+            ? `Pin tương thích: ${option.dataset.battery}`
+            : 'Pin tương thích: Mọi model pin';
+        preview.classList.add('is-visible');
+    }
+
     function openVehicleModal() {
         modal.setAttribute('aria-hidden', 'false');
         modal.classList.add('is-open');
@@ -165,6 +194,7 @@
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 100);
         }
+        updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview');
     }
 
     function closeVehicleModal() {
@@ -180,6 +210,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+        updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview');
         if (document.body.dataset.openModal === 'true') {
             openVehicleModal();
         }

@@ -514,6 +514,37 @@ body.vehicle-manage-body {
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
 }
 
+.vehicle-type-field {
+    position: relative;
+}
+
+.vehicle-type-preview {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    color: var(--text-secondary);
+    font-size: 13px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vehicle-type-preview.is-visible {
+    display: flex;
+}
+
+.vehicle-type-preview .preview-title {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.vehicle-type-preview .preview-battery {
+    color: var(--accent-secondary);
+    font-weight: 600;
+}
+
 .meta-hint {
     display: block;
     margin-top: 6px;

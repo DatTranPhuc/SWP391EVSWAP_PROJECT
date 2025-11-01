@@ -28,6 +28,27 @@ public class VehicleController {
     private final DriverService driverService;
     private final VehicleService vehicleService;
 
+    @ModelAttribute("vehicleTypes")
+    public VehicleType[] vehicleTypes() {
+        return VehicleType.values();
+    }
+
+    @ModelAttribute("vehicleForm")
+    public VehicleRegistrationForm vehicleForm(Model model) {
+        if (model.containsAttribute("vehicleForm")) {
+            Object existing = model.asMap().get("vehicleForm");
+            if (existing instanceof VehicleRegistrationForm form) {
+                if (form.getVehicleType() == null || form.getVehicleType().isBlank()) {
+                    form.setVehicleType(VehicleType.CITY_48V.name());
+                }
+                return form;
+            }
+        }
+        VehicleRegistrationForm form = new VehicleRegistrationForm();
+        form.setVehicleType(VehicleType.CITY_48V.name());
+        return form;
+    }
+
     // API này có thể giữ nguyên hoặc thay đổi tùy theo cấu trúc API của bạn
     @PostMapping("/api/drivers/{driverId}/vehicles")
     public ResponseEntity<Vehicle> addVehicle(@PathVariable Integer driverId,
@@ -57,14 +78,6 @@ public class VehicleController {
             model.addAttribute("driverId", driver.getDriverId());
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-
-            if (!model.containsAttribute("vehicleForm")) {
-                VehicleRegistrationForm form = new VehicleRegistrationForm();
-                form.setVehicleType(VehicleType.CITY_48V.name());
-                model.addAttribute("vehicleForm", form);
-            }
-
-            model.addAttribute("vehicleTypes", VehicleType.values());
 
             return "vehicle-register";
         } catch (Exception e) {
@@ -126,14 +139,6 @@ public class VehicleController {
                 .filter(java.util.Objects::nonNull)
                 .findFirst()
                 .orElse(null));
-
-        if (!model.containsAttribute("vehicleForm")) {
-            VehicleRegistrationForm form = new VehicleRegistrationForm();
-            form.setVehicleType(VehicleType.CITY_48V.name());
-            model.addAttribute("vehicleForm", form);
-        }
-
-        model.addAttribute("vehicleTypes", VehicleType.values());
 
         return "vehicle-manage";
     }

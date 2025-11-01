@@ -78,16 +78,21 @@
                 </div>
                 <div class="auth-field">
                     <label for="vehicleType">Phân loại xe</label>
-                    <select id="vehicleType" th:field="*{vehicleType}" required>
+                    <select id="vehicleType" th:field="*{vehicleType}" class="vehicle-type-select" required
+                            th:onchange="|updateVehicleTypePreview('vehicleType', 'vehicleTypePreview', this)|">
                         <option th:each="type : ${vehicleTypes}"
                                 th:value="${type.name()}"
-                                th:text="${type.displayName + ' – ' + type.getCompatibleBatteryLabel()}"
+                                th:text="${type.displayName}"
+                                th:data-description="${type.description}"
+                                th:data-battery="${type.getCompatibleBatteryLabel()}"
                                 th:selected="${type.name() == vehicleForm.vehicleType}">
                         </option>
                     </select>
-                    <small class="field-hint">
-                        Chọn nhóm xe để hệ thống tự xác định loại pin tương thích.
-                    </small>
+                    <div class="vehicle-type-preview" id="vehicleTypePreview">
+                        <strong class="preview-title"></strong>
+                        <span class="preview-description"></span>
+                        <span class="preview-battery"></span>
+                    </div>
                 </div>
                 <div class="auth-field">
                     <label for="vin">Số VIN</label>
@@ -114,5 +119,30 @@
         </div>
     </section>
 </main>
+<script>
+    function updateVehicleTypePreview(selectId, previewId, selectEl) {
+        const selectElement = selectEl || document.getElementById(selectId);
+        const preview = document.getElementById(previewId);
+        if (!selectElement || !preview) {
+            return;
+        }
+        const option = selectElement.selectedOptions[0];
+        if (!option) {
+            preview.classList.remove('is-visible');
+            return;
+        }
+
+        preview.querySelector('.preview-title').textContent = option.textContent.trim();
+        preview.querySelector('.preview-description').textContent = option.dataset.description || '';
+        preview.querySelector('.preview-battery').textContent = option.dataset.battery
+            ? `Pin tương thích: ${option.dataset.battery}`
+            : 'Pin tương thích: Mọi model pin';
+        preview.classList.add('is-visible');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateVehicleTypePreview('vehicleType', 'vehicleTypePreview');
+    });
+</script>
 </body>
 </html>
