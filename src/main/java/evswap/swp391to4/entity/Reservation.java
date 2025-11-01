@@ -2,15 +2,26 @@ package evswap.swp391to4.entity;
 
 
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
 import java.time.Instant;
 
-@Entity @Table(name = "reservation")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "reservation")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Reservation {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")
     private Integer reservationId;
 
