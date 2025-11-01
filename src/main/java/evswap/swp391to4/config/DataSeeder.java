@@ -62,7 +62,7 @@ public class DataSeeder implements CommandLineRunner {
                             .phone("0900000001")
                             .emailVerified(true)
                             .createdAt(Instant.now())
-                            .balance(BigDecimal.ZERO)
+                            .balance(new BigDecimal("200000"))
                             .build();
                     d = driverRepository.save(d);
                     // Seed initial wallet balance via successful payment record

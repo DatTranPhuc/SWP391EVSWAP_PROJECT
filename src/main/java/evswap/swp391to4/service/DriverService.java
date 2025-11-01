@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -141,6 +142,15 @@ public class DriverService {
             throw new IllegalStateException("Vui lòng xác minh email trước khi đăng nhập");
         }
 
+        // ===============================================
+        // ===== THÊM ĐOẠN KIỂM TRA NÀY VÀO =====
+        // ===============================================
+        // (Kiểm tra xem status có phải 'active' không)
+        if (!"active".equals(driver.getStatus())) {
+            throw new IllegalStateException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
+        }
+        // ===============================================
+
         if (!passwordEncoder.matches(password, driver.getPasswordHash())) {
             throw new IllegalArgumentException("Mật khẩu không đúng");
         }
@@ -152,5 +162,44 @@ public class DriverService {
     public Driver getDriverById(Integer driverId) {
         return driverRepo.findById(driverId)
                 .orElseThrow(() -> new IllegalStateException("Tài khoản tài xế không tồn tại"));
+    }
+
+    // ==========================================================
+    // ===== CÁC HÀM MỚI (CHO ADMIN QUẢN LÝ DRIVER) =====
+    // ==========================================================
+
+    /**
+     * (MỚI) Tìm kiếm Driver (cho Admin)
+     */
+    @Transactional(readOnly = true)
+    public List<Driver> searchDrivers(String searchType, String searchTerm) {
+        if (searchTerm == null || searchTerm.isBlank() || searchType == null || searchType.isBlank()) {
+            return driverRepo.findAll();
+        }
+
+        return switch (searchType) {
+            case "name" -> driverRepo.findByFullNameContainingIgnoreCase(searchTerm);
+            case "email" -> driverRepo.findByEmailContainingIgnoreCase(searchTerm);
+            case "phone" -> driverRepo.findByPhoneContaining(searchTerm);
+            case "status" -> driverRepo.findByStatus(searchTerm);
+            default -> driverRepo.findAll();
+        };
+    }
+
+    /**
+     * (MỚI) Cập nhật trạng thái (Active/Banned)
+     */
+    @Transactional
+    public void updateDriverStatus(Integer driverId, String newStatus) {
+        Driver driver = driverRepo.findById(driverId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài xế với ID: " + driverId));
+
+        List<String> validStates = List.of("active", "banned");
+        if (!validStates.contains(newStatus.toLowerCase())) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + newStatus);
+        }
+
+        driver.setStatus(newStatus.toLowerCase()); // (Hàm này sẽ hết lỗi khi bạn thêm trường 'status' vào Driver.java)
+        driverRepo.save(driver);
     }
 }

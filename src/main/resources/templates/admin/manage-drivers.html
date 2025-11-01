@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Khách hàng (Driver)</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* (Style phụ để trang giống các trang Staff/Station) */
+        .form-control-select { width: 100%; padding: 0.75rem 1rem; font-size: 1rem; font-family: var(--font-family); border: 1px solid var(--border-color); border-radius: 12px; background: rgba(15, 20, 30, 0.72) url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23a0aec0%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%20%2F%3E%3C%2Fsvg%3E') no-repeat right 0.75rem center; background-size: 1.25em 1.25em; color: var(--text-dark); -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .table-scroll-container { max-height: 600px; overflow-y: auto; overflow-x: auto; }
+        .btn.warning { background-color: #ffc107; color: #212529; } .btn.warning:hover { background-color: #e0a800; }
+        .btn.danger { background-color: #f87171; color: #020817; } .btn.danger:hover { background-color: #ef4444; }
+        .btn.success { background-color: #4ade80; color: #020817; } .btn.success:hover { background-color: #22c55e; }
+    </style>
+</head>
+
+<body class="admin-body"> <header class="admin-top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">🚗</span>
+            <span class="brand-name">EV SWAP</span>
+            <span class="admin-badge">Admin Panel</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/admin/drivers}" class="nav-link-button active">Quản lý Khách hàng</a>
+            <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button">Quản lý Trạm</a>
+        </nav>
+        <div class="auth-area" th:if="${session.loggedInAdmin}">
+            <span class="welcome">
+                Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!
+            </span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+
+    <header class="admin-header" style="margin-bottom: 2rem;">
+        <h1 class="admin-title">Quản lý Khách hàng (Driver)</h1>
+        <p class="admin-subtitle">Tìm kiếm và quản lý tài khoản khách hàng.</p>
+    </header>
+
+    <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
+    <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
+
+    <div class="admin-content-card" style="padding: 2rem;">
+
+        <div class="content-header" style="margin-bottom: 1rem;">
+            <h2 style="font-size: 1.5rem;">Danh sách khách hàng</h2>
+            <form th:action="@{/admin/drivers}" method="GET" class="admin-search" style="align-items: center;">
+                <select name="searchType" class="form-control-select" style="padding: 0.6rem 1rem; width: 150px; font-size: 0.9rem;">
+                    <option value="name" th:selected="${currentSearchType == 'name' or currentSearchType == null}">Theo Tên</option>
+                    <option value="email" th:selected="${currentSearchType == 'email'}">Theo Email</option>
+                    <option value="phone" th:selected="${currentSearchType == 'phone'}">Theo SĐT</option>
+                    <option value="status" th:selected="${currentSearchType == 'status'}">Theo Trạng thái</option>
+                </select>
+                <input type="text" name="searchTerm" placeholder="Nhập từ khóa..." th:value="${currentSearchTerm}" style="width: 200px;">
+                <button type="submit" class="btn primary" style="padding: 0.6rem 1.2rem;">Tìm</button>
+            </form>
+        </div>
+
+        <div class="table-scroll-container">
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ tên</th>
+                    <th>Email / SĐT</th>
+                    <th>Số dư (VNĐ)</th> <th>Xác thực Email</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="driver : ${driverList}">
+                    <td th:text="${driver.driverId}">#1</td>
+                    <td th:text="${driver.fullName}">Nguyễn Văn A</td>
+                    <td>
+                        <div th:text="${driver.email}"></div>
+                        <small th:text="${driver.phone}" style="color: var(--text-secondary);"></small>
+                    </td>
+
+                    <td th:text="${#numbers.formatDecimal(driver.balance, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                        0 VNĐ
+                    </td>
+
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="${driver.emailVerified} ? 'active' : 'inactive'"
+                              th:text="${driver.emailVerified} ? 'Đã xác thực' : 'Chưa'">
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="${driver.status == 'active' || driver.status == null} ? 'active' : 'inactive'"
+                              th:text="${driver.status ?: 'active'}">
+                            active
+                        </span>
+                    </td>
+
+                    <td style="min-width: 150px;">
+                        <form th:if="${driver.status == 'active' || driver.status == null}"
+                              th:action="@{/admin/drivers/update-status}" method="POST">
+                            <input type="hidden" name="driverId" th:value="${driver.driverId}" />
+                            <input type="hidden" name="newStatus" value="banned" />
+                            <button type="submit" class="btn danger" style="padding: 0.5rem 1rem;">
+                                <i class="fas fa-lock"></i> Tạm khóa
+                            </button>
+                        </form>
+                        <form th:if="${driver.status == 'banned'}"
+                              th:action="@{/admin/drivers/update-status}" method="POST">
+                            <input type="hidden" name="driverId" th:value="${driver.driverId}" />
+                            <input type="hidden" name="newStatus" value="active" />
+                            <button type="submit" class="btn success" style="padding: 0.5rem 1rem;">
+                                <i class="fas fa-lock-open"></i> Kích hoạt
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                <tr th:if="${driverList == null || driverList.isEmpty()}">
+                    <td colspan="7" class="empty-state">
+                        Không tìm thấy tài xế nào.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="admin-footer">
+    © 2024 EV SWAP - Admin Portal
+</footer>
+
+</body>
+</html>

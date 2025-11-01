@@ -64,6 +64,10 @@ public class Driver {
     @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @Column(name = "status")
+    @Builder.Default // Mặc định là 'active' khi tạo
+    private String status = "active";
+
     @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Vehicle> vehicles = new ArrayList<>();
