@@ -2,13 +2,13 @@ package evswap.swp391to4.entity;
 
 
 
-<<<<<<< HEAD
+
 import jakarta.persistence.*;
 import lombok.*;
-=======
+
 import java.math.BigDecimal;
 import java.time.Instant;
->>>>>>> feature/dev
+
 
 import java.time.Instant;
 

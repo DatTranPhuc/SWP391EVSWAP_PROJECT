@@ -1,7 +1,5 @@
 package evswap.swp391to4.controller;
 
-<<<<<<< HEAD
-=======
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -18,26 +16,21 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import evswap.swp391to4.dto.FeedbackResponse;
->>>>>>> feature/dev
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
-import evswap.swp391to4.entity.Admin; // <-- Import Admin
+import evswap.swp391to4.dto.TicketSupportResponse;
+import evswap.swp391to4.dto.TicketUpdateRequest;
+import evswap.swp391to4.entity.Admin;
+import evswap.swp391to4.service.FeedbackService;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
-import jakarta.servlet.http.HttpSession; // <-- Import Session
+import evswap.swp391to4.service.TicketSupportService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 /**
  * Controller DÀNH CHO ADMIN
@@ -50,6 +43,8 @@ public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
+    private final FeedbackService feedbackService;
+    private final TicketSupportService ticketService;
 
     /**
      * HÀM HELPER (NỘI BỘ)
@@ -336,8 +331,6 @@ public class AdminController {
         }
         return "redirect:/admin/stations";
     }
-<<<<<<< HEAD
-=======
 
     // ====================== FEEDBACK (XEM VÀ TẠO) ======================
 
@@ -353,7 +346,8 @@ public class AdminController {
     public String listFeedbackByStation(@PathVariable Long stationId, Model model, HttpSession session) {
         checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
         List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByStationId(stationId);
-        String stationName = stationService.findById(stationId.intValue()).getName();
+        StationResponse station = stationService.findById(stationId.intValue());
+        String stationName = station != null ? station.getName() : "Unknown Station";
         model.addAttribute("feedbackList", feedbackList);
         model.addAttribute("stationName", stationName);
         model.addAttribute("stationId", stationId);
@@ -392,8 +386,7 @@ public class AdminController {
                 List<TicketSupportService.Comment> comments = ticketService.getCommentsByTicketId(id);
                 model.addAttribute("comments", comments);
             } catch (Exception e) {
-                System.err.println("Error loading comments for ticket " + id + ": " + e.getMessage());
-                e.printStackTrace();
+                // Log error but continue with empty comments list
                 model.addAttribute("comments", new java.util.ArrayList<>());
             }
             
@@ -504,5 +497,5 @@ public class AdminController {
         
         return "redirect:/admin/tickets/" + id;
     }
->>>>>>> feature/dev
+
 }

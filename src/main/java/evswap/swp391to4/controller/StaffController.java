@@ -1,6 +1,6 @@
 package evswap.swp391to4.controller;
 
-<<<<<<< HEAD
+
 import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
@@ -16,12 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-=======
-import java.util.List;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,21 +26,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.dto.TicketSupportResponse;
 import evswap.swp391to4.dto.TicketUpdateRequest;
-import evswap.swp391to4.entity.Battery;
-import evswap.swp391to4.entity.Staff;
-import evswap.swp391to4.entity.Station;
-import evswap.swp391to4.service.BatteryService;
+
 import evswap.swp391to4.service.TicketSupportService;
 import evswap.swp391to4.service.ReservationService;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
->>>>>>> feature/dev
+
+
 
 @Controller
 @RequestMapping("/staff")
@@ -52,11 +41,10 @@ import lombok.RequiredArgsConstructor;
 public class StaffController {
 
     private final BatteryService batteryService;
-<<<<<<< HEAD
-=======
+
     private final TicketSupportService ticketService;
     private final ReservationService reservationService;
->>>>>>> feature/dev
+
 
     // (Hàm checkStaffLogin giữ nguyên)
     private Staff checkStaffLogin(HttpSession session) {
@@ -80,8 +68,6 @@ public class StaffController {
             Station station = staff.getStation();
 
             model.addAttribute("staffName", staff.getFullName());
-<<<<<<< HEAD
-=======
             model.addAttribute("stationName", staff.getStation().getName());
             model.addAttribute("stationAddress", staff.getStation().getAddress());
             model.addAttribute("stationId", staff.getStation().getStationId());
@@ -98,7 +84,6 @@ public class StaffController {
             model.addAttribute("openTicketsCount", openTicketsCount);
             model.addAttribute("resolvedTicketsCount", resolvedTicketsCount);
 
->>>>>>> feature/dev
             model.addAttribute("stationName", station.getName());
             model.addAttribute("stationAddress", station.getAddress());
             model.addAttribute("stationId", station.getStationId());
@@ -225,8 +210,7 @@ public class StaffController {
 
         return "redirect:/staff/batteries";
     }
-<<<<<<< HEAD
-=======
+
 
     /**
      * Trang quản lý tickets của staff
@@ -564,5 +548,5 @@ public class StaffController {
 
         return "redirect:/staff/reservations/" + id;
     }
->>>>>>> feature/dev
+
 }
