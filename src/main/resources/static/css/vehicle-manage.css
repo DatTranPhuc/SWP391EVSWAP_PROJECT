@@ -554,3 +554,51 @@ body.vehicle-manage-body {
         width: 100%;
     }
 }
+
+/* Sidebar styles */
+.menu-toggle {
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: transform 0.2s ease;
+}
+.menu-toggle:hover { transform: scale(1.1); }
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -220px;
+    height: 100%;
+    width: 220px;
+    background: rgba(10, 20, 35, 0.97);
+    backdrop-filter: blur(8px);
+    box-shadow: 3px 0 12px rgba(0,0,0,0.3);
+    transition: left 0.3s ease;
+    z-index: 998;
+    border-right: 1px solid rgba(0,180,216,0.3);
+}
+.sidebar.open { left: 0; }
+
+.sidebar-list {
+    list-style: none;
+    padding: 60px 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.sidebar-list li a {
+    display: block;
+    color: #e0f7fa;
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+.sidebar-list li a:hover {
+    background: linear-gradient(90deg, #00b4d8, #0077b6);
+    transform: translateX(4px);
+}

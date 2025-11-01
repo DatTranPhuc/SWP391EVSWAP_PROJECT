@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tài khoản | EV SWAP</title>
     <link rel="stylesheet" th:href="@{/css/account.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <script>
         // Hiển thị modal xác nhận xóa
         function confirmDelete(type, id) {
@@ -32,67 +33,92 @@
         }
     </script>
 </head>
-<body>
-<div class="account-container">
-    <h1>Thông tin tài khoản</h1>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
 
-    <!-- Thông tin cá nhân -->
-    <section class="info-section">
-        <h2>Khách hàng</h2>
-        <form th:action="@{/account/update}" method="post" class="info-card">
-            <p><strong>Họ và tên:</strong>
-                <input type="text" name="fullName" th:value="${driverName}" required>
-            </p>
-            <p><strong>Số điện thoại:</strong>
-                <input type="text" name="phone" th:value="${driverPhone}" required>
-            </p>
-            <p><strong>Email:</strong>
-                <input type="email" th:value="${driverEmail}" readonly>
-            </p>
-            <div class="btn-row">
-                <button type="submit" class="btn btn-update">💾 Cập nhật</button>
-                <button type="button" class="btn btn-delete" onclick="confirmDelete('account')">🗑️ Xóa tài khoản</button>
-            </div>
-        </form>
-    </section>
-
-    <!-- Thông tin xe -->
-    <section class="vehicle-section">
-        <h2>Thông tin xe</h2>
-
-        <div th:if="${vehicles != null and !vehicles.isEmpty()}" class="vehicle-table">
-            <table>
-                <thead>
-                <tr>
-                    <th>Tên xe</th>
-                    <th>Biển số</th>
-                    <th>Số khung (VIN)</th>
-                    <th>Hành động</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="v : ${vehicles}">
-                    <td th:text="${v.model}">VinFast Feliz</td>
-                    <td th:text="${v.plateNumber}">29A-12345</td>
-                    <td th:text="${v.vin}">VIN123456789</td>
-                    <td>
-                        <button type="button" class="btn btn-small btn-delete"
-                                th:onclick="'confirmDelete(\'vehicle\', ' + ${v.vehicleId} + ')'">Xóa</button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+<header class="manage-header container">
+    <div class="menu-toggle" id="menuToggle">☰</div>
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <h1 class="page-title">Quản lý tài khoản</h1>
         </div>
-
-        <div th:if="${vehicles == null or vehicles.isEmpty()}" class="no-vehicle">
-            <p>Hiện chưa có thông tin xe nào được đăng ký.</p>
-        </div>
-    </section>
-
-    <div style="text-align: center;">
-        <a th:href="@{/dashboard}" class="back-btn">← Quay lại Dashboard</a>
     </div>
-</div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
+    </div>
+</header>
+
+<!-- 🔹 Thanh bar dọc xổ ngang -->
+<aside class="sidebar" id="sidebarMenu">
+    <ul class="sidebar-list">
+        <li><a th:href="@{/dashboard}">🏠 Tổng quan</a></li>
+        <li><a th:href="@{/vehicles}">🚗 Phương tiện</a></li>
+        <li><a th:href="@{/reservations/schedule}">🔋 Đổi pin</a></li>
+        <li><a th:href="@{/wallet}">💳 Ví</a></li>
+        <li><a th:href="@{/feedback}">📝 Báo cáo</a></li>
+        <li><a th:href="@{/account}">👤 Tài khoản</a></li>
+        <li><a th:href="@{/support}">💬 Hỗ trợ</a></li>
+    </ul>
+</aside>
+
+<main class="container">
+    <div class="account-container">
+        <!-- Thông tin cá nhân -->
+        <section class="info-section">
+            <h2>Khách hàng</h2>
+            <form th:action="@{/account/update}" method="post" class="info-card">
+                <p><strong>Họ và tên:</strong>
+                    <input type="text" name="fullName" th:value="${driverName}" required>
+                </p>
+                <p><strong>Số điện thoại:</strong>
+                    <input type="text" name="phone" th:value="${driverPhone}" required>
+                </p>
+                <p><strong>Email:</strong>
+                    <input type="email" th:value="${driverEmail}" readonly>
+                </p>
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-update">💾 Cập nhật</button>
+                    <button type="button" class="btn btn-delete" onclick="confirmDelete('account')">🗑️ Xóa tài khoản</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Thông tin xe -->
+        <section class="vehicle-section">
+            <h2>Thông tin xe</h2>
+
+            <div th:if="${vehicles != null and !vehicles.isEmpty()}" class="vehicle-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Tên xe</th>
+                        <th>Biển số</th>
+                        <th>Số khung (VIN)</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="v : ${vehicles}">
+                        <td th:text="${v.model}">VinFast Feliz</td>
+                        <td th:text="${v.plateNumber}">29A-12345</td>
+                        <td th:text="${v.vin}">VIN123456789</td>
+                        <td>
+                            <button type="button" class="btn btn-small btn-delete"
+                                    th:onclick="'confirmDelete(\'vehicle\', ' + ${v.vehicleId} + ')'">Xóa</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${vehicles == null or vehicles.isEmpty()}" class="no-vehicle">
+                <p>Hiện chưa có thông tin xe nào được đăng ký.</p>
+            </div>
+        </section>
+    </div>
+</main>
 
 <!-- Modal xác nhận xóa -->
 <div id="confirmModal" class="modal-overlay">
@@ -105,5 +131,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (menuToggle && sidebarMenu) {
+        menuToggle.addEventListener('mouseenter', () => sidebarMenu.classList.add('open'));
+        sidebarMenu.addEventListener('mouseleave', () => sidebarMenu.classList.remove('open'));
+    }
+</script>
 </body>
 </html>

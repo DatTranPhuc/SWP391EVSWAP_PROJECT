@@ -15,6 +15,9 @@
 
 <header class="top-nav">
     <div class="container nav-inner">
+        <!-- 🔹 Nút mở thanh bar dọc -->
+        <div class="menu-toggle" id="menuToggle">☰</div>
+
         <div class="brand">
             <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
             <span class="brand-name">EV SWAP</span>
@@ -23,19 +26,12 @@
             <a th:if="${loggedIn}" th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:if="${loggedIn}" th:href="@{/vehicles}" class="nav-link-button">Phương tiện</a>
             <a th:if="${loggedIn}" th:href="@{/reservations/schedule}" class="nav-link-button">Đổi pin</a>
-<<<<<<< HEAD
-            <a th:if="${loggedIn}" th:href="@{/reports}" class="nav-link-button">Báo cáo</a>
-=======
-            <a th:if="${loggedIn}" th:href="@{/wallet}" class="nav-link-button">Ví</a>
             <a th:if="${loggedIn}" th:href="@{/feedback}" class="nav-link-button">Báo cáo</a>
-            <a th:if="${loggedIn}" th:href="@{/account}" class="nav-link-button">Tài khoản</a>
->>>>>>> feature/dev
             <a th:if="${loggedIn}" th:href="@{/support}" class="nav-link-button">Hỗ trợ</a>
 
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tổng quan">Tổng quan</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Phương tiện">Phương tiện</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Đổi pin">Đổi pin</button>
-            <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Ví">Ví</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Báo cáo">Báo cáo</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Hỗ trợ">Hỗ trợ</button>
         </nav>
@@ -71,6 +67,19 @@
         </div>
     </div>
 </header>
+
+<!-- 🔹 Thanh bar dọc xổ ngang -->
+<aside class="sidebar" id="sidebarMenu">
+    <ul class="sidebar-list">
+        <li><a th:href="@{/dashboard}">🏠 Tổng quan</a></li>
+        <li><a th:href="@{/vehicles}">🚗 Phương tiện</a></li>
+        <li><a th:href="@{/reservations/schedule}">🔋 Đổi pin</a></li>
+        <li><a th:href="@{/wallet}">💳 Ví</a></li>
+        <li><a th:href="@{/feedback}">📝 Báo cáo</a></li>
+        <li><a th:href="@{/account}">👤 Tài khoản</a></li>
+        <li><a th:href="@{/support}">💬 Hỗ trợ</a></li>
+    </ul>
+</aside>
 
 <main>
     <div class="container">
@@ -293,6 +302,7 @@
 </main>
 
 <script>
+    // Avatar Dropdown
     const avatarDropdown = document.getElementById('avatarDropdown');
     const dropdownMenu = document.getElementById('userDropdownMenu');
     if (avatarDropdown && dropdownMenu) {
@@ -306,9 +316,66 @@
             }
         });
     }
+
+    // Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (menuToggle && sidebarMenu) {
+        menuToggle.addEventListener('mouseenter', () => sidebarMenu.classList.add('open'));
+        sidebarMenu.addEventListener('mouseleave', () => sidebarMenu.classList.remove('open'));
+    }
 </script>
 
 <style>
+    /* 🔹 Sidebar xổ ngang */
+    .menu-toggle {
+        font-size: 24px;
+        color: white;
+        cursor: pointer;
+        margin-right: 15px;
+        transition: transform 0.2s ease;
+    }
+    .menu-toggle:hover { transform: scale(1.1); }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -220px;
+        height: 100%;
+        width: 220px;
+        background: rgba(10, 20, 35, 0.97);
+        backdrop-filter: blur(8px);
+        box-shadow: 3px 0 12px rgba(0,0,0,0.3);
+        transition: left 0.3s ease;
+        z-index: 998;
+        border-right: 1px solid rgba(0,180,216,0.3);
+    }
+    .sidebar.open { left: 0; }
+
+    .sidebar-list {
+        list-style: none;
+        padding: 60px 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .sidebar-list li a {
+        display: block;
+        color: #e0f7fa;
+        text-decoration: none;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+    .sidebar-list li a:hover {
+        background: linear-gradient(90deg, #00b4d8, #0077b6);
+        transform: translateX(4px);
+    }
+
+    /* 🔹 Avatar dropdown */
     .avatar {
         width: 42px;
         height: 42px;

@@ -14,6 +14,7 @@
 <div class="vehicle-manage-glow"></div>
 
 <header class="manage-header container">
+    <div class="menu-toggle" id="menuToggle">☰</div>
     <div class="driver-identity">
         <div class="driver-avatar" th:text="${driverInitial}">D</div>
         <div class="driver-intro">
@@ -27,6 +28,19 @@
         <button class="btn primary" type="button" onclick="openVehicleModal()">+ Thêm phương tiện</button>
     </div>
 </header>
+
+<!-- 🔹 Thanh bar dọc xổ ngang -->
+<aside class="sidebar" id="sidebarMenu">
+    <ul class="sidebar-list">
+        <li><a th:href="@{/dashboard}">🏠 Tổng quan</a></li>
+        <li><a th:href="@{/vehicles}">🚗 Phương tiện</a></li>
+        <li><a th:href="@{/reservations/schedule}">🔋 Đổi pin</a></li>
+        <li><a th:href="@{/wallet}">💳 Ví</a></li>
+        <li><a th:href="@{/feedback}">📝 Báo cáo</a></li>
+        <li><a th:href="@{/account}">👤 Tài khoản</a></li>
+        <li><a th:href="@{/support}">💬 Hỗ trợ</a></li>
+    </ul>
+</aside>
 
 <main class="manage-main container">
     <div class="alert success" th:if="${vehicleSuccess}" th:text="${vehicleSuccess}"></div>
@@ -172,6 +186,14 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (document.body.dataset.openModal === 'true') {
             openVehicleModal();
+        }
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarMenu = document.getElementById('sidebarMenu');
+        if (menuToggle && sidebarMenu) {
+            menuToggle.addEventListener('mouseenter', () => sidebarMenu.classList.add('open'));
+            sidebarMenu.addEventListener('mouseleave', () => sidebarMenu.classList.remove('open'));
         }
     });
 </script>
