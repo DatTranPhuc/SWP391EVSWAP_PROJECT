@@ -27,6 +27,8 @@ public interface SwapTransactionRepository extends JpaRepository<SwapTransaction
 
     boolean existsByReservationDriverDriverIdAndStationStationIdAndResultAndSwappedAtBetween(
             Integer driverId, Integer stationId, String result, Instant from, Instant to);
+
+    List<SwapTransaction> findTop5ByStationStationIdOrderBySwappedAtDesc(Integer stationId);
 }
 
 

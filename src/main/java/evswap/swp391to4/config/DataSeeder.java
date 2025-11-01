@@ -2,6 +2,7 @@ package evswap.swp391to4.config;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,14 +12,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.entity.SwapTransaction;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.BatteryRepository;
 import evswap.swp391to4.repository.DriverRepository;
+import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.StaffRepository;
 import evswap.swp391to4.repository.StationRepository;
+import evswap.swp391to4.repository.SwapTransactionRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import evswap.swp391to4.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +39,8 @@ public class DataSeeder implements CommandLineRunner {
     private final VehicleRepository vehicleRepository;
     private final BatteryRepository batteryRepository;
     private final PaymentService paymentService;
+    private final ReservationRepository reservationRepository;
+    private final SwapTransactionRepository swapTransactionRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -140,11 +147,125 @@ public class DataSeeder implements CommandLineRunner {
             return staffRepository.save(s);
         });
 
+        if (reservationRepository.count() == 0) {
+            List<Battery> stationBatteries = batteryRepository.findByStation(station);
+            Battery fullBattery = stationBatteries.stream()
+                    .filter(b -> "full".equalsIgnoreCase(b.getState()))
+                    .findFirst()
+                    .orElseGet(() -> batteryRepository.save(Battery.builder()
+                            .station(station)
+                            .model("MODEL-A")
+                            .state("full")
+                            .sohPercent(92)
+                            .socPercent(100)
+                            .build()));
+
+            Battery chargingBattery = stationBatteries.stream()
+                    .filter(b -> !"full".equalsIgnoreCase(b.getState()))
+                    .findFirst()
+                    .orElseGet(() -> batteryRepository.save(Battery.builder()
+                            .station(station)
+                            .model("MODEL-A")
+                            .state("charging")
+                            .sohPercent(88)
+                            .socPercent(60)
+                            .build()));
+
+            Instant now = Instant.now();
+            BigDecimal bookingPrice = new BigDecimal("25000");
+
+            reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.plus(3, ChronoUnit.HOURS))
+                    .status("pending")
+                    .createdAt(now.minus(2, ChronoUnit.HOURS))
+                    .build());
+
+            reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.plus(2, ChronoUnit.HOURS))
+                    .status("confirmed")
+                    .createdAt(now.minus(90, ChronoUnit.MINUTES))
+                    .build());
+
+            reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.plus(1, ChronoUnit.HOURS))
+                    .status("checked_in")
+                    .createdAt(now.minus(3, ChronoUnit.HOURS))
+                    .checkedInAt(now.minus(40, ChronoUnit.MINUTES))
+                    .build());
+
+            Reservation completed = reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.minus(30, ChronoUnit.MINUTES))
+                    .status("completed")
+                    .createdAt(now.minus(5, ChronoUnit.HOURS))
+                    .checkedInAt(now.minus(50, ChronoUnit.MINUTES))
+                    .assignedBattery(fullBattery)
+                    .qrStatus("used")
+                    .build());
+
+            reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.plus(5, ChronoUnit.HOURS))
+                    .status("canceled")
+                    .createdAt(now.minus(6, ChronoUnit.HOURS))
+                    .build());
+
+            Reservation completedHistory = reservationRepository.save(Reservation.builder()
+                    .driver(driver)
+                    .station(station)
+                    .vehicle(vehicle)
+                    .priceAmount(bookingPrice)
+                    .reservedStart(now.minus(2, ChronoUnit.DAYS))
+                    .status("completed")
+                    .createdAt(now.minus(3, ChronoUnit.DAYS))
+                    .checkedInAt(now.minus(2, ChronoUnit.DAYS).plus(45, ChronoUnit.MINUTES))
+                    .assignedBattery(fullBattery)
+                    .qrStatus("used")
+                    .build());
+
+            swapTransactionRepository.save(SwapTransaction.builder()
+                    .reservation(completed)
+                    .station(station)
+                    .batteryOut(fullBattery)
+                    .batteryIn(chargingBattery)
+                    .swappedAt(now.minus(25, ChronoUnit.MINUTES))
+                    .result("success")
+                    .build());
+
+            swapTransactionRepository.save(SwapTransaction.builder()
+                    .reservation(completedHistory)
+                    .station(station)
+                    .batteryOut(fullBattery)
+                    .batteryIn(chargingBattery)
+                    .swappedAt(now.minus(26, ChronoUnit.HOURS))
+                    .result("success")
+                    .build());
+        }
+
         System.out.println("Seeded test data:\n" +
                 "- Driver: " + driverEmail + " / " + driverPass + " (wallet: 200,000 VND)\n" +
                 "- Staff:  " + staffEmail + " / " + staffPass + " (station: " + station.getName() + ")\n" +
                 "- Vehicle: " + vehicle.getModel() + " (" + vehicle.getPlateNumber() + ")\n" +
-                "- Station has eligible battery MODEL-A (full, 100% SOC, SOH>=80)");
+                "- Station has eligible battery MODEL-A (full, 100% SOC, SOH>=80)\n" +
+                "- Sample reservations + swap transactions ready for simulator demo.");
     }
 }
 
