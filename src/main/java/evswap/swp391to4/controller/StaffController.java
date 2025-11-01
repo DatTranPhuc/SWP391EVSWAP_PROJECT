@@ -532,12 +532,18 @@ public class StaffController {
      */
     @PostMapping("/reservations/{id}/check-in")
     public String checkInReservation(@PathVariable Integer id,
+                                     @RequestParam("qrToken") String qrToken,
                                      HttpSession session,
                                      RedirectAttributes redirect) {
         try {
             checkStaffLogin(session);
 
-            reservationService.checkInReservation(id);
+            if (qrToken == null || qrToken.isBlank()) {
+                redirect.addFlashAttribute("error", "Vui lòng nhập mã QR để check-in");
+                return "redirect:/staff/reservations/" + id;
+            }
+
+            reservationService.checkInReservation(id, qrToken);
 
             redirect.addFlashAttribute("success", "Check-in thành công!");
         } catch (IllegalStateException e) {

@@ -280,6 +280,38 @@ public class ReservationController {
         }
     }
 
+    @PostMapping("/{id}/check-in")
+    public String selfCheckInReservation(@PathVariable Integer id,
+                                         @RequestParam("qrToken") String qrToken,
+                                         HttpSession session,
+                                         RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để tiếp tục");
+            return "redirect:/login";
+        }
+
+        if (qrToken == null || qrToken.isBlank()) {
+            redirect.addFlashAttribute("error", "Vui lòng nhập mã QR hợp lệ");
+            return "redirect:/reservations/" + id;
+        }
+
+        try {
+            Reservation reservation = reservationService.getReservationById(id);
+            if (!reservation.getDriver().getDriverId().equals(driver.getDriverId())) {
+                redirect.addFlashAttribute("error", "Bạn không có quyền check-in lịch này");
+                return "redirect:/reservations/my-reservations";
+            }
+
+            reservationService.checkInReservation(id, qrToken);
+            redirect.addFlashAttribute("success", "Check-in thành công! Vui lòng đến quầy để được hỗ trợ đổi pin.");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Không thể check-in: " + e.getMessage());
+        }
+
+        return "redirect:/reservations/" + id;
+    }
+
     private String extractInitial(String fullName) {
         if (fullName == null || fullName.isBlank()) {
             return "U";

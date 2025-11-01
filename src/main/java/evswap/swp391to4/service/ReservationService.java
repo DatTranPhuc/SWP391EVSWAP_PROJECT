@@ -202,16 +202,38 @@ public class ReservationService {
     }
 
     @Transactional
-    public void checkInReservation(Integer reservationId) {
+    public void checkInReservation(Integer reservationId, String providedQrToken) {
         Reservation reservation = reservationRepo.findById(reservationId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy đặt lịch"));
-        
+
         if (!"confirmed".equalsIgnoreCase(reservation.getStatus())) {
             throw new IllegalStateException("Chỉ có thể check-in reservation đã được xác nhận");
         }
-        
+
+        if (providedQrToken == null || providedQrToken.isBlank()) {
+            throw new IllegalStateException("Mã QR không hợp lệ");
+        }
+
+        String qrToken = reservation.getQrToken();
+        if (qrToken == null || !qrToken.equals(providedQrToken.trim())) {
+            throw new IllegalStateException("Mã QR không chính xác");
+        }
+
+        String qrStatus = reservation.getQrStatus();
+        if (qrStatus == null || !"active".equalsIgnoreCase(qrStatus)) {
+            throw new IllegalStateException("Mã QR đã được sử dụng hoặc không còn hiệu lực");
+        }
+
+        Instant qrExpiresAt = reservation.getQrExpiresAt();
+        if (qrExpiresAt != null && Instant.now().isAfter(qrExpiresAt)) {
+            reservation.setQrStatus("expired");
+            reservationRepo.save(reservation);
+            throw new IllegalStateException("Mã QR đã hết hạn");
+        }
+
         reservation.setStatus("checked_in");
         reservation.setCheckedInAt(Instant.now());
+        reservation.setQrStatus("used");
         reservationRepo.save(reservation);
     }
 
