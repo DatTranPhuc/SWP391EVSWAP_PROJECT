@@ -108,7 +108,7 @@ public class BatteryService {
             throw new IllegalStateException("Tài khoản staff của bạn chưa được gán trạm.");
         }
 
-        List<String> validStates = List.of("charging", "maintenance", "full");
+        List<String> validStates = List.of("charging", "maintenance", "full", "in_use", "rented");
         if (!validStates.contains(dto.getState().toLowerCase())) {
             throw new IllegalArgumentException("Trạng thái ban đầu không hợp lệ.");
         }

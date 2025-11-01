@@ -446,6 +446,15 @@ public class StaffController {
 
             model.addAttribute("reservation", reservation);
             model.addAttribute("stationName", staff.getStation().getName());
+            List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(staff.getStation());
+            List<Battery> availableFullBatteries = stationBatteries.stream()
+                    .filter(b -> "full".equalsIgnoreCase(b.getState()))
+                    .toList();
+            List<Battery> chargingBatteries = stationBatteries.stream()
+                    .filter(b -> "charging".equalsIgnoreCase(b.getState()))
+                    .toList();
+            model.addAttribute("availableFullBatteries", availableFullBatteries);
+            model.addAttribute("chargingBatteries", chargingBatteries);
             return "staff/reservation-detail";
 
         } catch (IllegalStateException e) {
@@ -485,13 +494,16 @@ public class StaffController {
     @PostMapping("/reservations/{id}/complete")
     public String completeReservation(@PathVariable Integer id,
                                       @RequestParam(name = "batteryId", required = false) Integer batteryId,
+                                      @RequestParam(name = "batteryInId", required = false) Integer batteryInId,
+                                      @RequestParam(name = "batteryInSoc", required = false) Integer batteryInSoc,
+                                      @RequestParam(name = "batteryInSoh", required = false) Integer batteryInSoh,
                                       HttpSession session,
                                       RedirectAttributes redirect) {
         try {
             checkStaffLogin(session);
 
             // Chỉ đảm bảo reservation thuộc trạm của staff thông qua view page đã kiểm tra; ở đây cứ chạy logic
-            reservationService.completeSwap(id, batteryId);
+            reservationService.completeSwap(id, batteryId, batteryInId, batteryInSoc, batteryInSoh);
 
             redirect.addFlashAttribute("success", "Đã hoàn tất đổi pin!");
         } catch (IllegalStateException e) {
