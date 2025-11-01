@@ -1,6 +1,7 @@
 package evswap.swp391to4.service;
 
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,10 @@ public class VehicleService {
             throw new IllegalStateException("Vui lòng xác minh email trước khi thêm phương tiện");
         }
 
+        if (vehicle.getVehicleType() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn loại phương tiện");
+        }
+
         vehicleRepository.findByVin(vehicle.getVin())
                 .ifPresent(existingVehicle -> {
                     if (existingVehicle.getDriver().getDriverId().equals(driverId)) {
@@ -51,6 +56,7 @@ public class VehicleService {
         vehicle.setVehicleId(null);
         vehicle.setDriver(driver);
         vehicle.setCreatedAt(Instant.now());
+        vehicle.setBatteryProfile(resolveBatteryProfile(vehicle.getVehicleType()));
 
         return vehicleRepository.save(vehicle);
     }
@@ -66,5 +72,16 @@ public class VehicleService {
         }
 
         return vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driverId);
+    }
+
+    private String resolveBatteryProfile(VehicleType vehicleType) {
+        if (vehicleType == null) {
+            return "EVS Pack 48V";
+        }
+
+        return switch (vehicleType) {
+            case FOUR_WHEEL -> "EVS Auto Pack 400V";
+            case TWO_WHEEL -> "EVS Core Pack 48V";
+        };
     }
 }

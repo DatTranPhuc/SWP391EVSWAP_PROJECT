@@ -504,6 +504,89 @@ body.vehicle-manage-body {
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
 }
 
+.form-type-selector {
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    padding: 18px 20px 12px;
+    display: grid;
+    gap: 16px;
+    background: rgba(17, 24, 39, 0.72);
+}
+
+.form-type-selector legend {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+.form-type-options {
+    display: grid;
+    gap: 12px;
+}
+
+.form-type-card {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    background: rgba(15, 20, 30, 0.68);
+    cursor: pointer;
+    transition: border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.form-type-card input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.form-type-card .type-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(99, 102, 241, 0.18);
+    font-size: 1.2rem;
+}
+
+.form-type-card .type-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-type-card .type-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-type-card .type-caption {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.form-type-card.is-active {
+    border-color: rgba(34, 211, 238, 0.8);
+    box-shadow: 0 12px 28px rgba(34, 211, 238, 0.22);
+    transform: translateY(-1px);
+}
+
+.form-type-card:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+}
+
+.type-summary {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;

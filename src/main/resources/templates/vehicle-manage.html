@@ -97,6 +97,10 @@
                 </div>
                 <div class="vehicle-details">
                     <div class="detail-item">
+                        <span class="detail-label">Loại xe</span>
+                        <span class="detail-value" th:text="${card.vehicleTypeLabel()}">Xe máy điện / Scooter</span>
+                    </div>
+                    <div class="detail-item">
                         <span class="detail-label">Model xe</span>
                         <span class="detail-value" th:text="${card.model()}">VinFast Feliz S</span>
                     </div>
@@ -136,6 +140,30 @@
                     <input type="text" th:field="*{plateNumber}" placeholder="59A3-08364">
                 </label>
             </div>
+            <fieldset class="form-type-selector">
+                <legend>Loại phương tiện</legend>
+                <div class="form-type-options">
+                    <label class="form-type-card" th:classappend="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).FOUR_WHEEL ? ' is-active' : ''">
+                        <input type="radio" th:field="*{vehicleType}" value="FOUR_WHEEL">
+                        <div class="type-icon">🚙</div>
+                        <div class="type-copy">
+                            <span class="type-title">Ô tô 4 bánh</span>
+                            <span class="type-caption">Được ghép với pin EVS Auto Pack 400V</span>
+                        </div>
+                    </label>
+                    <label class="form-type-card" th:classappend="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).TWO_WHEEL ? ' is-active' : ''">
+                        <input type="radio" th:field="*{vehicleType}" value="TWO_WHEEL">
+                        <div class="type-icon">🛵</div>
+                        <div class="type-copy">
+                            <span class="type-title">Xe máy điện / Scooter</span>
+                            <span class="type-caption">Gắn pin EVS Core Pack 48V tiêu chuẩn</span>
+                        </div>
+                    </label>
+                </div>
+                <p class="type-summary" th:text="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).FOUR_WHEEL
+                    ? 'Bạn sẽ được chỉ định bộ pin dung lượng cao EVS Auto Pack 400V.'
+                    : 'Chúng tôi gắn bộ pin tiêu chuẩn EVS Core Pack 48V cho xe hai bánh.'"></p>
+            </fieldset>
             <div class="modal-actions">
                 <button class="btn ghost" type="button" onclick="closeVehicleModal()">Huỷ</button>
                 <button class="btn primary" type="submit">Lưu phương tiện</button>

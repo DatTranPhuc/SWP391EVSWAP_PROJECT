@@ -61,7 +61,7 @@
         </div>
 
         <div class="vehicle-info">
-            <h2 id="vehicle-title">Đăng ký xe máy điện</h2>
+            <h2 id="vehicle-title">Đăng ký phương tiện EV</h2>
             <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
         </div>
 
@@ -88,6 +88,38 @@
 
             <div class="vehicle-tip">
                 <strong>Gợi ý:</strong> Số VIN thường nằm trên phần thân xe hoặc giấy đăng ký xe. Hãy kiểm tra kỹ để tránh sai sót.
+            </div>
+
+            <div class="vehicle-type-section">
+                <span class="section-label">Loại phương tiện</span>
+                <div class="vehicle-type-options">
+                    <label class="vehicle-type-card" th:classappend="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).FOUR_WHEEL ? ' is-active' : ''">
+                        <input type="radio" th:field="*{vehicleType}" value="FOUR_WHEEL">
+                        <div class="type-icon">🚙</div>
+                        <div class="type-content">
+                            <span class="type-title">Ô tô 4 bánh</span>
+                            <span class="type-caption">Dung lượng pin cao, tương thích EVS Auto Pack 400V</span>
+                        </div>
+                    </label>
+                    <label class="vehicle-type-card" th:classappend="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).TWO_WHEEL ? ' is-active' : ''">
+                        <input type="radio" th:field="*{vehicleType}" value="TWO_WHEEL">
+                        <div class="type-icon">🛵</div>
+                        <div class="type-content">
+                            <span class="type-title">Xe máy điện / Scooter</span>
+                            <span class="type-caption">Tiết kiệm, sử dụng pin EVS Core Pack 48V</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="battery-preview">
+                <div>
+                    <span class="section-label">Gói pin gợi ý</span>
+                    <strong th:text="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).FOUR_WHEEL ? 'EVS Auto Pack 400V' : 'EVS Core Pack 48V'"></strong>
+                </div>
+                <p th:text="*{vehicleType} == T(evswap.swp391to4.entity.VehicleType).FOUR_WHEEL
+                    ? 'Phù hợp với các dòng ô tô điện, hỗ trợ sạc nhanh DC và phạm vi di chuyển dài.'
+                    : 'Tối ưu cho xe hai bánh, nhẹ và dễ thay thế tại hơn 200 trạm EV SWAP.'"></p>
             </div>
 
             <div class="auth-submit">

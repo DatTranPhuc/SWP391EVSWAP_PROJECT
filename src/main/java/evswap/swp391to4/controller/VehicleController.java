@@ -3,6 +3,7 @@ package evswap.swp391to4.controller;
 import evswap.swp391to4.dto.VehicleRegistrationForm;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.VehicleService;
 import jakarta.servlet.http.HttpSession;
@@ -35,6 +36,7 @@ public class VehicleController {
                 .vin(request.vin())
                 .plateNumber(request.plateNumber())
                 .model(request.model())
+                .vehicleType(request.vehicleType())
                 .build();
         Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
         return ResponseEntity.ok(savedVehicle);
@@ -79,6 +81,7 @@ public class VehicleController {
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(form.getVehicleType())
                     .build();
 
             vehicleService.addVehicleToDriver(driverId, vehicle);
@@ -143,6 +146,7 @@ public class VehicleController {
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(form.getVehicleType())
                     .build();
 
             vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
@@ -168,7 +172,7 @@ public class VehicleController {
         return fullName.trim().substring(0, 1).toUpperCase();
     }
 
-    public record VehicleRequest(String vin, String plateNumber, String model) {
+    public record VehicleRequest(String vin, String plateNumber, String model, VehicleType vehicleType) {
     }
 
     // Lớp nội bộ để hiển thị dữ liệu trên view, giữ nguyên
@@ -179,6 +183,7 @@ public class VehicleController {
         private final String plateNumber;
         private final String vin;
         private final String model;
+        private final String vehicleTypeLabel;
         private final Instant createdAt;
         private final String statusLabel;
         private final String statusBadge;
@@ -194,6 +199,7 @@ public class VehicleController {
         public String plateNumber() { return plateNumber; }
         public String vin() { return vin; }
         public String model() { return model; }
+        public String vehicleTypeLabel() { return vehicleTypeLabel; }
         public Instant createdAt() { return createdAt; }
         public String statusLabel() { return statusLabel; }
         public String statusBadge() { return statusBadge; }
@@ -238,10 +244,13 @@ public class VehicleController {
                             .orElse("Chưa cập nhật"))
                     .vin(vehicle.getVin())
                     .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
+                    .vehicleTypeLabel(resolveVehicleTypeLabel(vehicle.getVehicleType()))
                     .createdAt(vehicle.getCreatedAt())
                     .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
                     .statusBadge(statusBadge)
-                    .batteryModel(guessBatteryModel(vehicle.getModel()))
+                    .batteryModel(Optional.ofNullable(vehicle.getBatteryProfile())
+                            .filter(profile -> !profile.isBlank())
+                            .orElseGet(() -> guessBatteryModel(vehicle.getModel())))
                     .batteryStatus(batteryPercent >= 75 ? "Đang sử dụng" : "Cần bảo dưỡng")
                     .batteryPercent(batteryPercent)
                     .healthLabel(healthLabel)
@@ -250,6 +259,13 @@ public class VehicleController {
         }
 
         return cards;
+    }
+
+    private String resolveVehicleTypeLabel(VehicleType vehicleType) {
+        if (vehicleType == null) {
+            return "Chưa phân loại";
+        }
+        return vehicleType.getDisplayName();
     }
 
     // Phương thức đoán model pin, giữ nguyên
