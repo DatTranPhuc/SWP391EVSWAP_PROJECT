@@ -32,4 +32,10 @@ public class SwapTransaction {
     private Instant swappedAt;
 
     private String result; // success/failed/aborted
+
+    @Column(name = "battery_in_soc_percent")
+    private Integer batteryInSocPercent;
+
+    @Column(name = "battery_in_soh_percent")
+    private Integer batteryInSohPercent;
 }

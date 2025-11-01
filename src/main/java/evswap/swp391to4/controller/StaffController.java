@@ -99,6 +99,7 @@ public class StaffController {
             model.addAttribute("chargingCount", batteryService.countBatteriesByState(station, "charging"));
             model.addAttribute("maintenanceCount", batteryService.countBatteriesByState(station, "maintenance"));
             model.addAttribute("retiredCount", batteryService.countBatteriesByState(station, "retired"));
+            model.addAttribute("reservedCount", batteryService.countReservedBatteries(station));
 
             // ===== SỬA DÒNG NÀY =====
             model.addAttribute("totalCount", batteryService.getAllBatteriesForStation(station).size());
@@ -490,6 +491,15 @@ public class StaffController {
 
             model.addAttribute("reservation", reservation);
             model.addAttribute("stationName", staff.getStation().getName());
+            List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(staff.getStation());
+            List<Battery> availableFullBatteries = stationBatteries.stream()
+                    .filter(b -> "full".equalsIgnoreCase(b.getState()))
+                    .toList();
+            List<Battery> chargingBatteries = stationBatteries.stream()
+                    .filter(b -> "charging".equalsIgnoreCase(b.getState()))
+                    .toList();
+            model.addAttribute("availableFullBatteries", availableFullBatteries);
+            model.addAttribute("chargingBatteries", chargingBatteries);
             return "staff/reservation-detail";
 
         } catch (IllegalStateException e) {
@@ -529,13 +539,16 @@ public class StaffController {
     @PostMapping("/reservations/{id}/complete")
     public String completeReservation(@PathVariable Integer id,
                                       @RequestParam(name = "batteryId", required = false) Integer batteryId,
+                                      @RequestParam(name = "batteryInId", required = false) Integer batteryInId,
+                                      @RequestParam(name = "batteryInSoc", required = false) Integer batteryInSoc,
+                                      @RequestParam(name = "batteryInSoh", required = false) Integer batteryInSoh,
                                       HttpSession session,
                                       RedirectAttributes redirect) {
         try {
             checkStaffLogin(session);
 
             // Chỉ đảm bảo reservation thuộc trạm của staff thông qua view page đã kiểm tra; ở đây cứ chạy logic
-            reservationService.completeSwap(id, batteryId);
+            reservationService.completeSwap(id, batteryId, batteryInId, batteryInSoc, batteryInSoh);
 
             redirect.addFlashAttribute("success", "Đã hoàn tất đổi pin!");
         } catch (IllegalStateException e) {
@@ -577,12 +590,18 @@ public class StaffController {
      */
     @PostMapping("/reservations/{id}/check-in")
     public String checkInReservation(@PathVariable Integer id,
+                                     @RequestParam("qrToken") String qrToken,
                                      HttpSession session,
                                      RedirectAttributes redirect) {
         try {
             checkStaffLogin(session);
 
-            reservationService.checkInReservation(id);
+            if (qrToken == null || qrToken.isBlank()) {
+                redirect.addFlashAttribute("error", "Vui lòng nhập mã QR để check-in");
+                return "redirect:/staff/reservations/" + id;
+            }
+
+            reservationService.checkInReservation(id, qrToken);
 
             redirect.addFlashAttribute("success", "Check-in thành công!");
         } catch (IllegalStateException e) {

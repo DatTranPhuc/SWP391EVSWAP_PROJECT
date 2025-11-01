@@ -5,6 +5,8 @@ package evswap.swp391to4.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
+
 @Entity @Table(name = "battery")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Battery {
@@ -24,4 +26,10 @@ public class Battery {
     private Integer sohPercent;
     @Column(name = "soc_percent")
     private Integer socPercent;
+
+    @Column(name = "reserved_for_reservation_id")
+    private Integer reservedForReservationId;
+
+    @Column(name = "reserved_at")
+    private Instant reservedAt;
 }

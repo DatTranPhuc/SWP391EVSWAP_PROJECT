@@ -404,6 +404,10 @@ main.container {
     background-color: rgba(248, 113, 113, 0.24);
     color: #fecaca;
 }
+.status-badge.reserved {
+    background-color: rgba(59, 130, 246, 0.24);
+    color: #bfdbfe;
+}
 .action-links a {
     font-weight: 600;
     text-decoration: none;
