@@ -36,6 +36,10 @@ public class Reservation {
     @JoinColumn(name = "assigned_battery_id")
     private Battery assignedBattery;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proposed_battery_id")
+    private Battery proposedBattery;
+
     @Column(name = "price_amount", precision = 12, scale = 2)
     private BigDecimal priceAmount;
 

@@ -1,7 +1,7 @@
 package evswap.swp391to4.service;
 
-import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.dto.AvailableBatteryResponse;
+import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
@@ -13,9 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -70,6 +72,11 @@ public class BatteryService {
             throw new IllegalStateException("Bạn không có quyền sửa pin không thuộc trạm của mình.");
         }
 
+        if (battery.getReservedForReservationId() != null) {
+            throw new IllegalStateException(
+                    "Pin đang được giữ cho đặt lịch #" + battery.getReservedForReservationId() + ". Không thể cập nhật thủ công.");
+        }
+
         List<String> validStates = List.of("full", "charging", "maintenance", "retired");
         if (!validStates.contains(newState.toLowerCase())) {
             throw new IllegalArgumentException("Trạng thái mới không hợp lệ: " + newState);
@@ -85,7 +92,12 @@ public class BatteryService {
         if (state == null || state.isBlank()) {
             return 0;
         }
-        return batteryRepo.countByStationAndState(station, state);
+        return batteryRepo.countByStationAndStateAndReservedForReservationIdIsNull(station, state);
+    }
+
+    @Transactional(readOnly = true)
+    public long countReservedBatteries(Station station) {
+        return batteryRepo.countByStationAndReservedForReservationIdIsNotNull(station);
     }
 
     @Transactional
@@ -128,8 +140,9 @@ public class BatteryService {
     @Transactional(readOnly = true)
     public List<AvailableBatteryResponse> findEligibleBatteriesForVehicle(Integer stationId, Integer vehicleId) {
         // Lấy danh sách pin tại trạm với điều kiện cơ bản
-        List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
-            stationId, "full", 100, 80);
+        List<Battery> eligibleBatteries =
+                batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqualAndReservedForReservationIdIsNull(
+                        stationId, "full", 100, 80);
 
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy xe"));
@@ -162,28 +175,71 @@ public class BatteryService {
      * Thêm trường reservedForReservationId vào Battery entity nếu cần
      */
     @Transactional
-    public void reserveBattery(Integer batteryId, Integer reservationId) {
+    public Battery reserveBattery(Integer batteryId, Integer reservationId) {
         Battery battery = batteryRepo.findById(batteryId)
             .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy pin với ID: " + batteryId));
-        
+
         // Kiểm tra pin có đủ điều kiện không
-        if (!"full".equals(battery.getState()) || 
-            battery.getSocPercent() != 100 || 
-            battery.getSohPercent() < 80) {
+        if (!"full".equalsIgnoreCase(battery.getState()) ||
+            battery.getSocPercent() == null || battery.getSocPercent() != 100 ||
+            battery.getSohPercent() == null || battery.getSohPercent() < 80) {
             throw new IllegalStateException("Pin không đủ điều kiện để đặt");
         }
-        
-        // Đánh dấu pin đã được reserve (có thể thêm trường reservedForReservationId)
-        // Hiện tại chỉ log để tracking, có thể extend Battery entity sau
-        System.out.println("Pin #" + batteryId + " đã được đặt cho reservation #" + reservationId);
-        
-        // TODO: Thêm trường reservedForReservationId vào Battery entity để track reservation
-        // battery.setReservedForReservationId(reservationId);
-        // batteryRepo.save(battery);
+
+        if (battery.getReservedForReservationId() != null &&
+                !battery.getReservedForReservationId().equals(reservationId)) {
+            throw new IllegalStateException(
+                    "Pin đang được giữ cho đặt lịch khác (#" + battery.getReservedForReservationId() + ")");
+        }
+
+        if (battery.getReservedForReservationId() != null) {
+            return battery;
+        }
+
+        battery.setReservedForReservationId(reservationId);
+        battery.setReservedAt(Instant.now());
+
+        return batteryRepo.save(battery);
     }
 
     @Transactional(readOnly = true)
     public Battery getBatteryById(Integer batteryId) {
         return batteryRepo.findById(batteryId).orElse(null);
+    }
+
+    @Transactional
+    public void releaseReservationHold(Integer reservationId) {
+        List<Battery> reserved = batteryRepo.findByReservedForReservationId(reservationId);
+        if (reserved.isEmpty()) {
+            return;
+        }
+
+        for (Battery battery : reserved) {
+            battery.setReservedForReservationId(null);
+            battery.setReservedAt(null);
+        }
+
+        batteryRepo.saveAll(reserved);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Battery> suggestEligibleBattery(Station station, Vehicle vehicle) {
+        if (station == null || vehicle == null) {
+            return Optional.empty();
+        }
+
+        VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
+
+        return batteryRepo.findByStation(station).stream()
+                .filter(battery -> battery.getReservedForReservationId() == null)
+                .filter(battery -> "full".equalsIgnoreCase(battery.getState()))
+                .filter(battery -> battery.getSocPercent() != null && battery.getSocPercent() == 100)
+                .filter(battery -> battery.getSohPercent() != null && battery.getSohPercent() >= 80)
+                .filter(battery -> {
+                    List<String> compatibleModels = type.getCompatibleBatteryModels();
+                    return compatibleModels.isEmpty() ||
+                            compatibleModels.stream().anyMatch(model -> model.equalsIgnoreCase(battery.getModel()));
+                })
+                .findFirst();
     }
 }
