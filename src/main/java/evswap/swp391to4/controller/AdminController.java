@@ -1,24 +1,36 @@
 package evswap.swp391to4.controller;
 
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import evswap.swp391to4.dto.FeedbackResponse;
 import evswap.swp391to4.dto.StaffCreateRequest;
 import evswap.swp391to4.dto.StaffResponse;
 import evswap.swp391to4.dto.StaffUpdateRequest;
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
-import evswap.swp391to4.entity.Admin; // <-- Import Admin
+import evswap.swp391to4.dto.TicketSupportResponse;
+import evswap.swp391to4.dto.TicketUpdateRequest;
+import evswap.swp391to4.entity.Admin;
+import evswap.swp391to4.service.FeedbackService;
 import evswap.swp391to4.service.StaffService;
 import evswap.swp391to4.service.StationService;
-import jakarta.servlet.http.HttpSession; // <-- Import Session
+import evswap.swp391to4.service.TicketSupportService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 /**
  * Controller DÀNH CHO ADMIN
@@ -31,6 +43,8 @@ public class AdminController {
 
     private final StaffService staffService;
     private final StationService stationService;
+    private final FeedbackService feedbackService;
+    private final TicketSupportService ticketService;
 
     /**
      * HÀM HELPER (NỘI BỘ)
@@ -317,4 +331,171 @@ public class AdminController {
         }
         return "redirect:/admin/stations";
     }
+
+    // ====================== FEEDBACK (XEM VÀ TẠO) ======================
+
+    @GetMapping("/feedback")
+    public String listFeedback(Model model, HttpSession session) {
+        checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+        List<FeedbackResponse> feedbackList = feedbackService.getAllFeedback();
+        model.addAttribute("feedbackList", feedbackList);
+        return "admin/list-feedback";
+    }
+
+    @GetMapping("/feedback/station/{stationId}")
+    public String listFeedbackByStation(@PathVariable Long stationId, Model model, HttpSession session) {
+        checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+        List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByStationId(stationId);
+        StationResponse station = stationService.findById(stationId.intValue());
+        String stationName = station != null ? station.getName() : "Unknown Station";
+        model.addAttribute("feedbackList", feedbackList);
+        model.addAttribute("stationName", stationName);
+        model.addAttribute("stationId", stationId);
+        return "admin/list-feedback";
+    }
+
+    // ====================== TICKET SUPPORT (XEM VÀ QUẢN LÝ) ======================
+
+    @GetMapping("/tickets")
+    public String listTickets(@RequestParam(value = "status", required = false) String status, Model model, HttpSession session) {
+        checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+        List<TicketSupportResponse> ticketList;
+        if (status == null || status.isEmpty() || "all".equals(status)) {
+            ticketList = ticketService.getAllTickets();
+        } else {
+            ticketList = ticketService.getTicketsByStatus(status);
+        }
+        model.addAttribute("ticketList", ticketList);
+        model.addAttribute("currentStatus", status);
+        return "admin/list-tickets";
+    }
+
+    @GetMapping("/tickets/{id}")
+    public String viewTicket(@PathVariable Integer id, Model model, HttpSession session) {
+        try {
+            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+            TicketSupportResponse ticket = ticketService.getTicketById(id);
+            model.addAttribute("ticket", ticket);
+            
+            // Lấy danh sách staff để assign
+            List<StaffResponse> staffList = staffService.getAllStaff(null);
+            model.addAttribute("staffList", staffList);
+            
+            // Load comments for display
+            try {
+                List<TicketSupportService.Comment> comments = ticketService.getCommentsByTicketId(id);
+                model.addAttribute("comments", comments);
+            } catch (Exception e) {
+                // Log error but continue with empty comments list
+                model.addAttribute("comments", new java.util.ArrayList<>());
+            }
+            
+            // Form object cho update
+            model.addAttribute("ticketUpdate", new TicketUpdateRequest());
+            return "admin/ticket-detail";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/admin/tickets";
+        }
+    }
+
+    /**
+     * API: Lấy danh sách comments (JSON) cho admin
+     */
+    @GetMapping("/tickets/{id}/comments")
+    @ResponseBody
+    public List<TicketSupportService.Comment> getCommentsJson(@PathVariable Integer id, HttpSession session) {
+        try {
+            checkAdminLogin(session);
+            return ticketService.getCommentsByTicketId(id);
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    @PostMapping("/tickets/{id}/update")
+    public String updateTicket(@PathVariable Integer id,
+                              @Valid @ModelAttribute("ticketUpdate") TicketUpdateRequest ticketUpdate,
+                              BindingResult bindingResult,
+                              HttpSession session,
+                              Model model,
+                              RedirectAttributes redirect) {
+        try {
+            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+            if (bindingResult.hasErrors()) {
+                // Load lại dữ liệu nếu có lỗi validation
+                TicketSupportResponse ticket = ticketService.getTicketById(id);
+                model.addAttribute("ticket", ticket);
+                List<StaffResponse> staffList = staffService.getAllStaff(null);
+                model.addAttribute("staffList", staffList);
+                model.addAttribute("ticketUpdate", ticketUpdate);
+                return "admin/ticket-detail";
+            }
+
+            // Tạo staff object để update (giả lập staff từ session)
+            evswap.swp391to4.entity.Staff staff = new evswap.swp391to4.entity.Staff();
+            staff.setStaffId(1); // Giả lập admin staff ID
+            
+            ticketService.updateTicket(id, ticketUpdate, staff);
+            redirect.addFlashAttribute("success", "Cập nhật ticket thành công!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/tickets/" + id;
+    }
+
+    @PostMapping("/tickets/{id}/resolve")
+    public String resolveTicket(@PathVariable Integer id,
+                               @RequestParam String note,
+                               HttpSession session,
+                               RedirectAttributes redirect) {
+        try {
+            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+            // Tạo staff object để resolve (giả lập staff từ session)
+            evswap.swp391to4.entity.Staff staff = new evswap.swp391to4.entity.Staff();
+            staff.setStaffId(1); // Giả lập admin staff ID
+            
+            ticketService.resolveTicket(id, note, staff);
+            redirect.addFlashAttribute("success", "Đã đánh dấu ticket là resolved!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/tickets/" + id;
+    }
+
+    @PostMapping("/tickets/{id}/close")
+    public String closeTicket(@PathVariable Integer id, RedirectAttributes redirect, HttpSession session) {
+        try {
+            checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
+            ticketService.closeTicket(id);
+            redirect.addFlashAttribute("success", "Đã đóng ticket!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/tickets/" + id;
+    }
+
+    @PostMapping("/tickets/{id}/comment")
+    public String addComment(@PathVariable Integer id,
+                           @RequestParam String message,
+                           HttpSession session,
+                           RedirectAttributes redirect) {
+        try {
+            checkAdminLogin(session);
+            
+            // Tạo admin object để comment (giả lập admin staff ID)
+            evswap.swp391to4.entity.Staff adminStaff = new evswap.swp391to4.entity.Staff();
+            adminStaff.setStaffId(1); // Giả lập admin staff ID
+            adminStaff.setFullName("Admin");
+            
+            ticketService.addComment(id, "admin", "Admin", message);
+            redirect.addFlashAttribute("success", "Đã thêm bình luận thành công!");
+            
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/tickets/" + id;
+    }
+
 }

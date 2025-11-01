@@ -35,4 +35,10 @@ public class TicketSupport {
 
     @Column(columnDefinition = "text")
     private String note;
+
+    @Column(name = "comment_history", columnDefinition = "text")
+    private String commentHistory;
+
+    @Column(columnDefinition = "text")
+    private String attachments;
 }

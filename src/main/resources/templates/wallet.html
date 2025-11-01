@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý ví - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/reservations/schedule}" class="nav-link-button">Đổi pin</a>
+            <a th:href="@{/wallet}" class="nav-link-button active">Ví</a>
+        </nav>
+        <div class="auth-area">
+            <span class="welcome">Xin chào, <strong th:text="${driverName}">người dùng</strong>!</span>
+            <form th:action="@{/logout}" method="post">
+                <button class="btn ghost" type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    </div>
+
+    <section class="wallet-section container">
+        <div class="wallet-header">
+            <div class="driver-identity">
+                <div class="driver-avatar" th:text="${driverInitial}">D</div>
+                <div class="driver-intro">
+                    <h1 class="page-title">Quản lý ví điện tử</h1>
+                    <p class="page-hint">Nạp tiền và theo dõi giao dịch của bạn</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="wallet-content">
+            <div class="wallet-left">
+                <div class="wallet-balance-card">
+                    <h2>Số dư hiện tại</h2>
+                    <div class="balance-amount" th:text="${#numbers.formatDecimal(balance, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</div>
+                    <p class="balance-note">Số dư có thể được sử dụng để đặt lịch đổi pin</p>
+                    <button class="btn primary full" id="open-topup-modal">Nạp tiền vào ví</button>
+                </div>
+            </div>
+
+            <div class="wallet-right">
+                <div class="transactions-section">
+                <div class="transactions-header"><h3>Lịch sử giao dịch</h3></div>
+                <div class="transactions-scroll">
+                <div class="transactions-empty" th:if="${transactions == null or transactions.isEmpty()}">
+                    <p>Chưa có giao dịch nào</p>
+                </div>
+                <div class="transactions-list" th:if="${transactions != null and !transactions.isEmpty()}">
+                    <div class="transaction-item" th:each="transaction : ${transactions}">
+                        <div class="transaction-info">
+                            <div class="transaction-type" th:text="${transaction.reservation == null ? 'Nạp tiền' : 'Đặt lịch đổi pin'}">Nạp tiền</div>
+                            <div class="transaction-time" th:text="${#temporals.format(transaction.paidAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</div>
+                            <div class="transaction-method" th:if="${transaction.method}" th:text="${transaction.method == 'payos' ? '💳 PayOS' : (transaction.method == 'wallet' ? '💰 Ví điện tử' : transaction.method)}">💰 Ví</div>
+                        </div>
+                        <div class="transaction-amount" 
+                             th:classappend="${transaction.status == 'refunded' ? 'refund' : (transaction.reservation == null ? 'credit' : 'debit')}"
+                             th:text="${transaction.status == 'refunded' ? '+' : (transaction.reservation == null ? '+' : '-')} + ${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                            + 100,000 VND
+                        </div>
+                        <div class="transaction-status-wrapper">
+                            <div class="transaction-status" 
+                                 th:classappend="${transaction.status == 'succeed' ? 'status-succeed' : (transaction.status == 'pending' ? 'status-pending' : (transaction.status == 'refunded' ? 'status-refunded' : 'status-failed'))}"
+                                 th:text="${transaction.status == 'succeed' ? 'Thành công' : (transaction.status == 'pending' ? 'Đang xử lý' : (transaction.status == 'refunded' ? 'Đã hoàn' : 'Thất bại'))}">
+                                Thành công
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Overlay modal nạp tiền -->
+<div id="topup-modal" class="modal-backdrop" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Nạp tiền vào ví</h3>
+            <button class="modal-close" id="close-topup-modal">✕</button>
+        </div>
+        <div class="modal-body">
+            <form th:action="@{/wallet/topup}" method="post" class="topup-form">
+                <div class="form-group">
+                    <label for="amount">Số tiền nạp (VND)</label>
+                    <input type="number" id="amount" name="amount" min="10000" step="1000" placeholder="Nhập số tiền..." required>
+                    <small>Nạp tối thiểu 10,000 VND</small>
+                </div>
+                <div class="payment-method-group">
+                    <label class="method-label">Phương thức thanh toán:</label>
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="method" value="wallet" checked>
+                            <span class="method-icon">💰</span>
+                            <span class="method-name">Giả lập (Testing)</span>
+                        </label>
+                        <label class="payment-method">
+                            <input type="radio" name="method" value="payos">
+                            <span class="method-icon">💳</span>
+                            <span class="method-name">Thanh toán PayOS</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn primary" id="topup-btn">
+                    <span class="btn-loading" id="btn-loading" style="display: none;">⏳ Đang xử lý...</span>
+                    <span id="btn-text">Nạp tiền</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="overlay-dismiss"></div>
+</div>
+
+<style>
+.wallet-section {
+    padding: 3rem 0;
+}
+
+.wallet-header {
+    margin-bottom: 2rem;
+}
+
+.driver-identity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.driver-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.wallet-content {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+.wallet-left { position: sticky; top: 96px; height: fit-content; }
+
+.wallet-balance-card {
+    background: linear-gradient(135deg, #5b7cfa 0%, #6a5acd 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+}
+.btn.full { width: 100%; margin-top: 1rem; }
+
+.wallet-balance-card h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.balance-amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.balance-note {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.topup-section {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(17, 24, 39, .06);
+}
+
+.topup-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.transactions-section {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(17, 24, 39, .06);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 220px);
+}
+
+.transactions-header { flex: 0 0 auto; margin: 0 0 1rem 0; }
+.transactions-scroll { flex: 1 1 auto; overflow-y: auto; }
+
+.transactions-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: #333;
+}
+
+.transactions-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.transaction-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e9eef5;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.transaction-item:hover {
+    border-color: #cfd8ee;
+    background: #f9fbff;
+}
+
+.transaction-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.transaction-type {
+    font-weight: 500;
+    color: #333;
+}
+
+.transaction-time {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.transaction-amount {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.transaction-amount.credit { color: #1aa251; }
+
+.transaction-amount.debit { color: #dc3545; }
+
+.transaction-amount.refund {
+    color: #17a2b8;
+}
+
+.transaction-status-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.transaction-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.transaction-status.status-succeed { background: #d4edda; color: #155724; }
+
+.transaction-status.status-pending { background: #fff3cd; color: #856404; }
+
+.transaction-status.status-refunded { background: #d1ecf1; color: #0c5460; }
+
+.transaction-status.status-failed { background: #f8d7da; color: #721c24; }
+
+.payment-method-group {
+    margin-bottom: 1.5rem;
+}
+
+/* Modal overlay styles */
+.modal-backdrop { position: fixed; inset: 0; z-index: 1000; display: none; }
+.modal-backdrop.open { 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: center; 
+    /* Tỉ lệ khoảng cách trên:dưới = 2:3 */
+    padding-top: 20vh; 
+    padding-bottom: 30vh; 
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); animation: fadeIn .18s ease; }
+.modal { position: relative; z-index: 1001; width: 560px; max-width: calc(100% - 2rem); max-height: 90vh; overflow-y: auto; margin: 0 auto; background: #ffffff; color: #1f2937; border-radius: 14px; box-shadow: 0 24px 64px rgba(0,0,0,.22); transform: scale(.96); opacity: 0; animation: modalIn .18s ease forwards; }
+.modal-header { display:flex; align-items:center; justify-content: space-between; padding: 1rem 1.25rem; background: #f3f4f6; color: #111827; border-bottom: 1px solid #e5e7eb; border-top-left-radius: 14px; border-top-right-radius: 14px; }
+.modal-body { padding: 1.25rem; background: #ffffff; }
+.modal-close { background: transparent; border: 0; font-size: 1.1rem; cursor: pointer; }
+
+@keyframes modalIn { to { transform: scale(1); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.method-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.payment-method:hover {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.payment-method input[type="radio"] {
+    margin: 0;
+}
+
+.payment-method input[type="radio"]:checked + .method-icon + .method-name {
+    font-weight: 600;
+}
+
+.method-icon {
+    font-size: 1.5rem;
+}
+
+.method-name {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.transaction-method {
+    font-size: 0.8rem;
+    color: #17a2b8;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .wallet-content { grid-template-columns: 1fr; }
+    .wallet-left { position: static; }
+    .transactions-section { height: auto; }
+    .transaction-item { grid-template-columns: 1fr; gap: 0.5rem; text-align: center; }
+    .payment-methods { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.topup-form');
+    const btn = document.getElementById('topup-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnLoading = document.getElementById('btn-loading');
+    const modal = document.getElementById('topup-modal');
+    const openBtn = document.getElementById('open-topup-modal');
+    const closeBtn = document.getElementById('close-topup-modal');
+    const overlayDismiss = document.getElementById('overlay-dismiss');
+    
+    if (openBtn && modal) {
+        openBtn.addEventListener('click', () => { 
+            modal.style.display = 'block';
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => { 
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    if (overlayDismiss) {
+        overlayDismiss.addEventListener('click', () => { 
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = document.getElementById('amount').value;
+            const method = document.querySelector('input[name="method"]:checked').value;
+            
+            if (parseInt(amount) < 10000) {
+                alert('Số tiền nạp tối thiểu là 10,000 VND');
+                e.preventDefault();
+                return;
+            }
+            
+            // Show loading state for PayOS payments
+            if (method === 'payos') {
+                btn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>

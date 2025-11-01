@@ -40,4 +40,10 @@ public interface BatteryRepository extends JpaRepository<Battery, Integer> {
      * Tìm pin theo Model
      */
     List<Battery> findByStationAndModelContainingIgnoreCase(Station station, String model);
+
+    /**
+     * Tìm pin đủ điều kiện cho reservation
+     */
+    List<Battery> findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
+        Integer stationId, String state, Integer socPercent, Integer sohPercent);
 }

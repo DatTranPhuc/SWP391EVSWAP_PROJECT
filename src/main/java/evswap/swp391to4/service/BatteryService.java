@@ -1,10 +1,13 @@
 package evswap.swp391to4.service;
 
 import evswap.swp391to4.dto.BatteryCreateRequest;
+import evswap.swp391to4.dto.AvailableBatteryResponse;
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.BatteryRepository;
+import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.util.List;
 public class BatteryService {
 
     private final BatteryRepository batteryRepo;
+    private final VehicleBatteryCompatibilityRepository compatibilityRepo;
 
     @Transactional(readOnly = true)
     public List<Battery> searchBatteriesForStation(Station station, String searchType, String searchTerm) {
@@ -111,5 +115,70 @@ public class BatteryService {
         }
 
         batteryRepo.saveAll(newBatteries);
+    }
+
+    /**
+     * Tìm pin đủ điều kiện cho xe tại trạm
+     * - state = "full"
+     * - soc = 100%
+     * - soh >= 80%
+     * - Tương thích với xe
+     */
+    @Transactional(readOnly = true)
+    public List<AvailableBatteryResponse> findEligibleBatteriesForVehicle(Integer stationId, Integer vehicleId) {
+        // Lấy danh sách pin tại trạm với điều kiện cơ bản
+        List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
+            stationId, "full", 100, 80);
+
+        // Lọc theo tương thích với xe
+        List<AvailableBatteryResponse> result = new ArrayList<>();
+        for (Battery battery : eligibleBatteries) {
+            boolean isCompatible = compatibilityRepo.existsByVehicleVehicleIdAndBatteryModel(
+                vehicleId, battery.getModel());
+            
+            if (isCompatible) {
+                result.add(AvailableBatteryResponse.builder()
+                    .batteryId(battery.getBatteryId())
+                    .model(battery.getModel())
+                    .sohPercent(battery.getSohPercent())
+                    .socPercent(battery.getSocPercent())
+                    .state(battery.getState())
+                    .stationName(battery.getStation().getName())
+                    .stationAddress(battery.getStation().getAddress())
+                    .build());
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Đánh dấu pin đã được đặt (reserve)
+     * Thêm trường reservedForReservationId vào Battery entity nếu cần
+     */
+    @Transactional
+    public void reserveBattery(Integer batteryId, Integer reservationId) {
+        Battery battery = batteryRepo.findById(batteryId)
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy pin với ID: " + batteryId));
+        
+        // Kiểm tra pin có đủ điều kiện không
+        if (!"full".equals(battery.getState()) || 
+            battery.getSocPercent() != 100 || 
+            battery.getSohPercent() < 80) {
+            throw new IllegalStateException("Pin không đủ điều kiện để đặt");
+        }
+        
+        // Đánh dấu pin đã được reserve (có thể thêm trường reservedForReservationId)
+        // Hiện tại chỉ log để tracking, có thể extend Battery entity sau
+        System.out.println("Pin #" + batteryId + " đã được đặt cho reservation #" + reservationId);
+        
+        // TODO: Thêm trường reservedForReservationId vào Battery entity để track reservation
+        // battery.setReservedForReservationId(reservationId);
+        // batteryRepo.save(battery);
+    }
+
+    @Transactional(readOnly = true)
+    public Battery getBatteryById(Integer batteryId) {
+        return batteryRepo.findById(batteryId).orElse(null);
     }
 }

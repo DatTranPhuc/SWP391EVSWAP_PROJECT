@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Feedback - EV SWAP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body class="admin-body">
+
+<header class="admin-top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">🚗</span> <span class="brand-name">EV SWAP</span> <span class="admin-badge">Admin Panel</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/admin/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/admin/staff}" class="nav-link-button">Quản lý Staff</a>
+            <a th:href="@{/admin/stations}" class="nav-link-button">Quản lý Trạm</a>
+        </nav>
+        <div class="auth-area" th:if="${session.loggedInAdmin}">
+            <span class="welcome">Xin chào, <strong th:text="${session.loggedInAdmin.fullName}">Admin</strong>!</span>
+            <form th:action="@{/logout}" method="post"><button class="btn ghost" type="submit">Đăng xuất</button></form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="admin-content-card">
+
+        <div class="content-header">
+            <h2 th:if="${stationName == null}">Quản lý Feedback</h2>
+            <h2 th:if="${stationName != null}" th:text="'Feedback của trạm: ' + ${stationName}">Feedback của trạm</h2>
+            <div class="header-actions">
+                <a th:href="@{/admin/feedback}" class="btn primary" th:if="${stationName != null}">Xem tất cả feedback</a>
+                <a th:href="@{/admin/stations}" class="btn ghost" th:if="${stationName == null}">← Trở về danh sách trạm</a>
+                <div th:if="${stationName != null}" class="back-link">
+                    <a th:href="@{/admin/stations}" class="btn ghost">← Quay lại danh sách trạm</a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="admin-alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="admin-alert error" th:text="${error}"></div>
+
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Driver</th>
+                <th>Trạm</th>
+                <th>Đánh giá</th>
+                <th>Nhận xét</th>
+                <th>Ngày tạo</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="feedback : ${feedbackList}">
+                <td th:text="${feedback.feedbackId}">1</td>
+                <td th:text="${feedback.driverName}">Nguyễn Văn A</td>
+                <td th:text="${feedback.stationName}">Trạm A</td>
+                <td>
+                    <div class="rating-display">
+                        <span th:each="i : ${#numbers.sequence(1, feedback.rating)}">⭐</span>
+                        <span th:each="i : ${#numbers.sequence(feedback.rating + 1, 5)}" class="rating-empty">☆</span>
+                        <span class="rating-text" th:text="'(' + feedback.rating + '/5)'">(4/5)</span>
+                    </div>
+                </td>
+                <td class="comment-cell">
+                    <div class="comment-content" th:text="${feedback.comment}">Nhận xét của người dùng</div>
+                </td>
+                <td th:text="${#temporals.format(feedback.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:30</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(feedbackList)}">
+                <td colspan="6" class="empty-state">Chưa có feedback nào.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer class="admin-footer">
+    <div class="container"><p>© 2025 EV SWAP - Admin Control Panel.</p></div>
+</footer>
+
+<style>
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.rating-display span {
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+.rating-empty {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.rating-text {
+    font-size: 0.875rem;
+    color: rgba(243, 244, 246, 0.7);
+    margin-left: 0.5rem;
+    font-weight: 500;
+}
+
+.comment-cell {
+    max-width: 300px;
+}
+
+.comment-content {
+    word-wrap: break-word;
+    line-height: 1.4;
+    color: rgba(243, 244, 246, 0.9);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(243, 244, 246, 0.6);
+    font-style: italic;
+}
+</style>
+
+</body>
+</html>
