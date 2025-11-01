@@ -17,10 +17,9 @@ public class Station {
     @Column(name = "station_id")
     private Integer stationId;
 
-    @Column( columnDefinition = "nvarchar(100)",nullable = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column( columnDefinition = "nvarchar(200)")
     private String address;
 
     private BigDecimal latitude;

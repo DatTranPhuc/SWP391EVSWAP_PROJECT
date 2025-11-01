@@ -1,5 +1,7 @@
 package evswap.swp391to4.controller;
 
+import evswap.swp391to4.entity.Driver;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,8 @@ public class DashboardController {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver != null) {
             model.addAttribute("driverName", driver.getFullName());
+            model.addAttribute("driverPhone", driver.getPhone());   // ✅ Thêm dòng này
+            model.addAttribute("driverEmail", driver.getEmail());   // ✅ Thêm dòng này
             model.addAttribute("loggedIn", true);
             
             // Load wallet balance for logged in users
@@ -65,7 +69,8 @@ public class DashboardController {
         }
 
         if ("Báo cáo".equalsIgnoreCase(normalizedFeature)) {
-            return "redirect:/feedback";
+            redirect.addFlashAttribute("dashboardMessage", "Chức năng Báo cáo sẽ sớm ra mắt.");
+            return "redirect:/dashboard";
         }
 
         if ("Tài khoản".equalsIgnoreCase(normalizedFeature)) {
@@ -82,4 +87,3 @@ public class DashboardController {
         return "redirect:/dashboard";
     }
 }
-

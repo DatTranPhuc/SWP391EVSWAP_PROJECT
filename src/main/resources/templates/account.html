@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản | EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/account.css}">
+    <script>
+        // Hiển thị modal xác nhận xóa
+        function confirmDelete(type, id) {
+            const modal = document.getElementById("confirmModal");
+            const msg = document.getElementById("confirmMessage");
+            const confirmBtn = document.getElementById("confirmBtn");
+
+            if (type === "vehicle") {
+                msg.textContent = "Bạn có chắc muốn xóa xe này không?";
+                confirmBtn.onclick = function () {
+                    window.location.href = "/account/delete-vehicle/" + id;
+                };
+            } else if (type === "account") {
+                msg.textContent = "Bạn có chắc muốn xóa tài khoản này không? Thao tác này không thể hoàn tác!";
+                confirmBtn.onclick = function () {
+                    window.location.href = "/account/delete";
+                };
+            }
+            modal.style.display = "flex";
+        }
+
+        // Đóng modal
+        function closeModal() {
+            document.getElementById("confirmModal").style.display = "none";
+        }
+    </script>
+</head>
+<body>
+<div class="account-container">
+    <h1>Thông tin tài khoản</h1>
+
+    <!-- Thông tin cá nhân -->
+    <section class="info-section">
+        <h2>Khách hàng</h2>
+        <form th:action="@{/account/update}" method="post" class="info-card">
+            <p><strong>Họ và tên:</strong>
+                <input type="text" name="fullName" th:value="${driverName}" required>
+            </p>
+            <p><strong>Số điện thoại:</strong>
+                <input type="text" name="phone" th:value="${driverPhone}" required>
+            </p>
+            <p><strong>Email:</strong>
+                <input type="email" th:value="${driverEmail}" readonly>
+            </p>
+            <div class="btn-row">
+                <button type="submit" class="btn btn-update">💾 Cập nhật</button>
+                <button type="button" class="btn btn-delete" onclick="confirmDelete('account')">🗑️ Xóa tài khoản</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Thông tin xe -->
+    <section class="vehicle-section">
+        <h2>Thông tin xe</h2>
+
+        <div th:if="${vehicles != null and !vehicles.isEmpty()}" class="vehicle-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tên xe</th>
+                    <th>Biển số</th>
+                    <th>Số khung (VIN)</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${vehicles}">
+                    <td th:text="${v.model}">VinFast Feliz</td>
+                    <td th:text="${v.plateNumber}">29A-12345</td>
+                    <td th:text="${v.vin}">VIN123456789</td>
+                    <td>
+                        <button type="button" class="btn btn-small btn-delete"
+                                th:onclick="'confirmDelete(\'vehicle\', ' + ${v.vehicleId} + ')'">Xóa</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${vehicles == null or vehicles.isEmpty()}" class="no-vehicle">
+            <p>Hiện chưa có thông tin xe nào được đăng ký.</p>
+        </div>
+    </section>
+
+    <div style="text-align: center;">
+        <a th:href="@{/dashboard}" class="back-btn">← Quay lại Dashboard</a>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal">
+        <h3>Xác nhận</h3>
+        <p id="confirmMessage">Bạn có chắc muốn xóa không?</p>
+        <div class="modal-buttons">
+            <button id="confirmBtn" class="btn btn-danger">Xóa</button>
+            <button onclick="closeModal()" class="btn btn-cancel">Hủy</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

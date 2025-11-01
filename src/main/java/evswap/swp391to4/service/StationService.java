@@ -1,11 +1,5 @@
 package evswap.swp391to4.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import evswap.swp391to4.dto.StationCreateRequest;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Station;
@@ -13,6 +7,11 @@ import evswap.swp391to4.repository.StaffRepository;
 import evswap.swp391to4.repository.StationDistance;
 import evswap.swp391to4.repository.StationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
