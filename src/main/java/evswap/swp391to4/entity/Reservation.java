@@ -1,21 +1,21 @@
 package evswap.swp391to4.entity;
 
-
-
-
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-
-import java.time.Instant;
-
-@Entity @Table(name = "reservation")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "reservation")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Reservation {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")
     private Integer reservationId;
 
@@ -27,8 +27,9 @@ public class Reservation {
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    // CHO PHÉP NULL TẠM THỜI để thêm cột và backfill dữ liệu
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "vehicle_id", nullable = true)
     private Vehicle vehicle;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,12 +42,13 @@ public class Reservation {
     @Column(name = "reserved_start")
     private Instant reservedStart;
 
-    private String status; // pending/confirmed/canceled/no_show/completed
+    // pending / confirmed / canceled / no_show / completed / checked_in
+    private String status;
 
     @Column(name = "created_at")
     private Instant createdAt;
 
-    // QR fields
+    // ===== QR fields =====
     @Column(name = "qr_nonce")
     private String qrNonce;
 
@@ -54,7 +56,7 @@ public class Reservation {
     private Instant qrExpiresAt;
 
     @Column(name = "qr_status")
-    private String qrStatus; // active/expired/revoked/used
+    private String qrStatus; // active / expired / revoked / used
 
     @Column(name = "qr_token")
     private String qrToken;
@@ -62,4 +64,3 @@ public class Reservation {
     @Column(name = "checked_in_at")
     private Instant checkedInAt;
 }
-

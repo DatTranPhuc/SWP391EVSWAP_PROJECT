@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReservationScheduler {
+public class    ReservationScheduler {
 
     private final ReservationRepository reservationRepository;
     private final PaymentService paymentService;
