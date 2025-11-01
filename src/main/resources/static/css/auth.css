@@ -286,6 +286,31 @@ body {
     transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
+.auth-field select {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 20, 30, 0.78);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+    appearance: none;
+}
+
+.auth-field select:focus {
+    outline: none;
+    border-color: var(--accent-strong);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28);
+}
+
+.auth-field .field-hint {
+    display: block;
+    margin-top: 6px;
+    color: rgba(148, 163, 184, 0.75);
+    font-size: 0.85rem;
+}
+
 .auth-field input::placeholder {
     color: rgba(148, 163, 184, 0.55);
 }

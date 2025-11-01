@@ -2,7 +2,6 @@ package evswap.swp391to4.config;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -13,13 +12,11 @@ import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.Vehicle;
-import evswap.swp391to4.entity.VehicleBatteryCompatibility;
-import evswap.swp391to4.entity.VehicleBatteryId;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.BatteryRepository;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.StaffRepository;
 import evswap.swp391to4.repository.StationRepository;
-import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import evswap.swp391to4.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +31,6 @@ public class DataSeeder implements CommandLineRunner {
     private final StationRepository stationRepository;
     private final VehicleRepository vehicleRepository;
     private final BatteryRepository batteryRepository;
-    private final VehicleBatteryCompatibilityRepository compatibilityRepository;
     private final PaymentService paymentService;
 
     @Override
@@ -78,6 +74,7 @@ public class DataSeeder implements CommandLineRunner {
                             .vin("VIN-TEST-0001")
                             .plateNumber("59A1-000.01")
                             .model("MODEL-A")
+                            .vehicleType(VehicleType.CITY_48V)
                             .createdAt(Instant.now())
                             .build();
                     return vehicleRepository.save(v);
@@ -108,15 +105,6 @@ public class DataSeeder implements CommandLineRunner {
                     .sohPercent(70)
                     .socPercent(100)
                     .build());
-
-            // Compatibility: vehicle compatible with MODEL-A battery b1
-            compatibilityRepository.saveAll(List.of(
-                    VehicleBatteryCompatibility.builder()
-                            .id(new VehicleBatteryId(vehicle.getVehicleId(), b1.getBatteryId()))
-                            .vehicle(vehicle)
-                            .battery(b1)
-                            .build()
-            ));
         }
 
         // Staff account for this station

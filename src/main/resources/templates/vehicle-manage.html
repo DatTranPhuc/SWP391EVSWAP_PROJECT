@@ -76,12 +76,13 @@
                 <div class="battery-section">
                     <div class="battery-meta">
                         <div>
-                            <span class="meta-label">Model pin</span>
-                            <strong class="meta-value" th:text="${card.batteryModel()}">VinFast 48V</strong>
+                            <span class="meta-label">Phân loại xe</span>
+                            <strong class="meta-value" th:text="${card.vehicleTypeLabel()}">Xe điện 48V phổ thông</strong>
+                            <span class="meta-hint" th:text="${card.vehicleTypeDescription()}">VinFast Feliz, Pega, Dibao...</span>
                         </div>
                         <div>
-                            <span class="meta-label">Trạng thái</span>
-                            <strong class="meta-value" th:text="${card.batteryStatus()}">Đang sử dụng</strong>
+                            <span class="meta-label">Pin tương thích</span>
+                            <strong class="meta-value" th:text="${card.compatibleBatteryLabel()}">MODEL-A</strong>
                         </div>
                     </div>
                     <div class="battery-progress">
@@ -126,6 +127,15 @@
                 <label>
                     <span>Model xe</span>
                     <input type="text" th:field="*{model}" placeholder="Ví dụ: VinFast Feliz S" required>
+                </label>
+                <label>
+                    <span>Phân loại xe</span>
+                    <select th:field="*{vehicleType}" required>
+                        <option th:each="type : ${vehicleTypes}"
+                                th:value="${type.name()}"
+                                th:text="${type.displayName + ' – ' + type.getCompatibleBatteryLabel()}"
+                                th:selected="${type.name() == vehicleForm.vehicleType}"></option>
+                    </select>
                 </label>
                 <label>
                     <span>Số VIN</span>

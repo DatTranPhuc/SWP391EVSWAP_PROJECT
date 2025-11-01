@@ -13,11 +13,11 @@ import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.SwapTransaction;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.repository.DriverRepository;
 import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.StationRepository;
 import evswap.swp391to4.repository.SwapTransactionRepository;
-import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
 import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,6 @@ public class ReservationService {
     private final DriverRepository driverRepo;
     private final StationRepository stationRepo;
     private final VehicleRepository vehicleRepository;
-    private final VehicleBatteryCompatibilityRepository compatibilityRepository;
     private final PaymentService paymentService;
     private final WalletService walletService;
     private final BatteryService batteryService;
@@ -64,14 +63,14 @@ public class ReservationService {
 
         // Lấy danh sách pin 'full' tại trạm, sau đó lọc theo SOH/SOC và tương thích
         List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(station);
-        java.util.Set<Integer> compatibleBatteryIds = compatibilityRepository.findByVehicle(vehicle)
-                .stream().map(c -> c.getBattery().getBatteryId()).collect(java.util.stream.Collectors.toSet());
+        VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
 
         long eligible = stationBatteries.stream()
                 .filter(b -> "full".equalsIgnoreCase(b.getState()))
                 .filter(b -> b.getSohPercent() != null && b.getSohPercent() >= 80)
                 .filter(b -> b.getSocPercent() != null && b.getSocPercent() == 100)
-                .filter(b -> compatibleBatteryIds.contains(b.getBatteryId()))
+                .filter(b -> type.getCompatibleBatteryModels().isEmpty() ||
+                        type.supportsBatteryModel(b.getModel()))
                 .count();
 
         return eligible > 0;
@@ -266,14 +265,14 @@ public class ReservationService {
             Vehicle vehicle = reservation.getVehicle();
 
             List<Battery> stationBatteries = batteryService.getAllBatteriesForStation(station);
-            java.util.Set<Integer> compatibleBatteryIds = compatibilityRepository.findByVehicle(vehicle)
-                    .stream().map(c -> c.getBattery().getBatteryId()).collect(java.util.stream.Collectors.toSet());
+            VehicleType type = vehicle.getVehicleType() == null ? VehicleType.UNIVERSAL : vehicle.getVehicleType();
 
             Battery chosen = stationBatteries.stream()
                     .filter(b -> "full".equalsIgnoreCase(b.getState()))
                     .filter(b -> b.getSohPercent() != null && b.getSohPercent() >= 80)
                     .filter(b -> b.getSocPercent() != null && b.getSocPercent() == 100)
-                    .filter(b -> compatibleBatteryIds.contains(b.getBatteryId()))
+                    .filter(b -> type.getCompatibleBatteryModels().isEmpty() ||
+                            type.supportsBatteryModel(b.getModel()))
                     .findFirst()
                     .orElse(null);
 

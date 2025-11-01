@@ -3,6 +3,7 @@ package evswap.swp391to4.controller;
 import evswap.swp391to4.dto.VehicleRegistrationForm;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Vehicle;
+import evswap.swp391to4.entity.VehicleType;
 import evswap.swp391to4.service.DriverService;
 import evswap.swp391to4.service.VehicleService;
 import jakarta.servlet.http.HttpSession;
@@ -31,10 +32,12 @@ public class VehicleController {
     @PostMapping("/api/drivers/{driverId}/vehicles")
     public ResponseEntity<Vehicle> addVehicle(@PathVariable Integer driverId,
                                               @RequestBody VehicleRequest request) {
+        VehicleType vehicleType = VehicleType.fromString(request.vehicleType());
         Vehicle vehicle = Vehicle.builder()
                 .vin(request.vin())
                 .plateNumber(request.plateNumber())
                 .model(request.model())
+                .vehicleType(vehicleType)
                 .build();
         Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
         return ResponseEntity.ok(savedVehicle);
@@ -56,8 +59,12 @@ public class VehicleController {
             model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
 
             if (!model.containsAttribute("vehicleForm")) {
-                model.addAttribute("vehicleForm", new VehicleRegistrationForm());
+                VehicleRegistrationForm form = new VehicleRegistrationForm();
+                form.setVehicleType(VehicleType.CITY_48V.name());
+                model.addAttribute("vehicleForm", form);
             }
+
+            model.addAttribute("vehicleTypes", VehicleType.values());
 
             return "vehicle-register";
         } catch (Exception e) {
@@ -75,10 +82,13 @@ public class VehicleController {
                                   @ModelAttribute("vehicleForm") VehicleRegistrationForm form,
                                   RedirectAttributes redirect) {
         try {
+            VehicleType vehicleType = VehicleType.fromString(form.getVehicleType());
+
             Vehicle vehicle = Vehicle.builder()
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(vehicleType)
                     .build();
 
             vehicleService.addVehicleToDriver(driverId, vehicle);
@@ -118,8 +128,12 @@ public class VehicleController {
                 .orElse(null));
 
         if (!model.containsAttribute("vehicleForm")) {
-            model.addAttribute("vehicleForm", new VehicleRegistrationForm());
+            VehicleRegistrationForm form = new VehicleRegistrationForm();
+            form.setVehicleType(VehicleType.CITY_48V.name());
+            model.addAttribute("vehicleForm", form);
         }
+
+        model.addAttribute("vehicleTypes", VehicleType.values());
 
         return "vehicle-manage";
     }
@@ -139,10 +153,13 @@ public class VehicleController {
         }
 
         try {
+            VehicleType vehicleType = VehicleType.fromString(form.getVehicleType());
+
             Vehicle vehicle = Vehicle.builder()
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(vehicleType)
                     .build();
 
             vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
@@ -168,7 +185,7 @@ public class VehicleController {
         return fullName.trim().substring(0, 1).toUpperCase();
     }
 
-    public record VehicleRequest(String vin, String plateNumber, String model) {
+    public record VehicleRequest(String vin, String plateNumber, String model, String vehicleType) {
     }
 
     // Lớp nội bộ để hiển thị dữ liệu trên view, giữ nguyên
@@ -179,11 +196,12 @@ public class VehicleController {
         private final String plateNumber;
         private final String vin;
         private final String model;
+        private final String vehicleTypeLabel;
+        private final String vehicleTypeDescription;
+        private final String compatibleBatteryLabel;
         private final Instant createdAt;
         private final String statusLabel;
         private final String statusBadge;
-        private final String batteryModel;
-        private final String batteryStatus;
         private final int batteryPercent;
         private final String healthLabel;
         private final String healthDescription;
@@ -194,11 +212,12 @@ public class VehicleController {
         public String plateNumber() { return plateNumber; }
         public String vin() { return vin; }
         public String model() { return model; }
+        public String vehicleTypeLabel() { return vehicleTypeLabel; }
+        public String vehicleTypeDescription() { return vehicleTypeDescription; }
+        public String compatibleBatteryLabel() { return compatibleBatteryLabel; }
         public Instant createdAt() { return createdAt; }
         public String statusLabel() { return statusLabel; }
         public String statusBadge() { return statusBadge; }
-        public String batteryModel() { return batteryModel; }
-        public String batteryStatus() { return batteryStatus; }
         public int batteryPercent() { return batteryPercent; }
         public String healthLabel() { return healthLabel; }
         public String healthDescription() { return healthDescription; }
@@ -228,6 +247,8 @@ public class VehicleController {
 
             String statusBadge = batteryPercent >= 75 ? "status-online" : "status-warning";
 
+            VehicleType type = Optional.ofNullable(vehicle.getVehicleType()).orElse(VehicleType.UNIVERSAL);
+
             cards.add(VehicleCardView.builder()
                     .vehicleId(vehicle.getVehicleId())
                     .vehicleName(Optional.ofNullable(vehicle.getModel())
@@ -238,11 +259,12 @@ public class VehicleController {
                             .orElse("Chưa cập nhật"))
                     .vin(vehicle.getVin())
                     .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
+                    .vehicleTypeLabel(type.getDisplayName())
+                    .vehicleTypeDescription(type.getDescription())
+                    .compatibleBatteryLabel(type.getCompatibleBatteryLabel())
                     .createdAt(vehicle.getCreatedAt())
                     .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
                     .statusBadge(statusBadge)
-                    .batteryModel(guessBatteryModel(vehicle.getModel()))
-                    .batteryStatus(batteryPercent >= 75 ? "Đang sử dụng" : "Cần bảo dưỡng")
                     .batteryPercent(batteryPercent)
                     .healthLabel(healthLabel)
                     .healthDescription(healthDescription)
@@ -250,21 +272,5 @@ public class VehicleController {
         }
 
         return cards;
-    }
-
-    // Phương thức đoán model pin, giữ nguyên
-    private String guessBatteryModel(String vehicleModel) {
-        if (vehicleModel == null) {
-            return "EVS Pack 48V";
-        }
-
-        String normalized = vehicleModel.toLowerCase();
-        if (normalized.contains("vinfast")) {
-            return "VinFast 48V - 20Ah";
-        }
-        if (normalized.contains("dat")) {
-            return "Dat Bike Hypercore";
-        }
-        return "EVS Pack 48V";
     }
 }

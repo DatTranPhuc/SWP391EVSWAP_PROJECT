@@ -27,6 +27,10 @@ public class Vehicle {
 
     private String model;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vehicle_type")
+    private VehicleType vehicleType;
+
     @Column(name = "created_at")
     private Instant createdAt;
 }

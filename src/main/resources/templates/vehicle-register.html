@@ -77,6 +77,19 @@
                     <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
                 </div>
                 <div class="auth-field">
+                    <label for="vehicleType">Phân loại xe</label>
+                    <select id="vehicleType" th:field="*{vehicleType}" required>
+                        <option th:each="type : ${vehicleTypes}"
+                                th:value="${type.name()}"
+                                th:text="${type.displayName + ' – ' + type.getCompatibleBatteryLabel()}"
+                                th:selected="${type.name() == vehicleForm.vehicleType}">
+                        </option>
+                    </select>
+                    <small class="field-hint">
+                        Chọn nhóm xe để hệ thống tự xác định loại pin tương thích.
+                    </small>
+                </div>
+                <div class="auth-field">
                     <label for="vin">Số VIN</label>
                     <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
                 </div>
