@@ -2,7 +2,6 @@ package evswap.swp391to4.config;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -85,6 +84,11 @@ public class DataSeeder implements CommandLineRunner {
                     return vehicleRepository.save(v);
                 });
 
+        if (vehicle.getVehicleType() == null) {
+            vehicle.setVehicleType(VehicleType.TWO_WHEEL);
+            vehicle = vehicleRepository.save(vehicle);
+        }
+
         // Batteries at station
         if (batteryRepository.findAll().isEmpty()) {
             Battery scooterFull = batteryRepository.save(Battery.builder()
@@ -112,14 +116,21 @@ public class DataSeeder implements CommandLineRunner {
                     .build());
 
             // Compatibility: vehicle compatible with scooter battery
-            compatibilityRepository.saveAll(List.of(
-                    VehicleBatteryCompatibility.builder()
-                            .id(new VehicleBatteryId(vehicle.getVehicleId(), scooterFull.getBatteryId()))
-                            .vehicle(vehicle)
-                            .battery(scooterFull)
-                            .build()
-            ));
+            ensureCompatibility(vehicle, scooterFull);
+
+            Vehicle car = vehicleRepository.findByVin("VIN-CAR-0001").orElseGet(() -> vehicleRepository.save(Vehicle.builder()
+                    .driver(driver)
+                    .vin("VIN-CAR-0001")
+                    .plateNumber("51H-123.45")
+                    .model("EVS Demo Car")
+                    .vehicleType(VehicleType.FOUR_WHEEL)
+                    .createdAt(Instant.now())
+                    .build()));
+
+            ensureCompatibility(car, carFull);
         }
+
+        Vehicle demoCar = vehicleRepository.findByVin("VIN-CAR-0001").orElse(null);
 
         // Staff account for this station
         String staffEmail = "staff1@test.com";
@@ -139,9 +150,30 @@ public class DataSeeder implements CommandLineRunner {
                 "- Driver: " + driverEmail + " / " + driverPass + " (wallet: 200,000 VND)\n" +
                 "- Staff:  " + staffEmail + " / " + staffPass + " (station: " + station.getName() + ")\n" +
                 "- Vehicle: " + vehicle.getModel() + " (" + vehicle.getPlateNumber() + ")\n" +
+                (demoCar != null ? "- Demo car: " + demoCar.getModel() + " (" + demoCar.getPlateNumber() + ")\n" : "") +
                 "- Station has eligible battery " + VehicleType.TWO_WHEEL.getDefaultBatteryModel() +
                 " (full, 100% SOC, SOH>=80)\n" +
                 "- Station also seeded a sample " + VehicleType.FOUR_WHEEL.getDefaultBatteryModel() + " pack");
+    }
+
+    private void ensureCompatibility(Vehicle vehicle, Battery battery) {
+        if (vehicle == null || battery == null) {
+            return;
+        }
+
+        boolean exists = compatibilityRepository
+                .existsByVehicleVehicleIdAndBatteryModel(vehicle.getVehicleId(), battery.getModel());
+        if (exists) {
+            return;
+        }
+
+        VehicleBatteryCompatibility compatibility = VehicleBatteryCompatibility.builder()
+                .id(new VehicleBatteryId(vehicle.getVehicleId(), battery.getBatteryId()))
+                .vehicle(vehicle)
+                .battery(battery)
+                .build();
+
+        compatibilityRepository.save(compatibility);
     }
 }
 

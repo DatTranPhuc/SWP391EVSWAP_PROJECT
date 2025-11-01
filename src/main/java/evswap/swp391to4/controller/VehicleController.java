@@ -188,6 +188,7 @@ public class VehicleController {
         private final String vin;
         private final String model;
         private final String vehicleTypeLabel;
+        private final String vehicleTypeIcon;
         private final Instant createdAt;
         private final String statusLabel;
         private final String statusBadge;
@@ -204,6 +205,7 @@ public class VehicleController {
         public String vin() { return vin; }
         public String model() { return model; }
         public String vehicleTypeLabel() { return vehicleTypeLabel; }
+        public String vehicleTypeIcon() { return vehicleTypeIcon; }
         public Instant createdAt() { return createdAt; }
         public String statusLabel() { return statusLabel; }
         public String statusBadge() { return statusBadge; }
@@ -252,6 +254,7 @@ public class VehicleController {
                     .vin(vehicle.getVin())
                     .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
                     .vehicleTypeLabel(vehicleTypeLabel)
+                    .vehicleTypeIcon(resolveVehicleTypeIcon(vehicle))
                     .createdAt(vehicle.getCreatedAt())
                     .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
                     .statusBadge(statusBadge)
@@ -294,5 +297,13 @@ public class VehicleController {
             return type.getDisplayName();
         }
         return "Chưa phân loại";
+    }
+
+    private String resolveVehicleTypeIcon(Vehicle vehicle) {
+        VehicleType type = vehicle.getVehicleType();
+        if (type != null) {
+            return type.getIcon();
+        }
+        return "🔋";
     }
 }

@@ -508,12 +508,24 @@ body {
 
 .vehicle-type-content {
     display: grid;
-    gap: 6px;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
     padding: 18px;
     border-radius: 18px;
     background: var(--surface);
     border: 1px solid var(--border-color);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.vehicle-type-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.vehicle-type-text {
+    display: grid;
+    gap: 4px;
 }
 
 .vehicle-type-option:hover .vehicle-type-content,

@@ -77,8 +77,11 @@
                     <label class="vehicle-type-option" th:each="type : ${vehicleTypes}">
                         <input type="radio" th:field="*{vehicleType}" th:value="${type}" />
                         <div class="vehicle-type-content">
-                            <span class="vehicle-type-name" th:text="${type.displayName}">Xe 2 bánh</span>
-                            <span class="vehicle-type-battery" th:text="'Pin: ' + ${type.defaultBatteryModel}">Pin: EVS Scooter Pack 48V</span>
+                            <span class="vehicle-type-icon" th:text="${type.icon}">🛵</span>
+                            <div class="vehicle-type-text">
+                                <span class="vehicle-type-name" th:text="${type.displayName}">Xe 2 bánh</span>
+                                <span class="vehicle-type-battery" th:text="'Pin: ' + ${type.defaultBatteryModel}">Pin: EVS Scooter Pack 48V</span>
+                            </div>
                         </div>
                     </label>
                 </div>

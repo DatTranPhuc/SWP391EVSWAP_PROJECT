@@ -517,12 +517,24 @@ body.vehicle-manage-body {
 
 .vehicle-type-content {
     display: grid;
-    gap: 6px;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
     padding: 16px;
     border-radius: 16px;
     background: rgba(15, 20, 30, 0.78);
     border: 1px solid var(--border-soft);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.vehicle-type-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.vehicle-type-text {
+    display: grid;
+    gap: 4px;
 }
 
 .vehicle-type-option:hover .vehicle-type-content,
@@ -546,6 +558,17 @@ body.vehicle-manage-body {
     border-color: var(--accent-primary);
     box-shadow: 0 18px 38px rgba(99, 102, 241, 0.28);
     background: rgba(99, 102, 241, 0.18);
+}
+
+.vehicle-type-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vehicle-type-chip-icon {
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 .form-grid label {
