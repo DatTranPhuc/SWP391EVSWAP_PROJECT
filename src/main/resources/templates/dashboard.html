@@ -23,12 +23,19 @@
             <a th:if="${loggedIn}" th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
             <a th:if="${loggedIn}" th:href="@{/vehicles}" class="nav-link-button">Phương tiện</a>
             <a th:if="${loggedIn}" th:href="@{/reservations/schedule}" class="nav-link-button">Đổi pin</a>
+<<<<<<< HEAD
             <a th:if="${loggedIn}" th:href="@{/reports}" class="nav-link-button">Báo cáo</a>
+=======
+            <a th:if="${loggedIn}" th:href="@{/wallet}" class="nav-link-button">Ví</a>
+            <a th:if="${loggedIn}" th:href="@{/feedback}" class="nav-link-button">Báo cáo</a>
+            <a th:if="${loggedIn}" th:href="@{/account}" class="nav-link-button">Tài khoản</a>
+>>>>>>> feature/dev
             <a th:if="${loggedIn}" th:href="@{/support}" class="nav-link-button">Hỗ trợ</a>
 
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Tổng quan">Tổng quan</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Phương tiện">Phương tiện</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Đổi pin">Đổi pin</button>
+            <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Ví">Ví</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Báo cáo">Báo cáo</button>
             <button th:if="${!loggedIn}" type="button" class="nav-link-button nav-link-button--locked" data-feature="Hỗ trợ">Hỗ trợ</button>
         </nav>
@@ -79,6 +86,24 @@
     </section>
 
     <section class="stats-section container">
+        <!-- Wallet Widget for logged in users -->
+        <div th:if="${loggedIn}" class="wallet-widget">
+            <div class="wallet-card">
+                <div class="wallet-header">
+                    <h3>Ví điện tử</h3>
+                    <a th:href="@{/wallet}" class="wallet-link">Quản lý ví</a>
+                </div>
+                <div class="wallet-balance">
+                    <span class="balance-amount" th:text="${walletBalance != null ? #numbers.formatDecimal(walletBalance, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0 đ</span>
+                    <p class="balance-note">Số dư hiện tại</p>
+                </div>
+                <div class="wallet-actions">
+                    <a th:href="@{/wallet}" class="btn ghost small">Nạp tiền</a>
+                    <a th:href="@{/reservations/my-reservations}" class="btn primary small">Lịch của tôi</a>
+                </div>
+            </div>
+        </div>
+
         <article class="stat-card">
             <header>
                 <h3>50+</h3>
@@ -101,6 +126,81 @@
             <p>Đội ngũ hỗ trợ tận tâm, đảm bảo hành trình của bạn không bị gián đoạn.</p>
         </article>
     </section>
+
+    <style>
+        .wallet-widget {
+            grid-column: 1 / -1;
+            margin-bottom: 2rem;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .wallet-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .wallet-link {
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .wallet-link:hover {
+            opacity: 1;
+        }
+
+        .wallet-balance {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .balance-note {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .wallet-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn.small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .wallet-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 
     <section id="benefits" class="feature-section container">
         <div class="section-header">

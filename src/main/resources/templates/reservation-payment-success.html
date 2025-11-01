@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt lịch thành công - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/reservation.css}">
+</head>
+<body class="reservation-body">
+<div class="reservation-background"></div>
+<div class="reservation-overlay"></div>
+
+<header class="manage-header container">
+    <div class="driver-identity">
+        <div class="driver-avatar" th:text="${driverInitial}">D</div>
+        <div class="driver-intro">
+            <span class="subtitle">Bước 3: Thanh toán</span>
+            <h1 class="page-title">Đặt lịch thành công!</h1>
+            <p class="page-hint" th:text="${'Xin chào ' + driverName + '! Lịch đổi pin của bạn đã được xác nhận.'}">
+                Lịch đổi pin của bạn đã được xác nhận.
+            </p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <a class="btn ghost" th:href="@{/reservations/my-reservations}">Xem lịch của tôi</a>
+        <a class="btn primary" th:href="@{/dashboard}">Về Dashboard</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${reservationSuccess}" th:text="${reservationSuccess}"></div>
+    <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
+
+    <section class="reservation-progress">
+        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+            <li class="progress-step" data-step="search">Tìm trạm</li>
+            <li class="progress-step" data-step="schedule">Đặt lịch</li>
+            <li class="progress-step" data-step="payment">Thanh toán</li>
+            <li class="progress-step" data-step="swap">Đổi pin</li>
+            <li class="progress-step" data-step="done">Hoàn tất</li>
+        </ul>
+    </section>
+
+    <section class="success-content">
+        <div class="success-card">
+            <div class="success-icon">✓</div>
+            <h2>Đặt lịch và thanh toán thành công!</h2>
+            <p>Lịch đổi pin của bạn đã được xác nhận. Vui lòng đến trạm đúng giờ để thực hiện đổi pin.</p>
+            
+            <div class="booking-details">
+                <h3>Thông tin đặt lịch</h3>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="label">Trạm đổi pin:</span>
+                        <span class="value" th:text="${reservation.station.name}">EV Swap Station</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Địa chỉ:</span>
+                        <span class="value" th:text="${reservation.station.address}">123 Nguyễn Văn Cừ, Q.5</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Thời gian:</span>
+                        <span class="value" th:text="${#temporals.format(reservation.reservedStart, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Phí đặt lịch:</span>
+                        <span class="value" th:text="${#numbers.formatDecimal(reservation.priceAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">25,000 VND</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Phương tiện:</span>
+                        <span class="value" th:text="${reservation.vehicle.model + ' - ' + (reservation.vehicle.plateNumber == null ? reservation.vehicle.vin : reservation.vehicle.plateNumber)}">VinFast VF8</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qr-section">
+                <h3>QR Code Check-in</h3>
+                <div class="qr-placeholder">
+                    <div class="qr-code" th:text="${reservation.qrToken}">QR_CODE</div>
+                    <p>Quét mã QR này tại trạm để check-in</p>
+                    <p class="qr-expiry" th:if="${reservation.qrExpiresAt != null}">
+                        Hết hạn: <span th:text="${#temporals.format(reservation.qrExpiresAt, 'dd/MM/yyyy HH:mm')}">25/12/2024 10:00</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <h3>Bước tiếp theo</h3>
+                <ol>
+                    <li>Đến trạm đúng giờ đã đặt</li>
+                    <li>Quét QR code để check-in</li>
+                    <li>Nhân viên sẽ hỗ trợ bạn đổi pin</li>
+                    <li>Hoàn tất và tiếp tục hành trình</li>
+                </ol>
+            </div>
+
+            <div class="action-buttons">
+                <a class="btn ghost" th:href="@{/reservations/schedule}">Đặt lịch khác</a>
+                <a class="btn primary" th:href="@{/reservations/my-reservations}">Xem lịch của tôi</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const progressSteps = document.getElementById('progressSteps');
+    if (progressSteps) {
+        const order = ['search', 'schedule', 'payment', 'swap', 'done'];
+        const currentStep = progressSteps.dataset.step || 'payment';
+        const currentIndex = order.indexOf(currentStep);
+
+        Array.from(progressSteps.children).forEach(item => {
+            const step = item.getAttribute('data-step');
+            const index = order.indexOf(step);
+            if (index < currentIndex) {
+                item.classList.add('is-complete');
+            } else if (index === currentIndex) {
+                item.classList.add('is-current');
+            }
+        });
+    }
+</script>
+
+<style>
+.success-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.success-card {
+    background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.98));
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(0,0,0,.2);
+    border: 1px solid rgba(255,255,255,.3);
+    text-align: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem;
+}
+
+.success-card h2 {
+    color: #28a745;
+    margin-bottom: 1rem;
+}
+
+.success-card > p {
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.booking-details {
+    background: linear-gradient(135deg, rgba(243,244,246,.8), rgba(229,231,235,.9));
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: left;
+    border: 1px solid rgba(209,213,219,.5);
+}
+
+.booking-details h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.label {
+    font-weight: 500;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.value {
+    color: #333;
+    font-weight: 500;
+}
+
+.qr-section {
+    margin-bottom: 2rem;
+}
+
+.qr-section h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.qr-placeholder {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    border: 2px dashed rgba(99,102,241,.3);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(249,250,251,.9), rgba(243,244,246,.9));
+}
+
+.qr-code {
+    width: 160px;
+    height: 160px;
+    background: #ffffff;
+    border: 2px solid rgba(99,102,241,.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #4b5563;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.next-steps {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.next-steps h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.next-steps ol {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.next-steps li {
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.action-buttons .btn {
+    min-width: 160px;
+    padding: 0.875rem 1.75rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn.ghost {
+    background: linear-gradient(135deg, rgba(243,244,246,.9), rgba(229,231,235,.9));
+    color: #6366f1;
+    border: 1px solid rgba(99,102,241,.3);
+}
+
+.action-buttons .btn.ghost:hover {
+    background: linear-gradient(135deg, rgba(99,102,241,.1), rgba(79,70,229,.1));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99,102,241,.2);
+}
+
+.action-buttons .btn.primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    box-shadow: 0 8px 20px rgba(99,102,241,.4);
+}
+
+.action-buttons .btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(99,102,241,.5);
+}
+
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+
+</body>
+</html>

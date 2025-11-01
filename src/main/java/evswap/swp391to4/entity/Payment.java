@@ -33,6 +33,17 @@ public class Payment {
     private Instant paidAt;
 
     private String currency;
+<<<<<<< HEAD
     @Column(name = "provider_txn_id")
+=======
+    
+    @Column(name = "provider_txn_id", columnDefinition = "nvarchar(MAX)")
+>>>>>>> feature/dev
     private String providerTxnId;
+    
+    @Column(name = "order_code")
+    private String orderCode; // PayOS orderCode for lookup
+    
+    @Column(name = "checkout_url", columnDefinition = "nvarchar(MAX)")
+    private String checkoutUrl; // PayOS checkout URL
 }

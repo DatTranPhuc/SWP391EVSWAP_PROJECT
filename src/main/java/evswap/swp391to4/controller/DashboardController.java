@@ -9,8 +9,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+<<<<<<< HEAD
+=======
+import evswap.swp391to4.entity.Driver;
+import evswap.swp391to4.service.WalletService;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+
+>>>>>>> feature/dev
 @Controller
+@RequiredArgsConstructor
 public class DashboardController {
+
+    private final WalletService walletService;
 
     @GetMapping({"/", "/dashboard"})
     public String showDashboard(HttpSession session, Model model) {
@@ -20,6 +32,14 @@ public class DashboardController {
             model.addAttribute("driverPhone", driver.getPhone());   // ✅ Thêm dòng này
             model.addAttribute("driverEmail", driver.getEmail());   // ✅ Thêm dòng này
             model.addAttribute("loggedIn", true);
+            
+            // Load wallet balance for logged in users
+            try {
+                BigDecimal balance = walletService.getBalance(driver.getDriverId());
+                model.addAttribute("walletBalance", balance);
+            } catch (Exception e) {
+                model.addAttribute("walletBalance", BigDecimal.ZERO);
+            }
         } else {
             model.addAttribute("loggedIn", false);
         }

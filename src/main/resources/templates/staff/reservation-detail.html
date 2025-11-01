@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đặt lịch - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/staff.css}">
+</head>
+<body class="staff-body">
+<div class="staff-background"></div>
+<div class="staff-overlay"></div>
+
+<header class="staff-top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">🔧</span> <span class="brand-name">EV SWAP</span>
+            <span class="staff-badge" th:text="${stationName}">Station</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng staff">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
+            <a th:href="@{/staff/reservations}" class="nav-link-button active">Đặt lịch</a>
+            <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
+        </nav>
+        <div class="auth-area" th:if="${session.loggedInStaff}">
+            <span class="welcome">Chào, <strong th:text="${session.loggedInStaff.fullName}">Staff</strong>!</span>
+            <form th:action="@{/logout}" method="post"><button class="btn ghost" type="submit">Đăng xuất</button></form>
+        </div>
+    </div>
+    <div class="section-divider"></div>
+</header>
+
+<header class="staff-header" style="margin: 2rem 0 1rem 0;">
+    <h1 class="staff-title">Chi tiết Đặt lịch</h1>
+    <p class="staff-subtitle" th:text="${'Trạm: ' + stationName}">Trạm</p>
+    <div class="container" style="text-align:right; margin-top:.5rem;">
+        <a class="btn ghost" th:href="@{/staff/reservations}">Quay lại danh sách</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+    <section class="reservation-detail-section">
+        <div class="detail-card">
+            <div class="card-header">
+                <h2>Thông tin đặt lịch</h2>
+                <div class="status-badge" 
+                     th:classappend="${reservation.status == 'pending' ? 'pending' : (reservation.status == 'confirmed' ? 'confirmed' : (reservation.status == 'checked_in' ? 'checked-in' : (reservation.status == 'completed' ? 'completed' : 'default')))}"
+                     th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : reservation.status)))}">
+                    Chờ xác nhận
+                </div>
+            </div>
+            <div class="section-divider" style="margin:.5rem 0 1rem 0;"></div>
+
+            <div class="detail-content">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="label">Mã đặt lịch:</span>
+                        <span class="value">#<span th:text="${reservation.reservationId}">123</span></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Trạm:</span>
+                        <span class="value" th:text="${reservation.station.name}">EV Swap Station</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Thời gian đặt:</span>
+                        <span class="value" th:text="${#temporals.format(reservation.reservedStart, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Trạng thái:</span>
+                        <span class="value" th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : reservation.status)))}">Chờ xác nhận</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-card">
+            <h3>Thao tác</h3>
+            <div class="action-buttons">
+                <form th:action="@{/staff/reservations/{id}/confirm(id=${reservation.reservationId})}" 
+                      method="post" th:if="${reservation.status == 'pending'}" style="display: inline;">
+                    <button type="submit" class="btn primary">Xác nhận đặt lịch</button>
+                </form>
+                
+                <form th:action="@{/staff/reservations/{id}/check-in(id=${reservation.reservationId})}" 
+                      method="post" th:if="${reservation.status == 'confirmed'}" style="display: inline;">
+                    <button type="submit" class="btn success">Check-in thủ công</button>
+                </form>
+                
+                <form th:action="@{/staff/reservations/{id}/complete(id=${reservation.reservationId})}"
+                      method="post" th:if="${reservation.status == 'checked_in'}" style="display: inline;">
+                    <button type="submit" class="btn warning">Hoàn tất đổi pin</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="timeline-card">
+            <h3>Timeline</h3>
+            <div class="section-divider" style="margin:.5rem 0 1rem 0;"></div>
+            <div class="timeline">
+                <div class="timeline-item completed">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Đặt lịch</h4>
+                        <p>Khách hàng đã đặt lịch thành công</p>
+                        <span class="timeline-time">10/06/2024 08:00</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" th:classappend="${reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed'} ? 'completed' : ''">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Xác nhận</h4>
+                        <p>Staff xác nhận đặt lịch</p>
+                        <span class="timeline-time" th:if="${reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed'}">10/06/2024 08:15</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" th:classappend="${reservation.status == 'checked_in' or reservation.status == 'completed'} ? 'completed' : ''">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Check-in</h4>
+                        <p>Khách hàng đến trạm và check-in</p>
+                        <span class="timeline-time" th:if="${reservation.status == 'checked_in' or reservation.status == 'completed'}">10/06/2024 08:30</span>
+                    </div>
+                </div>
+                
+                <div class="timeline-item" th:classappend="${reservation.status == 'completed'} ? 'completed' : ''">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Hoàn tất</h4>
+                        <p>Đổi pin thành công</p>
+                        <span class="timeline-time" th:if="${reservation.status == 'completed'}">10/06/2024 08:35</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+.section-divider { height: 1px; background: linear-gradient(90deg, rgba(67,56,202,.35), rgba(34,197,94,.15)); border: none; opacity: .6; }
+.reservation-detail-section { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+
+.detail-card, .action-card, .timeline-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.timeline-card { grid-column: 1 / -1; }
+
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.card-header h2 { margin: 0; color: #f3f4f6; }
+
+.status-badge { padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; }
+.status-badge.pending { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.status-badge.confirmed { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.status-badge.checked-in { background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); color: #10b981; border: 1px solid rgba(34,197,94,0.3); }
+.status-badge.completed { background: linear-gradient(135deg, rgba(107,114,128,0.2), rgba(75,85,99,0.1)); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.detail-item:last-child { border-bottom: none; }
+.label { font-weight: 500; color: rgba(243,244,246,0.7); }
+.value { color: #f3f4f6; font-weight: 600; }
+
+.action-card h3, .timeline-card h3 { margin: 0 0 1.5rem 0; color: #f3f4f6; }
+.action-buttons { display: flex; flex-direction: column; gap: 1rem; }
+.btn.success { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+.btn.warning { background: linear-gradient(135deg, #ffc107, #fd7e14); color: white; }
+
+.timeline { position: relative; padding-left: 2rem; }
+.timeline::before { content: ''; position: absolute; left: 1rem; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,0.12); }
+.timeline-item { position: relative; margin-bottom: 2rem; padding-left: 2rem; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-marker { position: absolute; left: -1.5rem; top: 0.5rem; width: 1rem; height: 1rem; border-radius: 50%; background: rgba(255,255,255,0.2); border: 3px solid rgba(15,20,30,0.9); box-shadow: 0 0 0 2px rgba(255,255,255,0.12); }
+.timeline-item.completed .timeline-marker { background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.4); }
+.timeline-content h4 { margin: 0 0 0.5rem 0; color: #f3f4f6; font-size: 1.1rem; }
+.timeline-content p { margin: 0 0 0.5rem 0; color: rgba(243,244,246,0.7); }
+.timeline-time { font-size: 0.85rem; color: rgba(243,244,246,0.55); font-weight: 500; }
+
+@media (max-width: 768px) {
+    .reservation-detail-section { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .action-buttons { flex-direction: column; }
+}
+</style>
+
+</body>
+</html>

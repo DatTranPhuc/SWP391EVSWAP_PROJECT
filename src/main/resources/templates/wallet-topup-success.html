@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nạp tiền thành công - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dashboard-body">
+<div class="background-gradient"></div>
+<div class="background-glow"></div>
+
+<header class="top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <img th:src="@{/images/logo.jpg}" src="/images/logo.jpg" alt="EV SWAP" class="brand-logo">
+            <span class="brand-name">EV SWAP</span>
+        </div>
+        <nav class="nav-links">
+            <a th:href="@{/wallet}" class="nav-link-button">Về ví</a>
+            <a th:href="@{/dashboard}" class="nav-link-button">Tổng quan</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="success-section container">
+        <div class="success-container">
+            <div class="success-icon">
+                <div class="checkmark-circle">
+                    <svg viewBox="0 0 52 52">
+                        <circle class="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
+                        <path class="checkmark" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                    </svg>
+                </div>
+            </div>
+
+            <h1>Nạp tiền thành công!</h1>
+            <p class="success-message" th:if="${success}" th:text="${success}">Bạn đã nạp tiền thành công vào ví</p>
+
+            <div class="success-details">
+                <div class="detail-item">
+                    <span class="detail-label">Trạng thái:</span>
+                    <span class="detail-value success-text">✓ Đã hoàn thành</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Thời gian:</span>
+                    <span class="detail-value" th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm:ss')}">01/01/2024 10:00:00</span>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a th:href="@{/wallet}" class="btn primary btn-large">
+                    Xem ví của tôi
+                </a>
+                <a th:href="@{/reservations/schedule}" class="btn ghost btn-large">
+                    Đặt lịch đổi pin
+                </a>
+            </div>
+
+            <div class="success-info">
+                <div class="info-box">
+                    <h3>💡 Tiếp theo bạn có thể:</h3>
+                    <ul>
+                        <li>Kiểm tra số dư trong ví của bạn</li>
+                        <li>Sử dụng số dư để đặt lịch đổi pin</li>
+                        <li>Xem lịch sử giao dịch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+.success-section {
+    padding: 3rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.success-container {
+    max-width: 600px;
+    width: 100%;
+    background: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.success-icon {
+    margin-bottom: 2rem;
+}
+
+.checkmark-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.checkmark-circle svg {
+    width: 100%;
+    height: 100%;
+}
+
+.checkmark-circle-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.3);
+    stroke-width: 2px;
+}
+
+.checkmark {
+    stroke: #fff;
+    stroke-width: 4px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 25;
+    stroke-dashoffset: 25;
+    animation: checkmark-draw 0.8s ease-in-out forwards;
+}
+
+@keyframes checkmark-draw {
+    0% {
+        stroke-dashoffset: 25;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+.success-container h1 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 2rem;
+}
+
+.success-message {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.success-details {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.success-text {
+    color: #28a745;
+}
+
+.success-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.success-info {
+    text-align: left;
+}
+
+.info-box {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.info-box h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.info-box ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.info-box li {
+    margin-bottom: 0.5rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+.info-box li:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .success-container {
+        padding: 2rem 1.5rem;
+    }
+    
+    .success-actions {
+        flex-direction: column;
+    }
+    
+    .btn-large {
+        width: 100%;
+    }
+}
+</style>
+
+</body>
+</html>
+
