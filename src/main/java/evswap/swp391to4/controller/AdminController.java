@@ -348,7 +348,8 @@ public class AdminController {
     public String listFeedbackByStation(@PathVariable Long stationId, Model model, HttpSession session) {
         checkAdminLogin(session); // <-- KIỂM TRA ĐĂNG NHẬP
         List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByStationId(stationId);
-        String stationName = stationService.findById(stationId.intValue()).getName();
+        StationResponse station = stationService.findById(stationId.intValue());
+        String stationName = station != null ? station.getName() : "Unknown Station";
         model.addAttribute("feedbackList", feedbackList);
         model.addAttribute("stationName", stationName);
         model.addAttribute("stationId", stationId);
@@ -387,8 +388,7 @@ public class AdminController {
                 List<TicketSupportService.Comment> comments = ticketService.getCommentsByTicketId(id);
                 model.addAttribute("comments", comments);
             } catch (Exception e) {
-                System.err.println("Error loading comments for ticket " + id + ": " + e.getMessage());
-                e.printStackTrace();
+                // Log error but continue with empty comments list
                 model.addAttribute("comments", new java.util.ArrayList<>());
             }
             
@@ -499,4 +499,5 @@ public class AdminController {
         
         return "redirect:/admin/tickets/" + id;
     }
+
 }

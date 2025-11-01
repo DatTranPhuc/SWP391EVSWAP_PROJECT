@@ -2,6 +2,10 @@ package evswap.swp391to4.entity;
 
 
 
+
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 

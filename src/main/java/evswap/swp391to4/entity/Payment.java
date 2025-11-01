@@ -33,7 +33,7 @@ public class Payment {
     private Instant paidAt;
 
     private String currency;
-    
+
     @Column(name = "provider_txn_id", columnDefinition = "nvarchar(MAX)")
     private String providerTxnId;
     

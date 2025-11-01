@@ -1,10 +1,23 @@
 package evswap.swp391to4.controller;
 
-import java.util.List;
 
+import evswap.swp391to4.dto.BatteryCreateRequest;
+import evswap.swp391to4.entity.Battery;
+import evswap.swp391to4.entity.Staff;
+import evswap.swp391to4.entity.Station;
+import evswap.swp391to4.service.BatteryService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,20 +26,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.dto.TicketSupportResponse;
 import evswap.swp391to4.dto.TicketUpdateRequest;
-import evswap.swp391to4.entity.Battery;
-import evswap.swp391to4.entity.Staff;
-import evswap.swp391to4.entity.Station;
-import evswap.swp391to4.service.BatteryService;
+
 import evswap.swp391to4.service.TicketSupportService;
 import evswap.swp391to4.service.ReservationService;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+
 
 @Controller
 @RequestMapping("/staff")
@@ -34,8 +41,10 @@ import lombok.RequiredArgsConstructor;
 public class StaffController {
 
     private final BatteryService batteryService;
+
     private final TicketSupportService ticketService;
     private final ReservationService reservationService;
+
 
     // (Hàm checkStaffLogin giữ nguyên)
     private Staff checkStaffLogin(HttpSession session) {
@@ -201,6 +210,7 @@ public class StaffController {
 
         return "redirect:/staff/batteries";
     }
+
 
     /**
      * Trang quản lý tickets của staff
@@ -538,4 +548,5 @@ public class StaffController {
 
         return "redirect:/staff/reservations/" + id;
     }
+
 }
