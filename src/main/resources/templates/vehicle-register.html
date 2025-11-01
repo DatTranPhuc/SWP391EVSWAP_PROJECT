@@ -21,129 +21,74 @@
     </div>
 </header>
 
-<main class="auth-wrapper vehicle-wrapper">
-    <section class="auth-showcase vehicle-showcase">
+<main class="auth-wrapper">
+    <section class="auth-showcase">
         <div class="showcase-header">
-            <p class="section-badge">Bước cuối cùng</p>
-            <h1>Hoàn thiện hồ sơ phương tiện của bạn</h1>
-            <p th:text="'Xin chào ' + ${driverName} + ', hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.'">
-                Xin chào Người dùng, hãy cung cấp thông tin xe để đồng bộ với hệ thống EV SWAP.
+            <p class="section-badge">Hoàn tất hồ sơ</p>
+            <h1>Chọn đúng phân loại xe để ghép pin phù hợp</h1>
+            <p th:text="'Xin chào ' + ${driver.fullName} + ', hãy cung cấp thông tin xe để EV SWAP đề xuất pin tương thích.'">
+                Xin chào Người dùng, hãy cung cấp thông tin xe để EV SWAP đề xuất pin tương thích.
             </p>
         </div>
-
-        <div class="vehicle-highlights">
-            <article class="highlight-card">
-                <div class="highlight-icon">🪫</div>
+        <div class="showcase-highlights">
+            <article class="highlight-card" th:each="type : ${vehicleTypes}">
+                <div class="highlight-icon">🚙</div>
                 <div class="highlight-content">
-                    <h3>Quản lý pin nhanh chóng</h3>
-                    <p>Thông tin xe được xác thực giúp bạn đổi pin tức thì tại hơn 200 trạm trên toàn quốc.</p>
+                    <h3 th:text="${type.displayName}">Xe điện 48V phổ thông</h3>
+                    <p th:text="${type.description}">VinFast Feliz, Pega, Dibao...</p>
+                    <p th:text="'Pin phù hợp: ' + ${type.compatibleBatteryLabel}">Pin phù hợp: MODEL-A</p>
                 </div>
             </article>
-            <article class="highlight-card">
-                <div class="highlight-icon">🛡️</div>
-                <div class="highlight-content">
-                    <h3>Bảo mật &amp; minh bạch</h3>
-                    <p>Dữ liệu phương tiện được mã hóa và chỉ sử dụng cho mục đích xác thực tại EV SWAP.</p>
-                </div>
-            </article>
-        </div>
-
-        <div class="vehicle-meta">
-            <span class="status-dot"></span>
-            <span>Thông tin có thể được cập nhật lại bất cứ lúc nào sau khi đăng ký.</span>
         </div>
     </section>
 
-    <section class="auth-card vehicle-card" aria-labelledby="vehicle-title">
+    <section class="auth-card" aria-labelledby="vehicle-title">
         <div class="auth-card-header">
             <a th:href="@{/dashboard}">← Quay lại bảng điều khiển</a>
-            <a class="btn btn-ghost" th:href="@{/logout}">Đăng xuất</a>
         </div>
 
         <div class="vehicle-info">
             <h2 id="vehicle-title">Đăng ký xe máy điện</h2>
-            <p>Vui lòng điền chính xác thông tin. Chúng tôi sẽ dùng để đối chiếu khi bạn đổi pin tại trạm EV SWAP.</p>
+            <p>Thông tin phân loại xe giúp hệ thống gợi ý pin tương thích và tránh nhầm lẫn khi đổi pin.</p>
         </div>
 
-        <div th:if="${verifySuccess}" class="alert-message alert-success" th:text="${verifySuccess}"></div>
         <div th:if="${vehicleError}" class="alert-message alert-error" th:text="${vehicleError}"></div>
 
-        <form class="auth-form vehicle-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
+        <form class="auth-form" th:action="@{/vehicles/register}" th:object="${vehicleForm}" method="post">
             <input type="hidden" name="driverId" th:value="${driverId}">
 
-            <div class="vehicle-form-grid">
-                <div class="auth-field">
-                    <label for="model">Model xe</label>
-                    <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
-                </div>
-                <div class="auth-field">
-                    <label for="vehicleType">Phân loại xe</label>
-                    <select id="vehicleType" th:field="*{vehicleType}" class="vehicle-type-select" required
-                            th:onchange="|updateVehicleTypePreview('vehicleType', 'vehicleTypePreview', this)|">
-                        <option value="" disabled th:selected="${vehicleForm.vehicleType == null}">-- Chọn phân loại xe --</option>
-                        <option th:each="type : ${vehicleTypes}"
-                                th:value="${type.name()}"
-                                th:text="${type.displayName}"
-                                th:data-description="${type.description}"
-                                th:data-battery="${type.getCompatibleBatteryLabel()}">
-                        </option>
-                    </select>
-                    <span class="field-hint">Thông tin này giúp gợi ý loại pin tương thích nhất cho phương tiện của bạn.</span>
-                    <div class="vehicle-type-preview" id="vehicleTypePreview">
-                        <strong class="preview-title"></strong>
-                        <span class="preview-description"></span>
-                        <span class="preview-battery"></span>
-                    </div>
-                </div>
-                <div class="auth-field">
-                    <label for="vin">Số VIN</label>
-                    <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
-                </div>
-                <div class="auth-field">
-                    <label for="plateNumber">Biển số</label>
-                    <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
-                </div>
+            <div class="auth-field">
+                <label for="model">Model xe</label>
+                <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
             </div>
 
-            <div class="vehicle-tip">
-                <strong>Gợi ý:</strong> Số VIN thường nằm trên phần thân xe hoặc giấy đăng ký xe. Hãy kiểm tra kỹ để tránh sai sót.
+            <div class="auth-field">
+                <label for="vehicleType">Phân loại xe</label>
+                <select id="vehicleType" th:field="*{vehicleType}" required>
+                    <option value="" disabled th:selected="${vehicleForm.vehicleType == null}">-- Chọn phân loại xe --</option>
+                    <option th:each="type : ${vehicleTypes}"
+                            th:value="${type.name()}"
+                            th:text="${type.displayName}">
+                    </option>
+                </select>
+                <small class="field-hint">Hãy chọn phân loại đúng để EV SWAP đề xuất pin tương thích nhất.</small>
+            </div>
+
+            <div class="auth-field">
+                <label for="vin">Số VIN</label>
+                <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
+            </div>
+
+            <div class="auth-field">
+                <label for="plateNumber">Biển số</label>
+                <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
             </div>
 
             <div class="auth-submit">
                 <button class="btn btn-primary" type="submit">Hoàn tất đăng ký</button>
             </div>
         </form>
-
-        <div class="vehicle-support">
-            <h3>Cần hỗ trợ?</h3>
-            <p>Liên hệ hotline 1900-0000 hoặc ghé trạm EV SWAP gần nhất để được nhân viên hướng dẫn bổ sung hồ sơ.</p>
-        </div>
     </section>
 </main>
-<script>
-    function updateVehicleTypePreview(selectId, previewId, selectEl) {
-        const selectElement = selectEl || document.getElementById(selectId);
-        const preview = document.getElementById(previewId);
-        if (!selectElement || !preview) {
-            return;
-        }
-        const option = selectElement.selectedOptions[0];
-        if (!option || !option.value) {
-            preview.classList.remove('is-visible');
-            return;
-        }
-
-        preview.querySelector('.preview-title').textContent = option.textContent.trim();
-        preview.querySelector('.preview-description').textContent = option.dataset.description || '';
-        preview.querySelector('.preview-battery').textContent = option.dataset.battery
-            ? `Pin tương thích: ${option.dataset.battery}`
-            : 'Pin tương thích: Mọi model pin';
-        preview.classList.add('is-visible');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        updateVehicleTypePreview('vehicleType', 'vehicleTypePreview');
-    });
-</script>
 </body>
 </html>

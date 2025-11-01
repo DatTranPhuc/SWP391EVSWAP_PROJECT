@@ -9,213 +9,83 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/vehicle-manage.css}" href="/css/vehicle-manage.css">
 </head>
-<body class="vehicle-manage-body" th:attr="data-open-modal=${vehicleError != null}">
-<div class="vehicle-manage-background"></div>
-<div class="vehicle-manage-glow"></div>
-
-<header class="manage-header container">
-    <div class="driver-identity">
-        <div class="driver-avatar" th:text="${driverInitial}">D</div>
-        <div class="driver-intro">
-            <span class="subtitle">Quản lý phương tiện</span>
-            <h1 class="page-title" th:text="${driverName}">Kiara</h1>
-            <p class="page-hint">Theo dõi trạng thái pin và thêm phương tiện mới chỉ với vài thao tác.</p>
-        </div>
+<body>
+<header class="page-header">
+    <div>
+        <p class="page-subtitle">Xin chào</p>
+        <h1 th:text="${driver.fullName}">Tài xế</h1>
     </div>
     <div class="header-actions">
-        <a class="btn ghost" th:href="@{/dashboard}">Quay về Dashboard</a>
-        <button class="btn primary" type="button" onclick="openVehicleModal()">+ Thêm phương tiện</button>
+        <a class="btn" th:href="@{/dashboard}">Quay lại Dashboard</a>
+        <a class="btn secondary" th:href="@{/logout}">Đăng xuất</a>
     </div>
 </header>
 
-<main class="manage-main container">
-    <div class="alert success" th:if="${vehicleSuccess}" th:text="${vehicleSuccess}"></div>
-    <div class="alert error" th:if="${vehicleError}" th:text="${vehicleError}"></div>
-
-    <section class="manage-stats">
-        <article class="stat-card">
-            <span class="stat-label">Tổng số phương tiện</span>
-            <strong class="stat-value" th:text="${totalVehicles}">0</strong>
-            <span class="stat-caption">Gồm cả xe đang hoạt động và dự phòng</span>
-        </article>
-        <article class="stat-card">
-            <span class="stat-label">Cập nhật gần nhất</span>
-            <strong class="stat-value" th:text="${lastUpdatedAt != null ? #temporals.format(lastUpdatedAt, 'dd/MM/yyyy HH:mm') : 'Chưa có'}">16/08/2024 09:24</strong>
-            <span class="stat-caption">Thời điểm thêm phương tiện cuối cùng</span>
-        </article>
-        <article class="stat-card">
-            <span class="stat-label">An toàn hệ thống</span>
-            <strong class="stat-value">99.9%</strong>
-            <span class="stat-caption">Giám sát pin thời gian thực, cảnh báo tức thì</span>
-        </article>
-    </section>
-
-    <section class="vehicle-grid" th:if="${#lists.isEmpty(vehicleCards)}">
-        <div class="empty-state">
-            <div class="empty-icon">🚙</div>
-            <h2>Chưa có phương tiện nào</h2>
-            <p>Thêm phương tiện đầu tiên để EV SWAP theo dõi tình trạng pin và lịch sử vận hành cho bạn.</p>
-            <button class="btn primary" type="button" onclick="openVehicleModal()">Thêm phương tiện</button>
-        </div>
-    </section>
-
-    <section class="vehicle-grid" th:if="${!#lists.isEmpty(vehicleCards)}">
-        <article class="vehicle-card" th:each="card : ${vehicleCards}">
-            <header class="vehicle-card__header">
-                <div class="vehicle-main">
-                    <h2 class="vehicle-name" th:text="${card.vehicleName()}">Kiara</h2>
-                    <span class="status-badge" th:text="${card.statusLabel()}" th:classappend="' ' + ${card.statusBadge()}">Hoạt động</span>
-                </div>
-                <div class="vehicle-meta-inline">
-                    <span class="plate-label">Biển số</span>
-                    <span class="plate-value" th:text="${card.plateNumber()}">59A3-08364</span>
-                </div>
-            </header>
-
-            <div class="vehicle-card__body">
-                <div class="battery-section">
-                    <div class="battery-meta">
-                        <div>
-                            <span class="meta-label">Phân loại xe</span>
-                            <strong class="meta-value" th:text="${card.vehicleTypeLabel()}">Xe điện 48V phổ thông</strong>
-                            <span class="meta-hint" th:text="${card.vehicleTypeDescription()}">VinFast Feliz, Pega, Dibao...</span>
-                        </div>
-                        <div>
-                            <span class="meta-label">Pin tương thích</span>
-                            <strong class="meta-value" th:text="${card.compatibleBatteryLabel()}">MODEL-A</strong>
-                        </div>
-                    </div>
-                    <div class="battery-progress">
-                        <div class="progress-track">
-                            <div class="progress-fill" th:style="'width:' + ${card.batteryPercent()} + '%'"></div>
-                        </div>
-                        <div class="progress-details">
-                            <span class="progress-value" th:text="${card.batteryPercent()} + '%'">98%</span>
-                            <span class="progress-status" th:text="${card.healthLabel()}">Tình trạng tuyệt vời</span>
-                        </div>
-                        <p class="progress-caption" th:text="${card.healthDescription()}">Pin hoạt động tối ưu</p>
-                    </div>
-                </div>
-                <div class="vehicle-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Model xe</span>
-                        <span class="detail-value" th:text="${card.model()}">VinFast Feliz S</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Số VIN</span>
-                        <span class="detail-value" th:text="${card.vin()}">VF9S093983927239</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Ngày thêm</span>
-                        <span class="detail-value"
-                              th:text="${card.createdAt() != null ? #temporals.format(card.createdAt(), 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'}">16/08/2024 09:24</span>
-                    </div>
-                </div>
-            </div>
-        </article>
-    </section>
-</main>
-
-<div class="vehicle-modal" id="vehicleModal" aria-hidden="true" role="dialog">
-    <div class="modal-backdrop" onclick="closeVehicleModal()"></div>
-    <div class="modal-content" role="document">
-        <button class="modal-close" type="button" aria-label="Đóng" onclick="closeVehicleModal()">×</button>
+<main class="page-content">
+    <section class="form-card">
         <h2>Thêm phương tiện mới</h2>
-        <p>Nhập thông tin chính xác để EV SWAP đồng bộ dữ liệu và đảm bảo pin phù hợp.</p>
-        <form th:action="@{/vehicles}" method="post" th:object="${vehicleForm}" class="modal-form">
-            <div class="form-grid">
-                <label>
-                    <span>Model xe</span>
-                    <input type="text" th:field="*{model}" placeholder="Ví dụ: VinFast Feliz S" required>
-                </label>
-                <label class="vehicle-type-field">
-                    <span>Phân loại xe</span>
-                    <select id="modalVehicleType" th:field="*{vehicleType}" class="vehicle-type-select" required
-                            onchange="updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview', this)">
-                        <option value="" disabled th:selected="${vehicleForm.vehicleType == null}">-- Chọn phân loại xe --</option>
-                        <option th:each="type : ${vehicleTypes}"
-                                th:value="${type.name()}"
-                                th:text="${type.displayName}"
-                                th:data-description="${type.description}"
-                                th:data-battery="${type.getCompatibleBatteryLabel()}"></option>
-                    </select>
-                    <span class="field-hint">Chọn đúng loại xe để hệ thống tự động lọc pin phù hợp.</span>
-                    <div class="vehicle-type-preview" id="modalVehicleTypePreview">
-                        <strong class="preview-title"></strong>
-                        <span class="preview-description"></span>
-                        <span class="preview-battery"></span>
-                    </div>
-                </label>
-                <label>
-                    <span>Số VIN</span>
-                    <input type="text" th:field="*{vin}" placeholder="VF9S093983927239" required>
-                </label>
-                <label>
-                    <span>Biển số</span>
-                    <input type="text" th:field="*{plateNumber}" placeholder="59A3-08364">
-                </label>
+        <p>Hãy chọn đúng phân loại xe để hệ thống gợi ý pin tương thích khi bạn đổi pin.</p>
+
+        <div th:if="${vehicleSuccess}" class="alert success" th:text="${vehicleSuccess}"></div>
+        <div th:if="${vehicleError}" class="alert error" th:text="${vehicleError}"></div>
+
+        <form th:action="@{/vehicles}" method="post" th:object="${vehicleForm}" class="vehicle-form">
+            <div class="form-row">
+                <label for="model">Model xe</label>
+                <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
             </div>
-            <div class="modal-actions">
-                <button class="btn ghost" type="button" onclick="closeVehicleModal()">Huỷ</button>
+            <div class="form-row">
+                <label for="vehicleType">Phân loại xe</label>
+                <select id="vehicleType" th:field="*{vehicleType}" required>
+                    <option value="" disabled th:selected="${vehicleForm.vehicleType == null}">-- Chọn phân loại xe --</option>
+                    <option th:each="type : ${vehicleTypes}"
+                            th:value="${type.name()}"
+                            th:text="${type.displayName}">
+                    </option>
+                </select>
+                <small class="field-hint">Chọn loại xe chính xác để lọc đúng model pin.</small>
+            </div>
+            <div class="form-row">
+                <label for="vin">Số VIN</label>
+                <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
+            </div>
+            <div class="form-row">
+                <label for="plateNumber">Biển số</label>
+                <input id="plateNumber" type="text" th:field="*{plateNumber}" placeholder="29A1-123.45">
+            </div>
+            <div class="form-actions">
                 <button class="btn primary" type="submit">Lưu phương tiện</button>
             </div>
         </form>
-    </div>
-</div>
+    </section>
 
-<script>
-    const modal = document.getElementById('vehicleModal');
+    <section class="list-card">
+        <h2>Phương tiện của bạn</h2>
+        <p th:if="${#lists.isEmpty(vehicles)}" class="empty-state">Chưa có phương tiện nào. Hãy thêm xe đầu tiên của bạn.</p>
 
-    function updateVehicleTypePreview(selectId, previewId, selectEl) {
-        const selectElement = selectEl || document.getElementById(selectId);
-        const preview = document.getElementById(previewId);
-        if (!selectElement || !preview) {
-            return;
-        }
-
-        const option = selectElement.selectedOptions[0];
-        if (!option || !option.value) {
-            preview.classList.remove('is-visible');
-            return;
-        }
-
-        preview.querySelector('.preview-title').textContent = option.textContent.trim();
-        preview.querySelector('.preview-description').textContent = option.dataset.description || '';
-        preview.querySelector('.preview-battery').textContent = option.dataset.battery
-            ? `Pin tương thích: ${option.dataset.battery}`
-            : 'Pin tương thích: Mọi model pin';
-        preview.classList.add('is-visible');
-    }
-
-    function openVehicleModal() {
-        modal.setAttribute('aria-hidden', 'false');
-        modal.classList.add('is-open');
-        document.body.classList.add('modal-open');
-        const firstInput = modal.querySelector('input');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 100);
-        }
-        updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview');
-    }
-
-    function closeVehicleModal() {
-        modal.setAttribute('aria-hidden', 'true');
-        modal.classList.remove('is-open');
-        document.body.classList.remove('modal-open');
-    }
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-            closeVehicleModal();
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        updateVehicleTypePreview('modalVehicleType', 'modalVehicleTypePreview');
-        if (document.body.dataset.openModal === 'true') {
-            openVehicleModal();
-        }
-    });
-</script>
+        <table th:if="${!#lists.isEmpty(vehicles)}" class="vehicle-table">
+            <thead>
+            <tr>
+                <th>Model</th>
+                <th>Phân loại</th>
+                <th>Pin tương thích</th>
+                <th>VIN</th>
+                <th>Biển số</th>
+                <th>Ngày tạo</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="vehicle : ${vehicles}">
+                <td th:text="${vehicle.model}">VinFast Feliz S</td>
+                <td th:text="${vehicle.vehicleType != null ? vehicle.vehicleType.displayName : 'Chưa phân loại'}">Xe điện 48V phổ thông</td>
+                <td th:text="${vehicle.vehicleType != null ? vehicle.vehicleType.compatibleBatteryLabel : 'Mọi model pin'}">MODEL-A</td>
+                <td th:text="${vehicle.vin}">VN1234567890</td>
+                <td th:text="${vehicle.plateNumber != null ? vehicle.plateNumber : 'Chưa cập nhật'}">29A1-123.45</td>
+                <td th:text="${vehicle.createdAt != null ? #temporals.format(vehicle.createdAt, 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật'}">01/01/2024 08:00</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
 </body>
 </html>
