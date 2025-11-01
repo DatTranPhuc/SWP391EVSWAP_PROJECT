@@ -356,6 +356,24 @@ public class StaffController {
      * Thêm comment vào ticket
      * URL: POST /staff/tickets/{id}/comment
      */
+    @PostMapping("/tickets/{id}/comment")
+    public String addComment(@PathVariable Integer id,
+                           @RequestParam String message,
+                           HttpSession session,
+                           RedirectAttributes redirect) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            
+            ticketService.addComment(id, "staff", staff.getFullName(), message);
+            redirect.addFlashAttribute("success", "Đã thêm bình luận thành công!");
+            
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/staff/tickets/" + id;
+    }
+
     /**
      * Danh sách reservations tại trạm của staff
      * URL: GET /staff/reservations
