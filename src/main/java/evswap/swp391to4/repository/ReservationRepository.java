@@ -9,4 +9,6 @@ import evswap.swp391to4.entity.Reservation;
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
     List<Reservation> findByDriverDriverIdOrderByReservedStartAsc(Integer driverId);
     List<Reservation> findByStationStationIdOrderByReservedStartAsc(Integer stationId);
+    List<Reservation> findByVehicleVehicleId(Integer vehicleId);
+    java.util.Optional<Reservation> findByQrToken(String qrToken);
 }

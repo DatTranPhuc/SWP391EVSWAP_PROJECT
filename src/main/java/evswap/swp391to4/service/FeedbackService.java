@@ -174,6 +174,16 @@ public class FeedbackService {
     }
 
     /**
+     * Kiểm tra xem driver đã tạo feedback cho station chưa
+     */
+    @Transactional(readOnly = true)
+    public boolean hasFeedbackForStation(Integer driverId, Integer stationId) {
+        List<Feedback> feedbackList = feedbackRepo.findByDriverDriverId(driverId);
+        return feedbackList.stream()
+                .anyMatch(f -> f.getStation().getStationId().equals(stationId));
+    }
+
+    /**
      * Helper method để map Entity sang DTO
      */
     private FeedbackResponse mapToResponse(Feedback feedback) {

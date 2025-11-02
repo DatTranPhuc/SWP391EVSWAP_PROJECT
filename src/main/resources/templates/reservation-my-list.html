@@ -33,44 +33,35 @@
 
     <section class="reservation-filters">
         <div class="filter-tabs">
-            <a th:href="@{/reservations/my-reservations}" 
-               th:classappend="${currentStatus == null or currentStatus == 'all'} ? 'active' : ''"
-               class="filter-tab">Tất cả</a>
-            <a th:href="@{/reservations/my-reservations(status='pending')}" 
-               th:classappend="${currentStatus == 'pending'} ? 'active' : ''"
-               class="filter-tab">Chờ xác nhận</a>
-            <a th:href="@{/reservations/my-reservations(status='confirmed')}" 
-               th:classappend="${currentStatus == 'confirmed'} ? 'active' : ''"
-               class="filter-tab">Đã xác nhận</a>
-            <a th:href="@{/reservations/my-reservations(status='checked_in')}" 
-               th:classappend="${currentStatus == 'checked_in'} ? 'active' : ''"
-               class="filter-tab">Đã check-in</a>
-            <a th:href="@{/reservations/my-reservations(status='completed')}" 
-               th:classappend="${currentStatus == 'completed'} ? 'active' : ''"
-               class="filter-tab">Hoàn tất</a>
-            <a th:href="@{/reservations/my-reservations(status='canceled')}" 
-               th:classappend="${currentStatus == 'canceled'} ? 'active' : ''"
-               class="filter-tab">Đã hủy</a>
+            <a th:href="@{/reservations/my-reservations(tab='scheduled')}" 
+               th:classappend="${currentTab == 'scheduled' or currentTab == null} ? 'active' : ''"
+               class="filter-tab">Lịch đặt</a>
+            <a th:href="@{/reservations/my-reservations(tab='history')}" 
+               th:classappend="${currentTab == 'history'} ? 'active' : ''"
+               class="filter-tab">Lịch sử đổi</a>
         </div>
     </section>
 
-    <section class="reservation-list-section">
-        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
+    <!-- Tab: Lịch đặt (Scheduled Reservations) -->
+    <section class="reservation-list-section" th:if="${currentTab == 'scheduled' or currentTab == null}">
+        <h2 class="section-title">Lịch đặt</h2>
+        
+        <div class="reservation-empty" th:if="${scheduledReservations == null or scheduledReservations.isEmpty()}">
             <div class="empty-state">
                 <div class="empty-icon">📅</div>
-                <h3>Chưa có lịch đổi pin nào</h3>
-                <p>Bạn chưa có lịch đổi pin nào. Hãy đặt lịch để bắt đầu!</p>
+                <h3>Chưa có lịch đặt nào</h3>
+                <p>Bạn chưa có lịch đặt nào. Hãy đặt lịch để bắt đầu!</p>
                 <a class="btn primary" th:href="@{/reservations/schedule}">Đặt lịch ngay</a>
             </div>
         </div>
 
-        <div class="reservation-grid" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
-            <div class="reservation-card" th:each="reservation : ${upcomingReservations}">
+        <div class="reservation-grid" th:if="${scheduledReservations != null and !scheduledReservations.isEmpty()}">
+            <div class="reservation-card" th:each="reservation : ${scheduledReservations}">
                 <div class="reservation-header">
                     <div class="reservation-id">#<span th:text="${reservation.reservationId()}">123</span></div>
                     <div class="reservation-status" 
-                         th:classappend="${reservation.status() == 'pending' ? 'pending' : (reservation.status() == 'confirmed' ? 'confirmed' : (reservation.status() == 'checked_in' ? 'checked-in' : (reservation.status() == 'completed' ? 'completed' : (reservation.status() == 'canceled' ? 'canceled' : 'default'))))}"
-                         th:text="${reservation.status() == 'pending' ? 'Chờ xác nhận' : (reservation.status() == 'confirmed' ? 'Đã xác nhận' : (reservation.status() == 'checked_in' ? 'Đã check-in' : (reservation.status() == 'completed' ? 'Hoàn tất' : (reservation.status() == 'canceled' ? 'Đã hủy' : reservation.status()))))}">
+                         th:classappend="${reservation.status() == 'pending' ? 'pending' : (reservation.status() == 'confirmed' ? 'confirmed' : 'checked-in')}"
+                         th:text="${reservation.status() == 'pending' ? 'Chờ xác nhận' : (reservation.status() == 'confirmed' ? 'Đã xác nhận' : 'Đã check-in')}">
                         Chờ xác nhận
                     </div>
                 </div>
@@ -97,10 +88,65 @@
                        class="btn primary small">Chi tiết</a>
 
                     <form th:action="@{/reservations/{id}/cancel(id=${reservation.reservationId()})}"
-                          method="post" th:if="${reservation.status() == 'pending' or reservation.status() == 'confirmed'}"
+                          method="post"
                           style="display: inline;">
                         <button type="submit" class="btn warning small"
-                                onclick="return confirm('Bạn có chắc muốn hủy lịch này?')">Hủy lịch</button>
+                                onclick="return confirm('Bạn có chắc muốn hủy lịch đặt này? Tiền sẽ được hoàn vào ví.')">Hủy đặt</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab: Lịch sử đổi (Swap History) -->
+    <section class="reservation-list-section" th:if="${currentTab == 'history'}">
+        <h2 class="section-title">Lịch sử đổi</h2>
+        
+        <div class="reservation-empty" th:if="${swapHistory == null or swapHistory.isEmpty()}">
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>Chưa có lịch sử đổi pin</h3>
+                <p>Lịch sử các lần đổi pin đã hoàn tất sẽ hiển thị ở đây.</p>
+            </div>
+        </div>
+
+        <div class="reservation-grid" th:if="${swapHistory != null and !swapHistory.isEmpty()}">
+            <div class="reservation-card" th:each="reservation : ${swapHistory}">
+                <div class="reservation-header">
+                    <div class="reservation-id">#<span th:text="${reservation.reservationId()}">123</span></div>
+                    <div class="reservation-status" 
+                         th:classappend="${reservation.status() == 'completed' ? 'completed' : 'canceled'}"
+                         th:text="${reservation.status() == 'completed' ? 'Hoàn tất' : 'Đã hủy'}">
+                        Hoàn tất
+                    </div>
+                </div>
+                
+                <div class="reservation-content">
+                    <div class="reservation-info">
+                        <div class="info-item">
+                            <span class="label">Trạm:</span>
+                            <span class="value" th:text="${reservation.stationName()}">EV Swap Station</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Thời gian:</span>
+                            <span class="value" th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Phí đặt lịch:</span>
+                            <span class="value">25,000 VND</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reservation-actions">
+                    <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}"
+                       class="btn primary small">Chi tiết</a>
+                    
+                    <form th:action="@{/reservations/{id}/delete(id=${reservation.reservationId()})}"
+                          method="post"
+                          style="display: inline;">
+                        <button type="submit" class="btn danger small"
+                                onclick="return confirm('Bạn có chắc muốn xóa lịch sử này? Hành động này không thể hoàn tác.')">Xóa</button>
                     </form>
                 </div>
             </div>
@@ -136,6 +182,14 @@
     background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
     border-radius: 16px; padding: 2rem; border: 1px solid rgba(255,255,255,.15);
     box-shadow: 0 12px 36px rgba(0,0,0,.25);
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    margin: 0 0 1.5rem 0;
+    color: #f3f4f6;
+    font-size: 1.5rem;
+    font-weight: 700;
 }
 
 .empty-state { text-align: center; padding: 3rem 1rem; color: rgba(243,244,246,.75); }
@@ -171,6 +225,15 @@
 .reservation-actions { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
 .btn.small { padding: .5rem 1rem; font-size: .85rem; }
 .btn.warning { background: linear-gradient(135deg, #ffc107, #fd7e14); color: white; }
+.btn.danger { 
+    background: linear-gradient(135deg, rgba(239,68,68,0.8), rgba(185,28,28,0.8)); 
+    color: white; 
+    border: 1px solid rgba(239,68,68,0.5);
+}
+.btn.danger:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(185,28,28,1));
+    box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+}
 
 /* Modal styles */
 .modal {

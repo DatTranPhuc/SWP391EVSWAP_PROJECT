@@ -18,8 +18,9 @@ public class Notification {
     @JoinColumn(name = "driver_id", nullable = false)
     private Driver driver;
 
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String type;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
     private String title;
 
     @Column(name = "is_read")

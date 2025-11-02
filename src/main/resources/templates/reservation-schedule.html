@@ -7,6 +7,8 @@
     <link rel="stylesheet" th:href="@{/css/reservation.css}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>
 <body class="reservation-body">
 <div class="reservation-background"></div>
@@ -63,6 +65,21 @@
                 <button class="btn primary" type="submit">Tìm kiếm</button>
             </form>
 
+            <!-- Vehicle type filter -->
+            <div class="vehicle-type-filter" style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #f3f4f6;">Loại xe:</h3>
+                <div class="filter-options" style="display: flex; gap: 0.5rem;">
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" name="vehicleType" value="motorcycle" checked style="margin-right: 0.5rem; accent-color: #4338ca;">
+                        <span>Xe máy điện</span>
+                    </label>
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" name="vehicleType" value="car" style="margin-right: 0.5rem; accent-color: #4338ca;">
+                        <span>Ô tô điện</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="station-empty" th:if="${stations == null or stations.isEmpty()}">
                 Không tìm thấy trạm phù hợp. Hãy thử lại với từ khóa khác.
             </div>
@@ -70,7 +87,9 @@
             <div class="station-list" th:if="${stations != null and !stations.isEmpty()}">
                 <article class="station-card"
                          th:each="station : ${stations}"
-                         th:attr="data-station-id=${station.stationId}">
+                         th:attr="data-station-id=${station.stationId}"
+                         th:data-motorcycle-batteries="${station.availableMotorcycleBatteries}"
+                         th:data-car-batteries="${station.availableCarBatteries}">
                     <div class="station-meta">
                         <span class="station-name" th:text="${station.name}">EV Swap Station</span>
                         <span class="station-status"
@@ -78,8 +97,14 @@
                               th:style="${station.status == 'active' ? '' : 'color:#facc15'}"></span>
                     </div>
                     <div class="station-address" th:text="${station.address}">123 Nguyễn Văn Cừ, Q.5</div>
+                    <div class="battery-availability">
+                        <span class="battery-count" style="color: #10b981; font-weight: 600; font-size: 0.9rem;">
+                            <span class="count-value"></span> pin có sẵn
+                        </span>
+                    </div>
                     <div class="form-actions">
                         <button class="btn ghost" type="button" th:attr="data-focus-id=${station.stationId}">Xem trên bản đồ</button>
+                        <button class="btn ghost instant-swap-btn" type="button" th:attr="data-station-id=${station.stationId}" style="background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); border-color: rgba(34,197,94,0.3); color: #10b981;">⚡ Đổi pin ngay</button>
                         <a class="btn primary" th:href="@{/reservations/book(stationId=${station.stationId})}">Đặt lịch</a>
                     </div>
                 </article>
@@ -90,36 +115,287 @@
     <section class="upcoming-reservations">
         <h2>Lịch đổi pin của bạn</h2>
         <p class="map-caption">Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.</p>
-        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
-            Chưa có lịch đổi pin nào. Hãy chọn trạm và đặt lịch ngay!
+        
+        <!-- Filter Tabs -->
+        <div class="reservation-filters" style="margin-bottom: 1.5rem;">
+            <div class="filter-tabs">
+                <a href="#scheduled" class="filter-tab active" data-tab="scheduled">Lịch đặt</a>
+                <a href="#history" class="filter-tab" data-tab="history">Lịch sử đổi</a>
+            </div>
         </div>
-        <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
-            <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
-                <div class="reservation-info">
-                    <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
-                    <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
+
+        <!-- Tab: Lịch đặt (Scheduled Reservations) -->
+        <div id="scheduled-section" class="reservation-tab-content active">
+            <div class="reservation-empty" th:if="${scheduledReservations == null or scheduledReservations.isEmpty()}">
+                <div class="empty-state">
+                    <div class="empty-icon">📅</div>
+                    <h3>Chưa có lịch đặt nào</h3>
+                    <p>Bạn chưa có lịch đặt nào. Hãy chọn trạm và đặt lịch ngay!</p>
                 </div>
-                <div class="reservation-item-actions">
-                    <span class="reservation-status"
-                          th:classappend="${reservation.status() == 'pending'} ? ' pending'"
-                          th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
-                        Đang chờ xác nhận
-                    </span>
-                    <div class="reservation-quick-actions">
-                        <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}" class="btn primary small">Chi tiết</a>
-                        <form th:action="@{/reservations/{id}/cancel(id=${reservation.reservationId()})}" method="post" th:if="${reservation.status() == 'pending' or reservation.status() == 'confirmed'}" style="display: inline;">
-                            <button type="submit" class="btn warning small" onclick="return confirm('Bạn có chắc muốn hủy lịch này?')">Hủy lịch</button>
-                        </form>
+            </div>
+            <div class="reservation-list" th:if="${scheduledReservations != null and !scheduledReservations.isEmpty()}">
+                <article class="reservation-item" th:each="reservation : ${scheduledReservations}">
+                    <div class="reservation-info">
+                        <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
+                        <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
                     </div>
+                    <div class="reservation-item-actions">
+                        <span class="reservation-status"
+                              th:classappend="${reservation.status() == 'pending' ? 'pending' : (reservation.status() == 'confirmed' ? 'confirmed' : 'checked-in')}"
+                              th:text="${reservation.status() == 'pending' ? 'Chờ xác nhận' : (reservation.status() == 'confirmed' ? 'Đã xác nhận' : 'Đã check-in')}">
+                            Chờ xác nhận
+                        </span>
+                        <div class="reservation-quick-actions">
+                            <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}" class="btn primary small">Chi tiết</a>
+                            <form th:action="@{/reservations/{id}/cancel(id=${reservation.reservationId()})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" 
+                                        class="btn warning small"
+                                        onclick="return confirm('Bạn có chắc muốn hủy lịch đặt này? Tiền sẽ được hoàn vào ví.')">Hủy đặt</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- Tab: Lịch sử đổi (Swap History) -->
+        <div id="history-section" class="reservation-tab-content" style="display: none;">
+            <div class="reservation-empty" th:if="${swapHistory == null or swapHistory.isEmpty()}">
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>Chưa có lịch sử đổi pin</h3>
+                    <p>Lịch sử các lần đổi pin đã hoàn tất sẽ hiển thị ở đây.</p>
                 </div>
-            </article>
+            </div>
+            <div class="reservation-list" th:if="${swapHistory != null and !swapHistory.isEmpty()}">
+                <article class="reservation-item" th:each="reservation : ${swapHistory}">
+                    <div class="reservation-info">
+                        <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
+                        <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
+                    </div>
+                    <div class="reservation-item-actions">
+                        <span class="reservation-status"
+                              th:classappend="${reservation.status() == 'completed' ? 'completed' : 'canceled'}"
+                              th:text="${reservation.status() == 'completed' ? 'Hoàn tất' : 'Đã hủy'}">
+                            Hoàn tất
+                        </span>
+                        <div class="reservation-quick-actions">
+                            <a th:href="@{/reservations/{id}(id=${reservation.reservationId()})}" class="btn primary small">Chi tiết</a>
+                            <form th:action="@{/reservations/{id}/delete(id=${reservation.reservationId()})}" 
+                                  method="post" 
+                                  style="display: inline;">
+                                <button type="submit" 
+                                        class="btn danger small"
+                                        onclick="return confirm('Bạn có chắc muốn xóa lịch sử này? Hành động này không thể hoàn tác.')">Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
         </div>
     </section>
 </main>
 
+<style>
+.reservation-filters { margin-bottom: 1.5rem; }
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+.filter-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 999px;
+    text-decoration: none;
+    color: rgba(243,244,246,.8);
+    font-weight: 600;
+    transition: all .25s ease;
+    white-space: nowrap;
+    background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.12);
+    cursor: pointer;
+}
+.filter-tab:hover {
+    transform: translateY(-1px);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+}
+.filter-tab.active {
+    background: linear-gradient(135deg, rgba(67,56,202,.5), rgba(34,197,94,.35));
+    color: #fff;
+    border-color: rgba(67,56,202,.6);
+}
+.reservation-tab-content {
+    display: none;
+}
+.reservation-tab-content.active {
+    display: block;
+}
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: rgba(243,244,246,.75);
+}
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    color: #f3f4f6;
+}
+.empty-state p {
+    margin: 0 0 1rem 0;
+}
+.btn.danger {
+    background: linear-gradient(135deg, rgba(239,68,68,0.8), rgba(185,28,28,0.8));
+    color: white;
+    border: 1px solid rgba(239,68,68,0.5);
+}
+.btn.danger:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(185,28,28,1));
+    box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+}
+.btn.warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+</style>
+
 <script th:inline="javascript">
     const stations = /*[[${stations}]]*/ [];
     let selectedStationId = null;
+
+    // Vietnamese translation function for routing instructions
+    function translateToVietnamese(text) {
+        if (!text) return text;
+        
+        const translations = {
+            'Head northeast': 'Đi hướng đông bắc',
+            'Head east': 'Đi hướng đông',
+            'Head southeast': 'Đi hướng đông nam',
+            'Head south': 'Đi hướng nam',
+            'Head southwest': 'Đi hướng tây nam',
+            'Head west': 'Đi hướng tây',
+            'Head northwest': 'Đi hướng tây bắc',
+            'Head north': 'Đi hướng bắc',
+            'Turn right onto': 'Rẽ phải vào',
+            'Turn left onto': 'Rẽ trái vào',
+            'Continue onto': 'Tiếp tục vào',
+            'Continue straight': 'Tiếp tục thẳng',
+            'Turn right': 'Rẽ phải',
+            'Turn left': 'Rẽ trái',
+            'You have arrived at your destination': 'Bạn đã đến nơi',
+            'You have arrived': 'Bạn đã đến',
+            'Arrive at': 'Đến tại',
+            'on the right': 'bên phải',
+            'on the left': 'bên trái',
+            'Go straight': 'Đi thẳng',
+            'Go straight onto': 'Đi thẳng vào',
+            'Slight right': 'Rẽ phải nhẹ',
+            'Slight left': 'Rẽ trái nhẹ',
+            'Sharp right': 'Rẽ phải gấp',
+            'Sharp left': 'Rẽ trái gấp',
+            'Keep right': 'Giữ bên phải',
+            'Keep left': 'Giữ bên trái',
+            'Make a U-turn': 'Quay đầu xe',
+            'at your destination': 'tại điểm đến',
+            'Destination reached': 'Đã đến đích',
+            'Take': 'Rẽ',
+            'Take the': 'Rẽ vào',
+            'onto': 'vào',
+            'Enter': 'Vào',
+            'Exit': 'Ra',
+            'Then': 'Sau đó',
+            'Bear': 'Rẽ',
+            'Fork': 'Ngã rẽ',
+            'and': 'và',
+            'Arrive': 'Đến',
+            'kilometers': 'kilômét',
+            'kilometer': 'kilômét',
+            'km': 'km',
+            'meters': 'mét',
+            'meter': 'mét',
+            'm': 'm',
+            'minutes': 'phút',
+            'minute': 'phút',
+            'min': 'phút',
+            'mi': 'mi',
+            'miles': 'dặm',
+            'mile': 'dặm',
+            'ft': 'ft',
+            'feet': 'feet',
+            'Drive': 'Lái xe',
+            'Walk': 'Đi bộ',
+            'on': 'trên',
+            'Reached': 'Đã đạt',
+            'A': '',
+            'B': ''
+        };
+        
+        let translated = text;
+        // Sort translations by length (longest first) to avoid partial replacements
+        const sortedKeys = Object.keys(translations).sort((a, b) => b.length - a.length);
+        for (const key of sortedKeys) {
+            translated = translated.replace(new RegExp(key, 'gi'), translations[key]);
+        }
+        
+        // Clean up extra spaces
+        translated = translated.replace(/\s+/g, ' ').trim();
+        
+        return translated;
+    }
+
+    // Function to translate all routing instructions in the panel
+    function translateRoutingInstructions() {
+        // Translate instruction cells
+        const instructionCells = document.querySelectorAll('.leaflet-routing-alt td');
+        instructionCells.forEach(cell => {
+            cell.textContent = translateToVietnamese(cell.textContent);
+        });
+        
+        // Translate summary
+        const summaryElements = document.querySelectorAll('.leaflet-routing-container');
+        summaryElements.forEach(element => {
+            // Translate distance and time units if needed
+            element.innerHTML = translateToVietnamese(element.innerHTML);
+        });
+    }
+
+    // Icon definitions (must be outside IIFE to be accessible by modal)
+    const stationIcon = typeof L !== 'undefined' ? L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    }) : null;
+
+    const inactiveIcon = typeof L !== 'undefined' ? L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    }) : null;
+
+    const userIcon = typeof L !== 'undefined' ? L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    }) : null;
 
     (function () {
         const mapContainer = document.getElementById('map');
@@ -168,33 +444,6 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        const stationIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        const inactiveIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        const userIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
 
         const markerById = new Map();
         let userMarker = null;
@@ -356,6 +605,428 @@
                 item.classList.add('is-current');
             }
         });
+    }
+
+    // Vehicle type filter logic
+    (function() {
+        const vehicleTypeRadios = document.querySelectorAll('input[name="vehicleType"]');
+        const stationCards = document.querySelectorAll('.station-card');
+        
+        function updateBatteryCounts() {
+            const selectedType = document.querySelector('input[name="vehicleType"]:checked')?.value || 'motorcycle';
+            
+            stationCards.forEach(card => {
+                const motorcycleCount = parseInt(card.dataset.motorcycleBatteries) || 0;
+                const carCount = parseInt(card.dataset.carBatteries) || 0;
+                
+                const countValue = selectedType === 'motorcycle' ? motorcycleCount : carCount;
+                const countSpan = card.querySelector('.count-value');
+                
+                if (countSpan) {
+                    countSpan.textContent = countValue;
+                }
+                
+                // Hide stations with 0 available batteries for selected type
+                if (countValue === 0) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'block';
+                }
+            });
+        }
+        
+        vehicleTypeRadios.forEach(radio => {
+            radio.addEventListener('change', updateBatteryCounts);
+        });
+        
+        // Initialize counts on page load
+        updateBatteryCounts();
+
+        // Handle "Đổi pin ngay" button click
+        document.querySelectorAll('.instant-swap-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const stationId = parseInt(this.dataset.stationId);
+                const station = stations.find(s => s.stationId === stationId);
+                if (station) {
+                    openInstantSwapModal(station);
+                }
+            });
+        });
+    })();
+
+    // Tab switching for reservations
+    (function() {
+        const filterTabs = document.querySelectorAll('.filter-tab[data-tab]');
+        const tabContents = document.querySelectorAll('.reservation-tab-content');
+        
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetTab = this.dataset.tab;
+                
+                // Update active tab
+                filterTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show/hide content
+                tabContents.forEach(content => {
+                    content.style.display = 'none';
+                    content.classList.remove('active');
+                });
+                
+                const targetContent = document.getElementById(targetTab + '-section');
+                if (targetContent) {
+                    targetContent.style.display = 'block';
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+    })();
+
+    // Instant Swap Modal with Navigation
+    let instantSwapModal = null;
+    let navigationMap = null;
+    let routingControl = null;
+    let watchId = null;
+    const ARRIVAL_RADIUS_M = 50; // 50 meters
+
+    function openInstantSwapModal(station) {
+        // Create modal if not exists
+        if (!instantSwapModal) {
+            instantSwapModal = document.createElement('div');
+            instantSwapModal.id = 'instant-swap-modal';
+            instantSwapModal.innerHTML = `
+                <div class="instant-swap-overlay">
+                    <div class="instant-swap-content">
+                        <div class="instant-swap-header">
+                            <h2>⚡ Đổi pin ngay</h2>
+                            <button class="close-btn" id="close-modal-btn">&times;</button>
+                        </div>
+                        <div class="instant-swap-body">
+                            <div id="navigation-map" style="width: 100%; height: 400px; border-radius: 8px; margin-bottom: 1rem;"></div>
+                            <div id="navigation-info" style="padding: 1rem; background: rgba(67,56,202,0.1); border-radius: 8px; margin-bottom: 1rem;">
+                                <p id="distance-info" style="margin: 0; color: #f3f4f6; font-weight: 600;">Đang tính toán đường đi...</p>
+                            </div>
+                            <div id="arrival-status" style="display: none; padding: 1rem; background: rgba(34,197,94,0.1); border-radius: 8px; color: #10b981; text-align: center; margin-bottom: 1rem;">
+                                <strong>✓ Bạn đã đến trạm!</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(instantSwapModal);
+
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                #instant-swap-modal {
+                    position: fixed;
+                    inset: 0;
+                    z-index: 10000;
+                    display: none;
+                }
+                #instant-swap-modal.active {
+                    display: block;
+                }
+                .instant-swap-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: rgba(0,0,0,0.85);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 2rem;
+                }
+                .instant-swap-content {
+                    background: linear-gradient(135deg, rgba(30,24,48,0.95), rgba(15,50,30,0.95));
+                    border-radius: 16px;
+                    border: 1px solid rgba(67,56,202,0.3);
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                .instant-swap-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1.5rem;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+                .instant-swap-header h2 {
+                    margin: 0;
+                    color: #f3f4f6;
+                }
+                .close-btn {
+                    background: transparent;
+                    border: none;
+                    color: #f3f4f6;
+                    font-size: 2rem;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 2rem;
+                    height: 2rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    transition: background 0.2s;
+                }
+                .close-btn:hover {
+                    background: rgba(255,255,255,0.1);
+                }
+                .instant-swap-body {
+                    padding: 1.5rem;
+                }
+                /* Routing instructions panel styling */
+                .leaflet-routing-container {
+                    background: rgba(30, 24, 48, 0.95) !important;
+                    border: 1px solid rgba(67, 56, 202, 0.3) !important;
+                    border-radius: 12px !important;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+                }
+                .leaflet-routing-container h3 {
+                    color: #f3f4f6 !important;
+                    background: rgba(67, 56, 202, 0.2) !important;
+                }
+                .leaflet-routing-alt {
+                    background: transparent !important;
+                    color: #f3f4f6 !important;
+                }
+                .leaflet-routing-alt-minimized {
+                    background: rgba(15, 20, 30, 0.8) !important;
+                }
+                .leaflet-routing-alt table tr {
+                    background: rgba(15, 20, 30, 0.5) !important;
+                }
+                .leaflet-routing-alt table tr:nth-child(even) {
+                    background: rgba(15, 20, 30, 0.7) !important;
+                }
+                .leaflet-routing-alt table tr:hover {
+                    background: rgba(67, 56, 202, 0.3) !important;
+                }
+                .leaflet-routing-alt table td {
+                    color: #f3f4f6 !important;
+                    border-color: rgba(255, 255, 255, 0.1) !important;
+                }
+                .leaflet-routing-alt table th {
+                    color: #f3f4f6 !important;
+                    background: rgba(67, 56, 202, 0.3) !important;
+                    border-color: rgba(255, 255, 255, 0.1) !important;
+                }
+                .leaflet-routing-icon {
+                    filter: brightness(0) invert(1) opacity(0.8) !important;
+                }
+                .leaflet-routing-container .leaflet-routing-alt-minimized {
+                    color: #f3f4f6 !important;
+                }
+                .leaflet-routing-container .leaflet-routing-geocoders {
+                    color: #f3f4f6 !important;
+                }
+                .leaflet-routing-container .leaflet-routing-geocoders input {
+                    background: rgba(15, 20, 30, 0.8) !important;
+                    color: #f3f4f6 !important;
+                    border-color: rgba(255, 255, 255, 0.1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Close button handler
+            document.getElementById('close-modal-btn').addEventListener('click', closeInstantSwapModal);
+            
+            // Close on overlay click
+            instantSwapModal.querySelector('.instant-swap-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeInstantSwapModal();
+                }
+            });
+        }
+
+        instantSwapModal.classList.add('active');
+
+        // Initialize navigation map AFTER modal is added to DOM
+        setTimeout(() => {
+            if (!navigationMap) {
+                const navMapContainer = document.getElementById('navigation-map');
+                if (navMapContainer) {
+                    navigationMap = L.map('navigation-map');
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                    }).addTo(navigationMap);
+                    
+                    setTimeout(() => navigationMap.invalidateSize(), 100);
+                }
+            } else {
+                // If map exists, clear it and reinit
+                navigationMap.eachLayer(function(layer) {
+                    navigationMap.removeLayer(layer);
+                });
+                setTimeout(() => navigationMap.invalidateSize(), 100);
+            }
+
+            // Clear existing routing
+            if (routingControl) {
+                navigationMap.removeControl(routingControl);
+                routingControl = null;
+            }
+
+            // Get user location and start navigation
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => startNavigation(position, station),
+                    error => {
+                        document.getElementById('distance-info').textContent = 'Không thể lấy vị trí của bạn. Vui lòng cho phép quyền truy cập vị trí.';
+                        alert('Vui lòng cho phép truy cập vị trí để sử dụng tính năng này.');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                alert('Trình duyệt của bạn không hỗ trợ định vị.');
+            }
+        }, 100);
+    }
+
+    function startNavigation(userPosition, station) {
+        const userLat = userPosition.coords.latitude;
+        const userLng = userPosition.coords.longitude;
+        const stationLat = parseFloat(station.latitude);
+        const stationLng = parseFloat(station.longitude);
+
+        // Add markers
+        const userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(navigationMap)
+            .bindPopup('Vị trí của bạn');
+        const stationMarker = L.marker([stationLat, stationLng], { icon: stationIcon }).addTo(navigationMap)
+            .bindPopup(station.name);
+
+        // Set map view to fit both markers
+        const userPos = [userLat, userLng];
+        const stationPos = [stationLat, stationLng];
+        const bounds = L.latLngBounds([userPos, stationPos]);
+        navigationMap.fitBounds(bounds, { padding: [50, 50] });
+
+        // Create routing control
+        if (typeof L.Routing !== 'undefined' && L.Routing.control) {
+            try {
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(userLat, userLng),
+                        L.latLng(stationLat, stationLng)
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1',
+                        profile: 'driving'
+                    }),
+                    lineOptions: {
+                        styles: [{ color: '#4338ca', weight: 4, opacity: 0.7 }]
+                    },
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    fitSelectedRoutes: true,
+                    showAlternatives: false,
+                    routeWhileDragging: false,
+                    collapsible: true,
+                    summaryTemplate: '<div class="routing-summary">{distance}, {time}</div>'
+                }).addTo(navigationMap);
+
+                routingControl.on('routesfound', function(e) {
+                    const routes = e.routes;
+                    if (routes && routes.length > 0) {
+                        const route = routes[0];
+                        const distance = (route.summary.totalDistance / 1000).toFixed(2);
+                        document.getElementById('distance-info').textContent = `Khoảng cách: ${distance} km`;
+                        
+                        // Translate instructions to Vietnamese after rendering
+                        setTimeout(() => {
+                            translateRoutingInstructions();
+                        }, 500);
+                        
+                        // Also translate when instructions are expanded/collapsed
+                        routingControl.on('routerselected', function() {
+                            setTimeout(() => {
+                                translateRoutingInstructions();
+                            }, 100);
+                        });
+                    }
+                });
+            } catch (err) {
+                console.error('Routing error:', err);
+                // Fallback: draw a simple line
+                const routeLine = L.polyline([userPos, stationPos], {
+                    color: '#4338ca',
+                    weight: 4,
+                    opacity: 0.7
+                }).addTo(navigationMap);
+            }
+        } else {
+            // Fallback: draw a simple line if routing library not available
+            const routeLine = L.polyline([userPos, stationPos], {
+                color: '#4338ca',
+                weight: 4,
+                opacity: 0.7
+            }).addTo(navigationMap);
+            document.getElementById('distance-info').textContent = 'Tính toán đường đi...';
+        }
+
+        // Start watching position
+        watchId = navigator.geolocation.watchPosition(
+            position => checkArrival(position, station, stationLat, stationLng),
+            error => console.error('Geolocation error:', error),
+            { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+        );
+    }
+
+    function checkArrival(position, station, stationLat, stationLng) {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        
+        // Calculate distance using Haversine formula
+        const R = 6371e3; // Earth radius in meters
+        const φ1 = userLat * Math.PI / 180;
+        const φ2 = stationLat * Math.PI / 180;
+        const Δφ = (stationLat - userLat) * Math.PI / 180;
+        const Δλ = (stationLng - userLng) * Math.PI / 180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c; // Distance in meters
+
+        // Update distance info
+        if (distance < 1000) {
+            document.getElementById('distance-info').textContent = `Khoảng cách: ${distance.toFixed(0)} m`;
+        } else {
+            document.getElementById('distance-info').textContent = `Khoảng cách: ${(distance/1000).toFixed(2)} km`;
+        }
+
+        // Check if arrived
+        if (distance <= ARRIVAL_RADIUS_M) {
+            document.getElementById('arrival-status').style.display = 'block';
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            // Redirect to instant swap payment after 2 seconds
+            setTimeout(() => {
+                window.location.href = `/reservations/instant-swap?stationId=${station.stationId}`;
+            }, 2000);
+        }
+    }
+
+    function closeInstantSwapModal() {
+        if (instantSwapModal) {
+            instantSwapModal.classList.remove('active');
+        }
+        if (watchId !== null) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+        if (routingControl && navigationMap) {
+            navigationMap.removeControl(routingControl);
+            routingControl = null;
+        }
     }
 </script>
 </body>

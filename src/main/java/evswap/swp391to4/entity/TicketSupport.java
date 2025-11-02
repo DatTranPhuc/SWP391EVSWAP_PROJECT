@@ -21,10 +21,12 @@ public class TicketSupport {
     @JoinColumn(name = "staff_id")
     private Staff staff;
 
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String category; // station/battery/payment
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String comment;
 
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String status; // open/in_progress/resolved/closed
 
     @Column(name = "created_at")
@@ -33,12 +35,12 @@ public class TicketSupport {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
-    @Column(name = "comment_history", columnDefinition = "text")
+    @Column(name = "comment_history", columnDefinition = "NVARCHAR(MAX)")
     private String commentHistory;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String attachments;
 }

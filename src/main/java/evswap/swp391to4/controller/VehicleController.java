@@ -35,6 +35,9 @@ public class VehicleController {
                 .vin(request.vin())
                 .plateNumber(request.plateNumber())
                 .model(request.model())
+                .vehicleType(request.vehicleType() != null && !request.vehicleType().isBlank() 
+                    ? request.vehicleType() 
+                    : "motorcycle")
                 .build();
         Vehicle savedVehicle = vehicleService.addVehicleToDriver(driverId, vehicle);
         return ResponseEntity.ok(savedVehicle);
@@ -79,6 +82,9 @@ public class VehicleController {
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(form.getVehicleType() != null && !form.getVehicleType().isBlank() 
+                        ? form.getVehicleType() 
+                        : "motorcycle") // Default to motorcycle
                     .build();
 
             vehicleService.addVehicleToDriver(driverId, vehicle);
@@ -143,6 +149,9 @@ public class VehicleController {
                     .model(form.getModel())
                     .vin(form.getVin())
                     .plateNumber(form.getPlateNumber())
+                    .vehicleType(form.getVehicleType() != null && !form.getVehicleType().isBlank() 
+                        ? form.getVehicleType() 
+                        : "motorcycle") // Default to motorcycle
                     .build();
 
             vehicleService.addVehicleToDriver(driver.getDriverId(), vehicle);
@@ -168,7 +177,7 @@ public class VehicleController {
         return fullName.trim().substring(0, 1).toUpperCase();
     }
 
-    public record VehicleRequest(String vin, String plateNumber, String model) {
+    public record VehicleRequest(String vin, String plateNumber, String model, String vehicleType) {
     }
 
     // Lớp nội bộ để hiển thị dữ liệu trên view, giữ nguyên
@@ -179,6 +188,7 @@ public class VehicleController {
         private final String plateNumber;
         private final String vin;
         private final String model;
+        private final String vehicleType;
         private final Instant createdAt;
         private final String statusLabel;
         private final String statusBadge;
@@ -194,6 +204,7 @@ public class VehicleController {
         public String plateNumber() { return plateNumber; }
         public String vin() { return vin; }
         public String model() { return model; }
+        public String vehicleType() { return vehicleType; }
         public Instant createdAt() { return createdAt; }
         public String statusLabel() { return statusLabel; }
         public String statusBadge() { return statusBadge; }
@@ -238,6 +249,7 @@ public class VehicleController {
                             .orElse("Chưa cập nhật"))
                     .vin(vehicle.getVin())
                     .model(Optional.ofNullable(vehicle.getModel()).orElse("Chưa cập nhật"))
+                    .vehicleType(Optional.ofNullable(vehicle.getVehicleType()).orElse("motorcycle"))
                     .createdAt(vehicle.getCreatedAt())
                     .statusLabel(batteryPercent >= 75 ? "Đang hoạt động" : "Đang kiểm tra")
                     .statusBadge(statusBadge)

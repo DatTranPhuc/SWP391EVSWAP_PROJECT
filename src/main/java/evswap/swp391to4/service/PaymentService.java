@@ -2,6 +2,7 @@ package evswap.swp391to4.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.entity.Payment;
 import evswap.swp391to4.entity.Reservation;
 import evswap.swp391to4.repository.PaymentRepository;
+import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.util.PayOsUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,12 @@ import vn.payos.type.PaymentData;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final ReservationRepository reservationRepository;
     private final RestTemplate restTemplate;
+
+    public PaymentRepository getPaymentRepository() {
+        return paymentRepository;
+    }
 
     @Value("${payos.api.endpoint}")
     private String payosEndpoint;
@@ -216,8 +223,39 @@ public class PaymentService {
             
             if ("PAID".equalsIgnoreCase(payosStatus)) {
                 payment.setStatus("succeed");
-                log.info("Payment successful: paymentId={}, orderCode={}", 
-                    payment.getPaymentId(), orderCode);
+                
+                // Cập nhật reservation payment status và tự động confirm reservation nếu có reservation
+                if (payment.getReservation() != null) {
+                    Reservation reservation = payment.getReservation();
+                    reservation.setPaymentStatus("completed");
+                    reservationRepository.save(reservation);
+                    log.info("Updated reservation payment status to completed: reservationId={}", 
+                        reservation.getReservationId());
+                    
+                    // Tự động confirm reservation nếu đang ở status "pending" (giống như thanh toán tiền mặt)
+                    // Chuyển từ "pending" sang "confirmed" để tiếp tục luồng đổi pin
+                    if ("pending".equalsIgnoreCase(reservation.getStatus())) {
+                        try {
+                            // For instant swap, skip to checked_in; otherwise confirm normally
+                            if (reservation.getIsInstantSwap() != null && reservation.getIsInstantSwap()) {
+                                reservation.setStatus("checked_in");
+                                reservation.setCheckedInAt(Instant.now());
+                            } else {
+                                reservation.setStatus("confirmed");
+                            }
+                            reservationRepository.save(reservation);
+                            log.info("Auto-confirmed reservation after PayOS payment success: reservationId={}, newStatus={}", 
+                                reservation.getReservationId(), reservation.getStatus());
+                        } catch (Exception e) {
+                            log.warn("Failed to auto-confirm reservation after payment: reservationId={}, error={}", 
+                                reservation.getReservationId(), e.getMessage());
+                        }
+                    }
+                }
+                
+                log.info("Payment successful: paymentId={}, orderCode={}, reservationId={}", 
+                    payment.getPaymentId(), orderCode, 
+                    payment.getReservation() != null ? payment.getReservation().getReservationId() : "null");
             } else if ("CANCELLED".equalsIgnoreCase(payosStatus)) {
                 payment.setStatus("failed");
                 log.info("Payment cancelled: paymentId={}, orderCode={}", 
@@ -264,6 +302,14 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public Optional<Payment> getPaymentByProviderTxnId(String providerTxnId) {
         return paymentRepository.findByProviderTxnId(providerTxnId);
+    }
+
+    /**
+     * Get payments by reservation
+     */
+    @Transactional(readOnly = true)
+    public List<Payment> getPaymentsByReservation(Reservation reservation) {
+        return paymentRepository.findByReservation(reservation);
     }
 
     @Transactional
@@ -313,6 +359,34 @@ public class PaymentService {
 
                 if ("PAID".equalsIgnoreCase(payosStatus)) {
                     payment.setStatus("succeed");
+                    
+                    // Cập nhật reservation payment status và tự động confirm reservation nếu có reservation
+                    if (payment.getReservation() != null) {
+                        Reservation reservation = payment.getReservation();
+                        reservation.setPaymentStatus("completed");
+                        reservationRepository.save(reservation);
+                        log.info("Updated reservation payment status to completed: reservationId={}", 
+                            reservation.getReservationId());
+                        
+                        // Tự động confirm reservation nếu đang ở status "pending" (giống như trong webhook)
+                        if ("pending".equalsIgnoreCase(reservation.getStatus())) {
+                            try {
+                                // For instant swap, skip to checked_in; otherwise confirm normally
+                                if (reservation.getIsInstantSwap() != null && reservation.getIsInstantSwap()) {
+                                    reservation.setStatus("checked_in");
+                                    reservation.setCheckedInAt(Instant.now());
+                                } else {
+                                    reservation.setStatus("confirmed");
+                                }
+                                reservationRepository.save(reservation);
+                                log.info("Auto-confirmed reservation after PayOS payment reconcile: reservationId={}, newStatus={}", 
+                                    reservation.getReservationId(), reservation.getStatus());
+                            } catch (Exception e) {
+                                log.warn("Failed to auto-confirm reservation after reconcile: reservationId={}, error={}", 
+                                    reservation.getReservationId(), e.getMessage());
+                            }
+                        }
+                    }
                 } else if ("CANCELLED".equalsIgnoreCase(payosStatus)) {
                     payment.setStatus("failed");
                 } else if (payosStatus != null) {
@@ -325,5 +399,90 @@ public class PaymentService {
         }
 
         return payment;
+    }
+
+    /**
+     * Tạo yêu cầu thanh toán PayOS cho giao dịch đổi pin (swap transaction)
+     * @param driver Tài xế thực hiện thanh toán
+     * @param reservation Reservation liên quan
+     * @param amount Số tiền cần thanh toán
+     * @return Payment object với status pending
+     */
+    @Transactional
+    public Payment createSwapPaymentRequest(Driver driver, Reservation reservation, BigDecimal amount) {
+        try {
+            // Tạo orderCode duy nhất
+            long timestamp = System.currentTimeMillis();
+            String timestampStr = String.valueOf(timestamp);
+            String last10Digits = timestampStr.substring(timestampStr.length() - 10);
+            String driverIdStr = String.valueOf(driver.getDriverId());
+            String orderCodeStr = last10Digits + driverIdStr;
+            if (orderCodeStr.length() > 11) {
+                orderCodeStr = orderCodeStr.substring(orderCodeStr.length() - 11);
+            }
+            Long orderCode = Long.parseLong(orderCodeStr);
+            log.info("Generated orderCode for swap: {} (length: {})", orderCode, orderCodeStr.length());
+
+            // Tạo PayOS SDK instance
+            PayOS payOS = new PayOS(payosClientId, payosApiKey, payosWebhookKey);
+            try {
+                String verified = payOS.confirmWebhook(payosWebhookUrl);
+                log.info("PayOS webhook confirmed: {}", verified);
+            } catch (Exception ex) {
+                log.warn("Could not confirm PayOS webhook. Proceeding anyway. reason={}", ex.getMessage());
+            }
+            
+            String cancelUrl = publicBaseUrl + "/staff/reservations/" + reservation.getReservationId();
+            // Use callback endpoint that will redirect to staff page and trigger auto refresh
+            String successUrl = publicBaseUrl + "/reservations/payment-callback?reservationId=" + reservation.getReservationId();
+            // PayOS requires description max 25 characters
+            String description = "Doi pin #" + reservation.getReservationId();
+            if (description.length() > 25) {
+                // If still too long, truncate to 25 chars
+                description = description.substring(0, 25);
+            }
+            
+            ItemData itemData = ItemData.builder()
+                .name("Phí đổi pin EVSWAP")
+                .quantity(1)
+                .price(amount.intValue())
+                .build();
+                
+            PaymentData paymentData = PaymentData.builder()
+                .orderCode(orderCode)
+                .amount(amount.intValue())
+                .description(description)
+                .item(itemData)
+                .cancelUrl(cancelUrl)
+                .returnUrl(successUrl)
+                .build();
+                
+            log.info("PayOS PaymentData for swap: {}", paymentData);
+            CheckoutResponseData result = payOS.createPaymentLink(paymentData);
+            String checkoutUrl = result.getCheckoutUrl();
+            String paymentLinkId = result.getPaymentLinkId();
+            
+            // Lưu payment với status pending
+            Payment payment = Payment.builder()
+                    .driver(driver)
+                    .reservation(reservation)
+                    .amount(amount)
+                    .method("payos")
+                    .status("pending")
+                    .paidAt(Instant.now())
+                    .currency("VND")
+                    .providerTxnId(paymentLinkId)
+                    .orderCode("EVSWAP" + orderCode)
+                    .checkoutUrl(checkoutUrl)
+                    .build();
+            payment = paymentRepository.save(payment);
+            
+            log.info("Created PayOS swap payment request [SDK]: paymentId={}, orderCode=EVSWAP{}, checkoutUrl={}", 
+                payment.getPaymentId(), orderCode, checkoutUrl);
+            return payment;
+        } catch (Exception e) {
+            log.error("Error creating PayOS swap payment request (SDK)", e);
+            throw new IllegalStateException("Lỗi khi tạo yêu cầu thanh toán: " + e.getMessage());
+        }
     }
 }

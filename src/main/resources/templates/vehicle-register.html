@@ -77,6 +77,14 @@
                     <input id="model" type="text" th:field="*{model}" placeholder="VinFast Feliz S" required>
                 </div>
                 <div class="auth-field">
+                    <label for="vehicleType">Loại xe</label>
+                    <select id="vehicleType" th:field="*{vehicleType}" required style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 20, 30, 0.72); border: 1px solid rgba(255,255,255,0.1); color: #f3f4f6;">
+                        <option value="">-- Chọn loại xe --</option>
+                        <option value="motorcycle">Xe máy điện</option>
+                        <option value="car">Ô tô điện</option>
+                    </select>
+                </div>
+                <div class="auth-field">
                     <label for="vin">Số VIN</label>
                     <input id="vin" type="text" th:field="*{vin}" placeholder="VN1234567890" required>
                 </div>

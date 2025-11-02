@@ -17,4 +17,6 @@ public class ReservationScheduleForm {
 
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime time;
+    
+    private String paymentMethod; // "wallet", "cash", "transfer"
 }

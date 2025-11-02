@@ -53,10 +53,15 @@
 
 <main class="manage-main container">
     <section class="reservation-progress">
-        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}, data-is-instant=${isInstantSwap}">
             <li class="progress-step" data-step="search">Tìm trạm</li>
             <li class="progress-step" data-step="schedule">Đặt lịch</li>
-            <li class="progress-step" data-step="payment">Thanh toán</li>
+            <!-- Hide "Thanh toán" step for instant swap if already checked_in -->
+            <li class="progress-step" 
+                data-step="payment"
+                th:style="${isInstantSwap and reservation.status == 'checked_in'} ? 'display: none;' : ''">
+                Thanh toán
+            </li>
             <li class="progress-step" data-step="swap">Đổi pin</li>
             <li class="progress-step" data-step="done">Hoàn tất</li>
         </ul>
@@ -64,7 +69,13 @@
 
     <section class="detail-grid">
         <div class="detail-card">
-            <h2 style="margin-top:0">Thông tin đặt lịch</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin:0">Thông tin đặt lịch</h2>
+                <span th:if="${isInstantSwap}" 
+                      style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); border-radius: 20px; border: 1px solid rgba(34,197,94,0.3); color: #10b981; font-weight: 600; font-size: 0.85rem;">
+                    ⚡ Đổi pin ngay
+                </span>
+            </div>
             <div class="detail-grid" style="grid-template-columns: 1fr 1fr; margin-top: .5rem;">
                 <div>
                     <div class="label">Mã đặt lịch</div>
@@ -72,7 +83,7 @@
                 </div>
                 <div>
                     <div class="label">Trạng thái</div>
-                    <div class="value" th:text="${reservation.status}">pending</div>
+                    <div class="value" th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : (reservation.status == 'canceled' ? 'Đã hủy' : reservation.status))))}">pending</div>
                 </div>
                 <div>
                     <div class="label">Trạm</div>
@@ -90,18 +101,62 @@
                     <div class="label">Phương tiện</div>
                     <div class="value" th:text="${reservation.vehicle.model + ' - ' + (reservation.vehicle.plateNumber == null ? reservation.vehicle.vin : reservation.vehicle.plateNumber)}">Xe</div>
                 </div>
+                <div th:if="${reservation.paymentMethod != null}">
+                    <div class="label">Thanh toán</div>
+                    <div class="value" th:text="${reservation.paymentMethod == 'wallet' ? 'Thanh toán ví' : (reservation.paymentMethod == 'cash' ? 'Tiền mặt' : 'Chuyển khoản')}">Thanh toán</div>
+                </div>
             </div>
         </div>
 
-        <div class="detail-card">
+        <!-- Receipt section for completed reservations -->
+        <div class="detail-card receipt-card" th:if="${reservation.status == 'completed'}" style="background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(16,185,129,0.05) 100%); border: 2px solid rgba(34,197,94,0.3);">
+            <h2 style="margin-top:0; color: #10b981;">✓ Đổi pin hoàn tất</h2>
+            <div class="receipt-content" style="margin-top: 1rem;">
+                <div th:if="${reservation.assignedBattery != null}" style="padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 0.75rem;">
+                    <div class="label">Pin đã đổi:</div>
+                    <div class="value">#<span th:text="${reservation.assignedBattery.batteryId}"></span> - <span th:text="${reservation.assignedBattery.model}"></span></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.75rem;">
+                    <div class="label">Tổng cộng:</div>
+                    <div class="value" style="font-size: 1.25rem; color: #10b981;" th:text="${#numbers.formatDecimal(reservation.priceAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">25,000 đ</div>
+                </div>
+                <div th:if="${not hasFeedback}" style="margin-top: 1rem;">
+                    <a th:href="@{/feedback?reservationId={id}(id=${reservation.reservationId})}" class="btn success" style="width: 100%; text-align: center; display: inline-block;">✍ Đánh giá trạm</a>
+                </div>
+                <div th:if="${hasFeedback}" style="padding: 0.75rem; background: rgba(67,56,202,0.1); border-radius: 8px; text-align: center; color: rgba(243,244,246,0.7);">
+                    Bạn đã đánh giá trạm này rồi
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code section - hide for instant swap that's already checked_in -->
+        <div class="detail-card" th:if="${reservation.status != 'completed' and !(isInstantSwap and reservation.status == 'checked_in')}">
             <h2 style="margin-top:0">QR Code Check-in</h2>
             <div class="qr-wrap">
-                <div class="qr-token" th:text="${reservation.qrToken}">QR_CODE</div>
+                <div th:if="${reservation.qrToken != null}" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <img th:src="@{/reservations/qr-code/{token}(token=${reservation.qrToken})}" 
+                         alt="QR Code" 
+                         style="width: 250px; height: 250px; border-radius: 12px; border: 2px solid rgba(243,244,246,0.2); background: white; padding: 0.5rem;">
+                    <div style="text-align: center; padding: 0.75rem; background: rgba(243,244,246,0.05); border-radius: 8px; width: 100%;">
+                        <div class="label" style="font-size: 0.85rem; color: rgba(243,244,246,0.6); margin-bottom: 0.25rem;">Mã token (nếu không thể quét QR):</div>
+                        <div class="value" style="font-family: 'Courier New', monospace; font-weight: 600; word-break: break-all;" th:text="${reservation.qrToken}">QR_TOKEN</div>
+                    </div>
+                </div>
+                <div th:if="${reservation.qrToken == null}" class="qr-token">Chưa có QR code</div>
                 <div class="label" th:if="${reservation.qrExpiresAt != null}">Hết hạn:
                     <span class="value" th:text="${#temporals.format(reservation.qrExpiresAt, 'dd/MM/yyyy HH:mm')}">--</span>
                 </div>
                 <div class="label">Trạng thái QR: <span class="value" th:text="${reservation.qrStatus}">active</span></div>
+                <div th:if="${isInstantSwap and reservation.status == 'checked_in'}" style="margin-top: 1rem; padding: 1rem; background: rgba(34,197,94,0.1); border-radius: 8px; color: #10b981; text-align: center;">
+                    ✓ Đã check-in tự động
+                </div>
             </div>
+        </div>
+        
+        <!-- Status message for instant swap checked_in -->
+        <div class="detail-card" th:if="${isInstantSwap and reservation.status == 'checked_in'}" style="background: linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(21,128,61,0.05) 100%); border: 2px solid rgba(34,197,94,0.3);">
+            <h2 style="margin-top:0; color: #10b981;">⚡ Đã check-in</h2>
+            <p style="margin: 1rem 0 0 0; color: rgba(243,244,246,0.8);">Bạn đã được check-in tự động. Vui lòng chờ staff xử lý đổi pin cho bạn.</p>
         </div>
     </section>
 
@@ -112,13 +167,20 @@
                 <div class="dot"></div>
                 <div><strong>Đặt lịch</strong><div class="label">Tạo lịch thành công</div></div>
             </div>
-            <div class="timeline-item" th:classappend="${reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed'} ? ' completed' : ''">
+            <!-- Hide "Xác nhận" step for instant swap or if already confirmed/checked_in -->
+            <div class="timeline-item" 
+                 th:if="${!(isInstantSwap or reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed')}"
+                 th:classappend="${reservation.status == 'confirmed' or reservation.status == 'checked_in' or reservation.status == 'completed'} ? ' completed' : ''">
                 <div class="dot"></div>
                 <div><strong>Xác nhận</strong><div class="label">Trạm xác nhận lịch</div></div>
             </div>
             <div class="timeline-item" th:classappend="${reservation.status == 'checked_in' or reservation.status == 'completed'} ? ' completed' : ''">
                 <div class="dot"></div>
-                <div><strong>Check-in</strong><div class="label">Quét QR tại trạm</div></div>
+                <div>
+                    <strong>Check-in</strong>
+                    <div class="label" th:if="${isInstantSwap}">Check-in tự động</div>
+                    <div class="label" th:unless="${isInstantSwap}">Quét QR tại trạm</div>
+                </div>
             </div>
             <div class="timeline-item" th:classappend="${reservation.status == 'completed'} ? ' completed' : ''">
                 <div class="dot"></div>

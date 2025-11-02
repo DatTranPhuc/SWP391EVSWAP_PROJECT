@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác nhận lịch đổi pin - EV SWAP</title>
+    <title>Đổi pin ngay - EV SWAP</title>
     <link rel="stylesheet" th:href="@{/css/reservation.css}">
 </head>
 <body class="reservation-body">
@@ -14,11 +14,11 @@
     <div class="driver-identity">
         <div class="driver-avatar" th:text="${driverInitial}">D</div>
         <div class="driver-intro">
-            <span class="subtitle">Bước 2: Đặt lịch</span>
-            <h1 class="page-title">Xác nhận lịch đổi pin</h1>
+            <span class="subtitle">⚡ Đổi pin ngay</span>
+            <h1 class="page-title">Xác nhận đổi pin</h1>
             <p class="page-hint"
-               th:text="${'Xin chào ' + driverName + '! Kiểm tra thông tin trạm bên dưới và chọn thời gian phù hợp.'}">
-                Kiểm tra thông tin trạm bên dưới và chọn thời gian phù hợp.
+               th:text="${'Xin chào ' + driverName + '! Bạn đã đến trạm. Chọn phương tiện và phương thức thanh toán để hoàn tất.'}">
+                Bạn đã đến trạm. Chọn phương tiện và phương thức thanh toán để hoàn tất.
             </p>
         </div>
     </div>
@@ -32,7 +32,7 @@
     <div class="alert error" th:if="${reservationError}" th:text="${reservationError}"></div>
 
     <section class="reservation-progress">
-        <ul class="progress-steps" id="progressSteps" th:attr="data-step=${currentStep}">
+        <ul class="progress-steps" id="progressSteps" data-step="payment">
             <li class="progress-step" data-step="search">Tìm trạm</li>
             <li class="progress-step" data-step="schedule">Đặt lịch</li>
             <li class="progress-step" data-step="payment">Thanh toán</li>
@@ -46,7 +46,7 @@
             <div class="panel-heading">
                 <div>
                     <h2 th:text="${selectedStation.name}">EV Swap Station</h2>
-                    <p class="map-caption">Kiểm tra lại thông tin trạm trước khi xác nhận lịch của bạn.</p>
+                    <p class="map-caption">Thông tin trạm đã chọn cho đổi pin ngay.</p>
                 </div>
             </div>
             <div class="station-address" th:text="${selectedStation.address}">123 Nguyễn Văn Cừ, Q.5</div>
@@ -63,8 +63,16 @@
         </div>
 
         <aside class="reservation-sidebar booking-form" th:object="${reservationForm}">
-            <h2>Chọn thời gian</h2>
-            <form th:action="@{/reservations/book}" method="post">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <span style="font-size: 1.5rem;">⚡</span>
+                <h2 style="margin: 0;">Thông tin đổi pin ngay</h2>
+            </div>
+            <div style="padding: 0.75rem; background: rgba(34,197,94,0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.3); margin-bottom: 1rem;">
+                <p style="margin: 0; font-size: 0.9rem; color: #10b981; font-weight: 500;">
+                    ⚡ Bạn sẽ được check-in tự động và sẵn sàng để staff xử lý đổi pin
+                </p>
+            </div>
+            <form th:action="@{/reservations/instant-swap}" method="post">
                 <input type="hidden" th:field="*{stationId}" th:value="${selectedStation.stationId}">
                 <div class="form-grid">
                     <label>
@@ -88,72 +96,46 @@
                             <input type="hidden" id="vehicleId" th:field="*{vehicleId}" required>
                         </div>
                     </label>
-                    <label>
-                        <span>Ngày đổi pin</span>
-                        <input type="date"
-                               th:field="*{date}"
-                               th:attr="min=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
-                               required>
-                    </label>
-                    <label>
-                        <span>Giờ dự kiến</span>
-                        <input type="time" th:field="*{time}" required>
-                    </label>
                 </div>
                 
-                <!-- Hidden payment method field (always wallet for booking) -->
-                <input type="hidden" name="paymentMethod" value="wallet">
-
-                <!-- Payment info -->
+                <!-- Payment method selection -->
                 <div class="payment-method-section" style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #f3f4f6;">Phương thức thanh toán:</h3>
-                    <div style="padding: 0.75rem; background: rgba(67,56,202,0.1); border-radius: 8px; border: 1px solid rgba(67,56,202,0.3);">
-                        <div style="display: flex; align-items: center;">
-                            <span style="margin-right: 0.5rem; font-size: 1.2rem;">💳</span>
-                            <span style="color: #f3f4f6; font-weight: 500;">Thanh toán bằng ví</span>
-                        </div>
+                    <div class="payment-options" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); transition: all 0.2s;">
+                            <input type="radio" name="paymentMethod" value="cash" checked required style="margin-right: 0.5rem; accent-color: #4338ca;">
+                            <span style="flex: 1; color: #f3f4f6; font-weight: 500;">Tiền mặt</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1); transition: all 0.2s;">
+                            <input type="radio" name="paymentMethod" value="transfer" style="margin-right: 0.5rem; accent-color: #4338ca;">
+                            <span style="flex: 1; color: #f3f4f6; font-weight: 500;">Chuyển khoản</span>
+                        </label>
                     </div>
                     <p style="margin: 0.75rem 0 0 0; font-size: 0.85rem; color: rgba(243,244,246,0.7);">
-                        💳 Số tiền sẽ được trừ từ ví ngay khi đặt lịch
+                        <span style="color: #fbbf24;">ℹ️ Bạn sẽ thanh toán sau khi staff hoàn tất đổi pin</span>
                     </p>
-                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(34,197,94,0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.3);">
-                        <p style="margin: 0; font-size: 0.85rem; color: #10b981;">
-                            ✓ Lịch sẽ được xác nhận tự động sau khi thanh toán thành công
-                        </p>
-                    </div>
                 </div>
 
                 <div class="wallet-summary">
                     <div>Số dư ví: <strong th:text="${#numbers.formatDecimal(walletBalance, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</strong></div>
-                    <div>Phí đặt lịch: <strong>25.000 đ</strong></div>
+                    <div>Phí đổi pin: <strong>25.000 đ</strong></div>
                 </div>
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(67,56,202,0.1); border-radius: 8px; border: 1px solid rgba(67,56,202,0.3);">
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #f3f4f6;">Bước tiếp theo:</h4>
+                    <ul style="margin: 0; padding-left: 1.25rem; color: rgba(243,244,246,0.8); font-size: 0.85rem; line-height: 1.6;">
+                        <li>Bạn sẽ được check-in tự động</li>
+                        <li>Staff sẽ xử lý đổi pin cho bạn</li>
+                        <li>Thanh toán theo phương thức đã chọn</li>
+                    </ul>
+                </div>
+                
                 <div class="form-actions">
-                    <a class="btn ghost" th:href="@{/reservations/schedule}">Chọn trạm khác</a>
-                    <button class="btn primary" type="submit" id="submit-btn">Đặt lịch và thanh toán</button>
+                    <a class="btn ghost" th:href="@{/reservations/schedule}">Hủy</a>
+                    <button class="btn primary" type="submit" id="submit-btn" style="background: linear-gradient(135deg, #22c55e, #10b981);">⚡ Xác nhận đổi pin ngay</button>
                 </div>
             </form>
         </aside>
-    </section>
-
-    <section class="upcoming-reservations">
-        <h2>Lịch đổi pin của bạn</h2>
-        <p class="map-caption">Theo dõi các lịch đã đặt để sẵn sàng cho các bước tiếp theo.</p>
-        <div class="reservation-empty" th:if="${upcomingReservations == null or upcomingReservations.isEmpty()}">
-            Chưa có lịch đổi pin nào. Hãy xác nhận lịch ngay!
-        </div>
-        <div class="reservation-list" th:if="${upcomingReservations != null and !upcomingReservations.isEmpty()}">
-            <article class="reservation-item" th:each="reservation : ${upcomingReservations}">
-                <div class="reservation-info">
-                    <strong th:text="${reservation.stationName()}">EV Swap Station</strong>
-                    <span th:text="${#temporals.format(reservation.reservedStart(), 'dd/MM/yyyy HH:mm')}" class="station-address">10/06/2024 08:30</span>
-                </div>
-                <span class="reservation-status"
-                      th:classappend="${reservation.status() == 'pending'} ? ' pending'"
-                      th:text="${reservation.status() == 'pending' ? 'Đang chờ xác nhận' : reservation.status()}">
-                    Đang chờ xác nhận
-                </span>
-            </article>
-        </div>
     </section>
 </main>
 
@@ -161,7 +143,7 @@
     const progressSteps = document.getElementById('progressSteps');
     if (progressSteps) {
         const order = ['search', 'schedule', 'payment', 'swap', 'done'];
-        const currentStep = progressSteps.dataset.step || 'schedule';
+        const currentStep = progressSteps.dataset.step || 'payment';
         const currentIndex = order.indexOf(currentStep);
 
         Array.from(progressSteps.children).forEach(item => {
@@ -196,7 +178,6 @@
 </style>
 
 <script>
-    // Custom Select initialization (reused from support page)
     document.addEventListener('DOMContentLoaded', function() {
         initializeCustomSelect('vehicle-select', 'vehicleId');
 
@@ -211,7 +192,6 @@
 
             trigger.addEventListener('click', function(e) {
                 e.stopPropagation();
-                // close others
                 document.querySelectorAll('.custom-select').forEach(s => {
                     if (s !== customSelect && s.classList.contains('active')) {
                         s.classList.remove('active');
@@ -244,7 +224,6 @@
                 }
             });
 
-            // initialize from existing value (when form rerenders after error)
             const initialValue = hiddenInput.value;
             if (initialValue) {
                 const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
@@ -262,3 +241,4 @@
 
 </body>
 </html>
+

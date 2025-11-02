@@ -77,7 +77,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" id="stationId" name="stationId" th:field="*{stationId}" required>
+                            <input type="hidden" id="stationId" name="stationId" th:field="*{stationId}" th:attr="value=${preselectedStationId != null ? preselectedStationId : feedback.stationId}" required>
                         </div>
                         <div class="form-error" th:if="${stationIdError}" th:text="${stationIdError}"></div>
                     </div>
@@ -790,6 +790,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const customOptions = customSelect.querySelectorAll('.custom-option');
         const hiddenInput = document.getElementById(inputId);
         const selectedValue = trigger.querySelector('.selected-value');
+        
+        // Initialize from existing value (including preselected)
+        const initialValue = hiddenInput.value;
+        if (initialValue && selectId === 'station-select') {
+            const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
+            if (selectedOption) {
+                const text = selectedOption.querySelector('.text').textContent;
+                selectedValue.textContent = text;
+                selectedOption.classList.add('selected');
+            }
+        }
 
         // Toggle dropdown
         trigger.addEventListener('click', function(e) {

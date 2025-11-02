@@ -68,6 +68,7 @@
         <div th:if="${logoutMessage}" class="alert-message alert-success" th:text="${logoutMessage}"></div>
 
         <form class="auth-form" th:action="@{/login}" method="post">
+            <input type="hidden" name="redirect" th:value="${redirectUrl}" />
             <div class="auth-field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" placeholder="example@email.com" required>

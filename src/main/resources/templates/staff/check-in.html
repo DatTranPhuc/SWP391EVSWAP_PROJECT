@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in bằng QR Code - EV SWAP</title>
+    <link rel="stylesheet" th:href="@{/css/staff.css}">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+</head>
+<body class="staff-body">
+<div class="staff-background"></div>
+<div class="staff-overlay"></div>
+
+<header class="staff-top-nav">
+    <div class="container nav-inner">
+        <div class="brand">
+            <span class="brand-icon">🔧</span> <span class="brand-name">EV SWAP</span>
+            <span class="staff-badge" th:text="${stationName}">Station</span>
+        </div>
+        <nav class="nav-links" aria-label="Điều hướng staff">
+            <a th:href="@{/staff/dashboard}" class="nav-link-button">Tổng quan</a>
+            <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
+            <a th:href="@{/staff/reservations}" class="nav-link-button">Đặt lịch</a>
+            <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
+            <a th:href="@{/staff/check-in}" class="nav-link-button active">Check-in</a>
+        </nav>
+        <div class="auth-area" th:if="${session.loggedInStaff}">
+            <span class="welcome">Chào, <strong th:text="${session.loggedInStaff.fullName}">Staff</strong>!</span>
+            <form th:action="@{/logout}" method="post"><button class="btn ghost" type="submit">Đăng xuất</button></form>
+        </div>
+    </div>
+    <div class="section-divider"></div>
+</header>
+
+<header class="staff-header" style="margin: 2rem 0 1rem 0;">
+    <h1 class="staff-title">Check-in bằng QR Code</h1>
+    <p class="staff-subtitle" th:text="${'Quét QR code hoặc nhập token để check-in khách hàng tại: ' + stationName}">Mô tả</p>
+    <div class="container" style="text-align:right; margin-top:.5rem;">
+        <a class="btn ghost" th:href="@{/staff/reservations}">Quay lại danh sách</a>
+    </div>
+</header>
+
+<main class="manage-main container">
+    <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+    <!-- Pre-load reservation info if provided -->
+    <div th:if="${preloadReservation != null}" class="preload-reservation-card">
+        <div class="preload-header">
+            <span class="preload-icon">📋</span>
+            <h3 class="preload-title">Thông tin đặt lịch</h3>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="label">Mã đặt lịch:</span>
+                <span class="value">#<span th:text="${preloadReservation.reservationId}">123</span></span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Khách hàng:</span>
+                <span class="value" th:text="${preloadReservation.driver.fullName}">Nguyễn Văn A</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Xe:</span>
+                <span class="value" th:text="${preloadReservation.vehicle.model + ' - ' + (preloadReservation.vehicle.plateNumber != null ? preloadReservation.vehicle.plateNumber : preloadReservation.vehicle.vin)}">Xe</span>
+            </div>
+        </div>
+        <div class="info-hint-box">
+            <span class="hint-icon">💡</span>
+            <p class="hint-text">Bạn có thể quét QR code từ điện thoại khách hàng hoặc yêu cầu họ cung cấp mã token để check-in.</p>
+        </div>
+    </div>
+
+    <!-- Tabs for different check-in methods -->
+    <div class="detail-card">
+        <div class="check-in-tabs">
+            <button class="check-in-tab active" data-tab="camera">
+                <i class="fas fa-camera" style="margin-right: 0.5rem;"></i> Quét bằng Camera
+            </button>
+            <button class="check-in-tab" data-tab="upload">
+                <i class="fas fa-upload" style="margin-right: 0.5rem;"></i> Upload Ảnh QR
+            </button>
+            <button class="check-in-tab" data-tab="manual">
+                <i class="fas fa-keyboard" style="margin-right: 0.5rem;"></i> Nhập Token
+            </button>
+        </div>
+
+        <!-- Camera Scanner Tab -->
+        <div id="camera-tab" class="check-in-tab-content active">
+            <div style="text-align: center;">
+                <div id="camera-container" style="position: relative; display: inline-block; margin-bottom: 1rem;">
+                    <video id="video" width="400" height="300" autoplay playsinline style="border-radius: 12px; border: 2px solid rgba(243,244,246,0.2); background: #000;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <div id="camera-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 250px; border: 3px solid rgba(34,197,94,0.8); border-radius: 12px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                </div>
+                <div id="camera-status" class="camera-status-text">Đang khởi động camera...</div>
+                <div class="camera-controls">
+                    <button id="start-camera-btn" class="btn-camera-start">
+                        <span class="btn-icon">📷</span>
+                        <span>Bật Camera</span>
+                    </button>
+                    <button id="stop-camera-btn" class="btn-camera-stop" style="display: none;">
+                        <span class="btn-icon">⏹</span>
+                        <span>Tắt Camera</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Image Tab -->
+        <div id="upload-tab" class="check-in-tab-content" style="display: none;">
+            <div style="text-align: center;">
+                <input type="file" id="qr-image-input" accept="image/*" style="display: none;">
+                <div class="upload-area-enhanced" id="upload-area">
+                    <div class="upload-icon-wrapper">
+                        <i class="fas fa-cloud-upload-alt upload-icon-large"></i>
+                    </div>
+                    <p class="upload-text-primary">Nhấn để chọn ảnh QR code</p>
+                    <p class="upload-text-secondary">Hoặc kéo thả ảnh vào đây</p>
+                </div>
+                <div id="upload-preview" class="upload-preview-enhanced" style="display: none;">
+                    <img id="preview-image" src="" alt="Preview" class="preview-image-enhanced">
+                </div>
+                <button id="scan-upload-btn" class="btn-scan-upload" style="display: none;">
+                    <span class="btn-icon">🔍</span>
+                    <span>Quét QR từ ảnh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Manual Token Input Tab -->
+        <div id="manual-tab" class="check-in-tab-content" style="display: none;">
+            <form id="manual-checkin-form" class="manual-form">
+                <div class="form-group-enhanced">
+                    <label for="manual-token-input" class="form-label-enhanced">
+                        <span class="label-icon">🔑</span>
+                        Nhập QR Token
+                    </label>
+                    <div class="input-wrapper-enhanced">
+                        <input type="text" 
+                               id="manual-token-input" 
+                               class="token-input-enhanced"
+                               placeholder="QR_123_1234567890" 
+                               required>
+                        <span class="input-icon">📝</span>
+                    </div>
+                    <small class="form-hint-enhanced">Nhập mã token từ QR code của khách hàng</small>
+                </div>
+                <button type="submit" class="btn-success-enhanced">
+                    <span class="btn-icon">✓</span>
+                    <span>Xác nhận Token</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reservation Info Display (shown after successful scan/input) -->
+    <div id="reservation-info" class="reservation-found-card" style="display: none;">
+        <div class="found-header">
+            <span class="found-icon">✓</span>
+            <h3 class="found-title">Đã tìm thấy đặt lịch</h3>
+        </div>
+        <div id="reservation-details" class="detail-grid-enhanced"></div>
+        <div class="checkin-actions">
+            <button id="confirm-checkin-btn" class="btn-confirm-checkin">
+                <span class="btn-icon">✓</span>
+                <span>Xác nhận Check-in</span>
+            </button>
+            <button id="cancel-checkin-btn" class="btn-cancel-checkin">
+                <span>Hủy</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="error-display" class="alert error" style="display: none;"></div>
+</main>
+
+<script th:inline="javascript">
+    let stream = null;
+    let scanning = false;
+    let currentToken = null;
+
+    // Tab switching
+    document.querySelectorAll('.check-in-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            document.querySelectorAll('.check-in-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.check-in-tab-content').forEach(c => {
+                c.style.display = 'none';
+                c.classList.remove('active');
+            });
+            
+            tab.classList.add('active');
+            document.getElementById(targetTab + '-tab').style.display = 'block';
+            document.getElementById(targetTab + '-tab').classList.add('active');
+            
+            // Stop camera when switching away
+            if (targetTab !== 'camera' && stream) {
+                stopCamera();
+            }
+        });
+    });
+
+    // Camera Scanner
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startBtn = document.getElementById('start-camera-btn');
+    const stopBtn = document.getElementById('stop-camera-btn');
+    const cameraStatus = document.getElementById('camera-status');
+
+    startBtn.addEventListener('click', startCamera);
+    stopBtn.addEventListener('click', stopCamera);
+
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(mediaStream => {
+                stream = mediaStream;
+                video.srcObject = stream;
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                cameraStatus.textContent = 'Đang quét QR code...';
+                scanning = true;
+                scanQR();
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                cameraStatus.textContent = 'Không thể truy cập camera. Vui lòng cho phép quyền truy cập camera.';
+                cameraStatus.style.color = '#f87171';
+            });
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        scanning = false;
+        startBtn.style.display = 'inline-block';
+        stopBtn.style.display = 'none';
+        cameraStatus.textContent = 'Camera đã tắt';
+    }
+
+    function scanQR() {
+        if (!scanning) return;
+        
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            handleQrToken(code.data);
+            stopCamera();
+        } else {
+            requestAnimationFrame(scanQR);
+        }
+    }
+
+    // Upload Image
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('qr-image-input');
+    const previewDiv = document.getElementById('upload-preview');
+    const previewImg = document.getElementById('preview-image');
+    const scanUploadBtn = document.getElementById('scan-upload-btn');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'rgba(34,197,94,0.5)';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'rgba(243,244,246,0.3)';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'rgba(243,244,246,0.3)';
+        if (e.dataTransfer.files.length > 0) {
+            handleFileSelect(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    scanUploadBtn.addEventListener('click', () => {
+        const file = fileInput.files[0];
+        if (file) {
+            scanUploadedImage(file);
+        }
+    });
+
+    function handleFileSelect(file) {
+        if (!file.type.startsWith('image/')) {
+            showError('Vui lòng chọn file ảnh');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewDiv.style.display = 'block';
+            scanUploadBtn.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function scanUploadedImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        fetch('/staff/api/check-in/qr-scan', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'HTTP ' + response.status);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                currentToken = data.qrToken;
+                displayReservationInfo(data);
+            } else {
+                showError(data.error || 'Không thể quét QR code từ ảnh');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Lỗi khi quét QR code: ' + err.message);
+        });
+    }
+
+    // Manual Token Input
+    document.getElementById('manual-checkin-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const token = document.getElementById('manual-token-input').value.trim();
+        if (token) {
+            verifyToken(token);
+        }
+    });
+
+    function verifyToken(token) {
+        const formData = new FormData();
+        formData.append('qrToken', token);
+        
+        fetch('/staff/api/check-in/qr-scan', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'HTTP ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    currentToken = data.qrToken;
+                    displayReservationInfo(data);
+                } else {
+                    showError(data.error || 'Token không hợp lệ');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showError('Lỗi khi xác thực token: ' + err.message);
+            });
+    }
+
+    // Handle QR token from any method
+    function handleQrToken(token) {
+        verifyToken(token);
+    }
+
+    function displayReservationInfo(data) {
+        const infoDiv = document.getElementById('reservation-info');
+        const detailsDiv = document.getElementById('reservation-details');
+        
+        detailsDiv.innerHTML = `
+            <div class="detail-item">
+                <span class="label">Mã đặt lịch:</span>
+                <span class="value">#${data.reservationId}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Khách hàng:</span>
+                <span class="value">${data.driverName}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Xe:</span>
+                <span class="value">${data.vehicleInfo}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Thời gian đặt:</span>
+                <span class="value">${new Date(data.reservedStart).toLocaleString('vi-VN')}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Trạng thái:</span>
+                <span class="value">${data.status === 'confirmed' ? 'Đã xác nhận' : 'Đã check-in'}</span>
+            </div>
+        `;
+        
+        infoDiv.style.display = 'block';
+        document.getElementById('error-display').style.display = 'none';
+        infoDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('error-display');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        document.getElementById('reservation-info').style.display = 'none';
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Confirm check-in
+    document.getElementById('confirm-checkin-btn').addEventListener('click', () => {
+        if (!currentToken) return;
+        
+        const formData = new FormData();
+        formData.append('qrToken', currentToken);
+        
+        fetch('/staff/api/check-in/confirm', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/staff/reservations/' + data.reservationId;
+            } else {
+                showError(data.error || 'Lỗi khi check-in');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Lỗi khi check-in: ' + err.message);
+        });
+    });
+
+    document.getElementById('cancel-checkin-btn').addEventListener('click', () => {
+        document.getElementById('reservation-info').style.display = 'none';
+        currentToken = null;
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (stream) {
+            stopCamera();
+        }
+    });
+</script>
+
+<style>
+/* Enhanced Tabs */
+.check-in-tabs { 
+    display: flex; 
+    gap: 0.5rem; 
+    margin-bottom: 2rem; 
+    border-bottom: 2px solid rgba(67,56,202,0.2); 
+    padding-bottom: 0;
+}
+.check-in-tab { 
+    padding: 1rem 1.75rem; 
+    background: transparent; 
+    border: none; 
+    border-bottom: 3px solid transparent; 
+    color: rgba(243,244,246,0.6); 
+    cursor: pointer; 
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.check-in-tab:hover { 
+    color: rgba(243,244,246,0.9);
+    background: rgba(67,56,202,0.05);
+    border-radius: 8px 8px 0 0;
+}
+.check-in-tab.active { 
+    color: #f3f4f6; 
+    border-bottom-color: #10b981;
+    background: linear-gradient(135deg, rgba(67,56,202,0.1), rgba(34,197,94,0.05));
+    border-radius: 8px 8px 0 0;
+}
+.check-in-tab.active::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(67,56,202,0.8), #10b981);
+}
+.check-in-tab-content { display: none; }
+.check-in-tab-content.active { display: block; }
+
+/* Preload Reservation Card */
+.preload-reservation-card {
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, rgba(67,56,202,0.12), rgba(34,197,94,0.08));
+    border-radius: 16px;
+    padding: 1.75rem;
+    border: 1px solid rgba(67,56,202,0.3);
+    box-shadow: 0 4px 20px rgba(67,56,202,0.15);
+}
+.preload-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.preload-icon {
+    font-size: 1.75rem;
+}
+.preload-title {
+    margin: 0;
+    color: #f3f4f6;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+.info-hint-box {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(21,128,61,0.1));
+    border-radius: 10px;
+    border: 1px solid rgba(34,197,94,0.4);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+.hint-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+.hint-text {
+    margin: 0;
+    color: rgba(243,244,246,0.9);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Enhanced Form Elements */
+.manual-form {
+    max-width: 550px;
+    margin: 0 auto;
+}
+.form-group-enhanced {
+    margin-bottom: 1.5rem;
+}
+.form-label-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+}
+.label-icon {
+    font-size: 1.1rem;
+}
+.input-wrapper-enhanced {
+    position: relative;
+    width: 100%;
+}
+.token-input-enhanced {
+    width: 100%;
+    padding: 1rem 3rem 1rem 1rem;
+    border-radius: 12px;
+    border: 2px solid rgba(67,56,202,0.4);
+    background: linear-gradient(135deg, rgba(30,24,48,0.6), rgba(15,50,30,0.6));
+    color: #f3f4f6;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.token-input-enhanced:focus {
+    outline: none;
+    border-color: rgba(67,56,202,0.8);
+    background: linear-gradient(135deg, rgba(30,24,48,0.8), rgba(15,50,30,0.8));
+    box-shadow: 0 0 0 3px rgba(67,56,202,0.25), 0 4px 16px rgba(67,56,202,0.3);
+}
+.token-input-enhanced::placeholder {
+    color: rgba(243,244,246,0.4);
+}
+.input-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    pointer-events: none;
+    opacity: 0.6;
+}
+.form-hint-enhanced {
+    display: block;
+    margin-top: 0.5rem;
+    color: rgba(243,244,246,0.6);
+    font-size: 0.85rem;
+}
+
+/* Enhanced Buttons */
+.btn-success-enhanced, .btn-confirm-checkin, .btn-camera-start, .btn-scan-upload {
+    width: 100%;
+    padding: 1rem 1.75rem;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+}
+.btn-success-enhanced:hover, .btn-confirm-checkin:hover, 
+.btn-camera-start:hover, .btn-scan-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34,197,94,0.4);
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
+.btn-success-enhanced:active, .btn-confirm-checkin:active, 
+.btn-camera-start:active, .btn-scan-upload:active {
+    transform: translateY(0);
+}
+
+.btn-cancel-checkin {
+    padding: 1rem 1.75rem;
+    background: rgba(243,244,246,0.1);
+    color: rgba(243,244,246,0.9);
+    border: 2px solid rgba(243,244,246,0.2);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-cancel-checkin:hover {
+    background: rgba(243,244,246,0.15);
+    border-color: rgba(243,244,246,0.3);
+    transform: translateY(-2px);
+}
+
+.btn-camera-stop {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.15));
+    border: 2px solid rgba(239,68,68,0.4);
+    color: #f87171;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-camera-stop:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,0.3), rgba(220,38,38,0.2));
+    border-color: rgba(239,68,68,0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.btn-icon {
+    font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Camera Controls */
+.camera-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+.camera-status-text {
+    margin: 1rem 0;
+    color: rgba(243,244,246,0.8);
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Upload Area Enhanced */
+.upload-area-enhanced {
+    border: 2px dashed rgba(67,56,202,0.4);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, rgba(67,56,202,0.05), rgba(34,197,94,0.03));
+    text-align: center;
+}
+.upload-area-enhanced:hover {
+    border-color: rgba(67,56,202,0.6);
+    background: linear-gradient(135deg, rgba(67,56,202,0.1), rgba(34,197,94,0.05));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(67,56,202,0.2);
+}
+.upload-icon-wrapper {
+    margin-bottom: 1rem;
+}
+.upload-icon-large {
+    font-size: 3.5rem;
+    color: rgba(67,56,202,0.6);
+    transition: all 0.3s ease;
+}
+.upload-area-enhanced:hover .upload-icon-large {
+    color: rgba(67,56,202,0.9);
+    transform: scale(1.1);
+}
+.upload-text-primary {
+    color: rgba(243,244,246,0.9);
+    margin: 0;
+    font-weight: 600;
+    font-size: 1rem;
+}
+.upload-text-secondary {
+    color: rgba(243,244,246,0.6);
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0 0;
+}
+.upload-preview-enhanced {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.preview-image-enhanced {
+    max-width: 350px;
+    max-height: 350px;
+    border-radius: 12px;
+    border: 3px solid rgba(67,56,202,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* Reservation Found Card */
+.reservation-found-card {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(21,128,61,0.1));
+    border-radius: 16px;
+    padding: 2rem;
+    border: 2px solid rgba(34,197,94,0.4);
+    box-shadow: 0 8px 24px rgba(34,197,94,0.2);
+    margin-top: 2rem;
+}
+.found-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.found-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.4);
+}
+.found-title {
+    margin: 0;
+    color: #10b981;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+.detail-grid-enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.detail-grid-enhanced .detail-item {
+    padding: 1rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.detail-grid-enhanced .label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgba(243,244,246,0.7);
+    font-size: 0.85rem;
+}
+.detail-grid-enhanced .value {
+    display: block;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+}
+.checkin-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+.btn-confirm-checkin {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+.btn-cancel-checkin {
+    flex: 0 1 auto;
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .check-in-tabs {
+        flex-wrap: wrap;
+    }
+    .check-in-tab {
+        flex: 1;
+        min-width: 120px;
+        padding: 0.875rem 1rem;
+        font-size: 0.85rem;
+    }
+    .checkin-actions {
+        flex-direction: column;
+    }
+    .btn-confirm-checkin, .btn-cancel-checkin {
+        width: 100%;
+    }
+}
+</style>
+
+</body>
+</html>
+

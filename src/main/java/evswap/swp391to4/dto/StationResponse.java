@@ -23,4 +23,8 @@ public class StationResponse {
 
     // Cần cho việc hiển thị khoảng cách trong bảng
     private Double distance;
+
+    // Battery availability
+    private Integer availableMotorcycleBatteries;
+    private Integer availableCarBatteries;
 }

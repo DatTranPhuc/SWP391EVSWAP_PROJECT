@@ -21,6 +21,7 @@
             <a th:href="@{/staff/batteries}" class="nav-link-button">Quản lý Pin</a>
             <a th:href="@{/staff/reservations}" class="nav-link-button active">Đặt lịch</a>
             <a th:href="@{/staff/tickets}" class="nav-link-button">Hỗ trợ</a>
+            <a th:href="@{/staff/check-in}" class="nav-link-button">Check-in</a>
         </nav>
         <div class="auth-area" th:if="${session.loggedInStaff}">
             <span class="welcome">Chào, <strong th:text="${session.loggedInStaff.fullName}">Staff</strong>!</span>
@@ -40,19 +41,37 @@
 
 <main class="manage-main container">
     <div class="alert success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert success" th:if="${paymentSuccessMessage}" th:text="${paymentSuccessMessage}"></div>
     <div class="alert error" th:if="${error}" th:text="${error}"></div>
 
     <section class="reservation-detail-section">
         <div class="detail-card">
             <div class="card-header">
-                <h2>Thông tin đặt lịch</h2>
+                <div>
+                    <h2>Thông tin đặt lịch</h2>
+                    <span th:if="${reservation.isInstantSwap != null and reservation.isInstantSwap}" 
+                          style="display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.75rem; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); border-radius: 12px; border: 1px solid rgba(34,197,94,0.3); color: #10b981; font-weight: 600; font-size: 0.75rem;">
+                        ⚡ Đổi pin ngay
+                    </span>
+                </div>
                 <div class="status-badge" 
-                     th:classappend="${reservation.status == 'pending' ? 'pending' : (reservation.status == 'confirmed' ? 'confirmed' : (reservation.status == 'checked_in' ? 'checked-in' : (reservation.status == 'completed' ? 'completed' : 'default')))}"
-                     th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : reservation.status)))}">
+                     th:classappend="${reservation.status == 'pending' ? 'pending' : (reservation.status == 'confirmed' ? 'confirmed' : (reservation.status == 'checked_in' ? 'checked-in' : (reservation.status == 'completed' ? 'completed' : (reservation.status == 'canceled' ? 'canceled' : 'default'))))}"
+                     th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : (reservation.status == 'canceled' ? 'Đã hủy' : reservation.status))))}">
                     Chờ xác nhận
                 </div>
             </div>
             <div class="section-divider" style="margin:.5rem 0 1rem 0;"></div>
+            
+            <!-- Customer information -->
+            <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(67,56,202,0.05); border-radius: 8px; border: 1px solid rgba(67,56,202,0.2);">
+                <h4 style="margin: 0 0 0.5rem 0; color: #f3f4f6; font-size: 0.9rem;">Khách hàng:</h4>
+                <p style="margin: 0; color: rgba(243,244,246,0.8);">
+                    <strong th:text="${reservation.driver.fullName}">Nguyễn Văn A</strong>
+                </p>
+                <p style="margin: 0.25rem 0 0 0; color: rgba(243,244,246,0.7); font-size: 0.85rem;" th:if="${reservation.vehicle != null}">
+                    Xe: <span th:text="${reservation.vehicle.model + ' - ' + (reservation.vehicle.plateNumber == null ? reservation.vehicle.vin : reservation.vehicle.plateNumber)}">Xe</span>
+                </p>
+            </div>
 
             <div class="detail-content">
                 <div class="detail-grid">
@@ -61,40 +80,283 @@
                         <span class="value">#<span th:text="${reservation.reservationId}">123</span></span>
                     </div>
                     <div class="detail-item">
-                        <span class="label">Trạm:</span>
-                        <span class="value" th:text="${reservation.station.name}">EV Swap Station</span>
-                    </div>
-                    <div class="detail-item">
                         <span class="label">Thời gian đặt:</span>
                         <span class="value" th:text="${#temporals.format(reservation.reservedStart, 'dd/MM/yyyy HH:mm')}">10/06/2024 08:30</span>
                     </div>
-                    <div class="detail-item">
-                        <span class="label">Trạng thái:</span>
-                        <span class="value" th:text="${reservation.status == 'pending' ? 'Chờ xác nhận' : (reservation.status == 'confirmed' ? 'Đã xác nhận' : (reservation.status == 'checked_in' ? 'Đã check-in' : (reservation.status == 'completed' ? 'Hoàn tất' : reservation.status)))}">Chờ xác nhận</span>
+                    <div class="detail-item" th:if="${reservation.paymentMethod != null}">
+                        <span class="label">Phương thức thanh toán:</span>
+                        <span class="value" th:text="${reservation.paymentMethod == 'wallet' ? 'Thanh toán ví' : (reservation.paymentMethod == 'cash' ? 'Tiền mặt' : 'Chuyển khoản')}">Thanh toán</span>
+                    </div>
+                    <div class="detail-item" th:if="${reservation.paymentStatus != null}">
+                        <span class="label">Trạng thái thanh toán:</span>
+                        <span class="value" th:style="${reservation.paymentStatus == 'completed' ? 'color: #10b981;' : ''}"
+                              th:text="${reservation.paymentStatus == 'completed' ? '✓ Đã thanh toán' : (reservation.paymentStatus == 'pending' ? 'Chờ thanh toán' : reservation.paymentStatus)}">Chờ thanh toán</span>
+                    </div>
+                    <div class="detail-item" th:if="${reservation.priceAmount != null}">
+                        <span class="label">Giá:</span>
+                        <span class="value" th:text="${#numbers.formatDecimal(reservation.priceAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">25,000 đ</span>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="action-card">
+        
+        <!-- Action buttons for pending/confirmed status -->
+        <div class="action-card" th:if="${reservation.status == 'pending' or reservation.status == 'confirmed'}">
             <h3>Thao tác</h3>
+            <div class="section-divider" style="margin:.5rem 0 1rem 0;"></div>
             <div class="action-buttons">
-                <form th:action="@{/staff/reservations/{id}/confirm(id=${reservation.reservationId})}" 
-                      method="post" th:if="${reservation.status == 'pending'}" style="display: inline;">
-                    <button type="submit" class="btn primary">Xác nhận đặt lịch</button>
-                </form>
+                <!-- Pending: Confirm -->
+                <div th:if="${reservation.status == 'pending'}">
+                    <p style="margin: 0 0 1rem 0; color: rgba(243,244,246,0.7);">
+                        <span th:if="${reservation.isInstantSwap != null and reservation.isInstantSwap}">
+                            ⚡ Đây là đổi pin ngay. Sau khi xác nhận, bạn có thể check-in bằng QR code hoặc token.
+                        </span>
+                        <span th:unless="${reservation.isInstantSwap != null and reservation.isInstantSwap}">
+                            Xác nhận đặt lịch để khách hàng có thể check-in bằng QR code hoặc token.
+                        </span>
+                    </p>
+                    <form th:action="@{/staff/reservations/{id}/confirm(id=${reservation.reservationId})}" method="post" style="display: inline-block;">
+                        <button type="submit" class="btn primary">Xác nhận đặt lịch</button>
+                    </form>
+                </div>
                 
-                <form th:action="@{/staff/reservations/{id}/check-in(id=${reservation.reservationId})}" 
-                      method="post" th:if="${reservation.status == 'confirmed'}" style="display: inline;">
-                    <button type="submit" class="btn success">Check-in thủ công</button>
-                </form>
+                <!-- Confirmed: Check-in by QR/Token -->
+                <div th:if="${reservation.status == 'confirmed'}">
+                    <p style="margin: 0 0 1rem 0; color: rgba(243,244,246,0.7);">
+                        Khách hàng đã được xác nhận. Check-in bằng QR code hoặc nhập token khi khách hàng đến trạm.
+                    </p>
+                    <a th:href="@{/staff/check-in(reservationId=${reservation.reservationId})}" class="btn success">Check-in bằng QR/Token</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battery selection and payment handling when checked_in -->
+        <div class="swap-process-card" th:if="${reservation.status == 'checked_in'}">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">Quy trình đổi pin</h3>
+                <span style="padding: 0.5rem 1rem; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); border-radius: 12px; border: 1px solid rgba(34,197,94,0.3); color: #10b981; font-weight: 600; font-size: 0.85rem;">
+                    ✓ Đã check-in
+                </span>
+            </div>
+            <div class="section-divider" style="margin:.5rem 0 1rem 0;"></div>
+            
+            <!-- Step 1: Select Battery -->
+            <div class="process-step" th:if="${reservation.assignedBattery == null}">
+                <div class="step-header">
+                    <span class="step-number">1</span>
+                    <h4 class="step-title">Chọn pin để đổi</h4>
+                </div>
+                <p class="step-description">Vui lòng chọn pin phù hợp với xe của khách hàng từ danh sách pin khả dụng.</p>
+                <div th:if="${availableBatteries != null and !availableBatteries.isEmpty()}" class="battery-selection-form">
+                    <form th:action="@{/staff/reservations/{id}/assign-battery(id=${reservation.reservationId})}" method="post" class="battery-form">
+                        <div class="form-group">
+                            <label for="battery-select" class="form-label">🔋 Chọn Pin</label>
+                            <div class="custom-select-wrapper-enhanced">
+                                <select name="batteryId" id="battery-select" class="custom-select-enhanced" required>
+                                    <option value="">-- Chọn pin để đổi --</option>
+                                    <option th:each="battery : ${availableBatteries}" 
+                                            th:value="${battery.batteryId}" 
+                                            th:data-model="${battery.model}"
+                                            th:data-soh="${battery.sohPercent}"
+                                            th:text="${'Pin #' + battery.batteryId + ' | ' + battery.model + ' | SOH: ' + battery.sohPercent + '%'}">
+                                        Pin
+                                    </option>
+                                </select>
+                                <div class="select-arrow">
+                                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+                                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <small class="form-hint">Chọn pin phù hợp với model xe của khách hàng và có SOH tốt</small>
+                        </div>
+                        <button type="submit" class="btn primary btn-submit-battery">
+                            <span>✓</span>
+                            <span>Xác nhận chọn pin</span>
+                        </button>
+                    </form>
+                </div>
+                <div th:if="${availableBatteries == null or availableBatteries.isEmpty()}" class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>Không có pin khả dụng</strong>
+                        <p>Hiện tại không có pin phù hợp cho xe này tại trạm. Vui lòng liên hệ quản lý.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Payment handling -->
+            <div class="process-step" th:if="${reservation.assignedBattery != null}">
+                <div class="step-header">
+                    <span class="step-number">2</span>
+                    <h4 class="step-title">Xử lý thanh toán</h4>
+                </div>
                 
-                <form th:action="@{/staff/reservations/{id}/complete(id=${reservation.reservationId})}"
-                      method="post" th:if="${reservation.status == 'checked_in'}" style="display: inline;">
-                    <button type="submit" class="btn warning">Hoàn tất đổi pin</button>
+                <!-- Wallet payment: already paid -->
+                <div th:if="${reservation.paymentMethod == 'wallet'}" class="payment-status-box success-status">
+                    <span class="status-icon">✓</span>
+                    <div>
+                        <strong>Đã thanh toán bằng ví</strong>
+                        <p>Khách hàng đã thanh toán thành công qua ví điện tử.</p>
+                    </div>
+                </div>
+                
+                <!-- Cash payment -->
+                <div th:if="${reservation.paymentMethod == 'cash' and reservation.paymentStatus != 'completed'}" class="payment-action-box">
+                    <div class="payment-info">
+                        <span class="payment-icon">💵</span>
+                        <div>
+                            <strong>Thanh toán bằng tiền mặt</strong>
+                            <p>Nhận tiền mặt từ khách hàng và xác nhận đã nhận.</p>
+                        </div>
+                    </div>
+                    <form th:action="@{/staff/reservations/{id}/confirm-cash-payment(id=${reservation.reservationId})}" method="post" class="payment-form">
+                        <button type="submit" class="btn success btn-payment-confirm">
+                            <span>✓</span>
+                            <span>Xác nhận đã nhận tiền mặt</span>
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Transfer payment -->
+                <div th:if="${reservation.paymentMethod == 'transfer' and reservation.paymentStatus != 'completed'}" class="payment-action-box">
+                    <div class="payment-info">
+                        <span class="payment-icon">📱</span>
+                        <div>
+                            <strong>Thanh toán chuyển khoản</strong>
+                            <p>Tạo QR code để khách hàng quét và thanh toán.</p>
+                        </div>
+                    </div>
+                    <form th:action="@{/staff/reservations/{id}/create-transfer-qr(id=${reservation.reservationId})}" method="post" class="payment-form">
+                        <button type="submit" class="btn primary btn-generate-qr">
+                            <span>📱</span>
+                            <span>Tạo QR chuyển khoản</span>
+                        </button>
+                    </form>
+                    <div id="qr-display-area" class="qr-display-container"></div>
+                    <script th:inline="javascript">
+                        const reservationId = /*[[${reservation.reservationId}]]*/ 0;
+                        let paymentQrUrl = null;
+                        let pollCount = 0;
+                        const MAX_POLL_COUNT = 120; // Stop after 10 minutes (120 * 5s)
+                        
+                        // Poll for payment status and QR URL
+                        const pollPaymentStatus = setInterval(() => {
+                            pollCount++;
+                            
+                            // Stop polling after max attempts
+                            if (pollCount > MAX_POLL_COUNT) {
+                                clearInterval(pollPaymentStatus);
+                                return;
+                            }
+                            
+                            fetch('/staff/reservations/' + reservationId + '/payment-qr')
+                                .then(res => {
+                                    if (res.status === 401 || res.status === 403) {
+                                        // Authentication error - stop polling but don't redirect
+                                        clearInterval(pollPaymentStatus);
+                                        console.warn('Polling stopped due to authentication issue');
+                                        return null;
+                                    }
+                                    if (!res.ok) {
+                                        return null;
+                                    }
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    if (data && data.qrUrl) {
+                                        if (!paymentQrUrl) {
+                                            // First time getting QR URL
+                                            paymentQrUrl = data.qrUrl;
+                                            document.getElementById('qr-display-area').innerHTML = 
+                                                '<div class="qr-display-box">' +
+                                                    '<div class="qr-info">' +
+                                                        '<span class="qr-icon">📱</span>' +
+                                                        '<div>' +
+                                                            '<strong>QR Code đã sẵn sàng</strong>' +
+                                                            '<p>Chọn nút bên dưới để mở QR code cho khách hàng quét</p>' +
+                                                        '</div>' +
+                                                    '</div>' +
+                                                    '<a href="' + data.qrUrl + '" target="_blank" class="btn primary btn-open-qr">' +
+                                                        '<span>📱</span>' +
+                                                        '<span>Mở QR Code</span>' +
+                                                    '</a>' +
+                                                '</div>';
+                                        }
+                                    }
+                                })
+                                .catch(err => {
+                                    // Silently handle errors - don't break the page
+                                    console.debug('Polling error (non-critical):', err);
+                                });
+                            
+                            // Also check payment status using dedicated API
+                            fetch('/staff/reservations/' + reservationId + '/payment-status')
+                                .then(res => {
+                                    if (res.status === 401 || res.status === 403) {
+                                        clearInterval(pollPaymentStatus);
+                                        return null;
+                                    }
+                                    if (!res.ok) {
+                                        return null;
+                                    }
+                                    return res.json();
+                                })
+                                .then(data => {
+                                    if (data && (data.paymentStatus === 'completed' || data.latestPaymentStatus === 'succeed')) {
+                                        // Payment completed - refresh page after a short delay
+                                        clearInterval(pollPaymentStatus);
+                                        setTimeout(() => {
+                                            window.location.reload();
+                                        }, 1000);
+                                    }
+                                })
+                                .catch(err => {
+                                    // Silently handle errors
+                                    console.debug('Status check error (non-critical):', err);
+                                });
+                        }, 5000);
+                        
+                        // Cleanup on page unload
+                        window.addEventListener('beforeunload', () => {
+                            clearInterval(pollPaymentStatus);
+                        });
+                    </script>
+                </div>
+                <div th:if="${reservation.paymentStatus == 'completed' and reservation.paymentMethod != 'wallet'}" class="payment-status-box success-status">
+                    <span class="status-icon">✓</span>
+                    <div>
+                        <strong>Đã xác nhận thanh toán</strong>
+                        <p>Thanh toán đã được xác nhận thành công.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Complete Swap -->
+            <div class="process-step step-complete" th:if="${reservation.assignedBattery != null and (reservation.paymentMethod == 'wallet' or reservation.paymentStatus == 'completed')}">
+                <div class="step-header">
+                    <span class="step-number step-number-success">3</span>
+                    <h4 class="step-title">Hoàn tất đổi pin</h4>
+                </div>
+                <div class="battery-info-box">
+                    <span class="battery-icon">🔋</span>
+                    <div>
+                        <strong>Pin đã chọn:</strong>
+                        <p class="battery-details" th:text="'Pin #' + ${reservation.assignedBattery.batteryId} + ' | ' + ${reservation.assignedBattery.model} + ' | SOH: ' + ${reservation.assignedBattery.sohPercent} + '%'">
+                            Pin #123
+                        </p>
+                    </div>
+                </div>
+                <p class="complete-description">Xác nhận đã hoàn tất quá trình đổi pin cho khách hàng.</p>
+                <form th:action="@{/staff/reservations/{id}/complete(id=${reservation.reservationId})}" method="post" class="complete-form">
+                    <button type="submit" class="btn warning btn-complete-swap">
+                        <span>✓</span>
+                        <span>Hoàn tất đổi pin</span>
+                    </button>
                 </form>
             </div>
         </div>
+
 
         <div class="timeline-card">
             <h3>Timeline</h3>
@@ -153,15 +415,317 @@
 }
 
 .timeline-card { grid-column: 1 / -1; }
+.swap-process-card { 
+    grid-column: 1 / -1; 
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
 
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .card-header h2 { margin: 0; color: #f3f4f6; }
 
+/* Process Steps */
+.process-step { 
+    padding: 1.5rem; 
+    background: linear-gradient(135deg, rgba(67,56,202,0.08), rgba(34,197,94,0.05)); 
+    border-radius: 12px; 
+    border: 1px solid rgba(67,56,202,0.25); 
+    margin-bottom: 1rem; 
+    transition: all 0.3s ease;
+}
+.process-step:hover { 
+    border-color: rgba(67,56,202,0.4);
+    box-shadow: 0 4px 20px rgba(67,56,202,0.15);
+}
+.process-step:last-child { margin-bottom: 0; }
+.process-step.step-complete {
+    background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(21,128,61,0.05));
+    border-color: rgba(34,197,94,0.3);
+}
+
+/* Step Header */
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(67,56,202,0.4), rgba(67,56,202,0.2));
+    color: #f3f4f6;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 2px solid rgba(67,56,202,0.5);
+    box-shadow: 0 2px 8px rgba(67,56,202,0.2);
+}
+.step-number-success {
+    background: linear-gradient(135deg, rgba(34,197,94,0.4), rgba(34,197,94,0.2));
+    border-color: rgba(34,197,94,0.5);
+    box-shadow: 0 2px 8px rgba(34,197,94,0.2);
+}
+.step-title {
+    margin: 0;
+    color: #f3f4f6;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.step-description {
+    margin: 0 0 1.25rem 0;
+    color: rgba(243,244,246,0.75);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: rgba(243,244,246,0.6);
+    font-size: 0.85rem;
+}
+
+/* Custom Select Enhanced */
+.custom-select-wrapper-enhanced {
+    position: relative;
+    width: 100%;
+}
+.custom-select-enhanced {
+    width: 100%;
+    padding: 0.875rem 2.5rem 0.875rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(30,24,48,0.6) 0%, rgba(15,50,30,0.6) 100%);
+    border: 2px solid rgba(67,56,202,0.5);
+    color: #f3f4f6;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+.custom-select-enhanced:hover {
+    border-color: rgba(67,56,202,0.7);
+    background: linear-gradient(135deg, rgba(30,24,48,0.8) 0%, rgba(15,50,30,0.8) 100%);
+    box-shadow: 0 4px 12px rgba(67,56,202,0.2);
+}
+.custom-select-enhanced:focus {
+    outline: none;
+    border-color: rgba(67,56,202,0.9);
+    box-shadow: 0 0 0 3px rgba(67,56,202,0.25), 0 4px 16px rgba(67,56,202,0.3);
+    background: linear-gradient(135deg, rgba(30,24,48,0.9) 0%, rgba(15,50,30,0.9) 100%);
+}
+.custom-select-enhanced option {
+    background: rgba(15,20,30,0.98);
+    color: #f3f4f6;
+    padding: 0.75rem;
+}
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: rgba(243,244,246,0.7);
+    transition: transform 0.3s ease;
+}
+.custom-select-wrapper-enhanced:focus-within .select-arrow {
+    transform: translateY(-50%) rotate(180deg);
+    color: rgba(243,244,246,1);
+}
+
+/* Buttons Enhanced */
+.btn-submit-battery, .btn-payment-confirm, .btn-generate-qr, .btn-complete-swap, .btn-open-qr {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-submit-battery:hover, .btn-payment-confirm:hover, .btn-generate-qr:hover, .btn-complete-swap:hover, .btn-open-qr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+.btn-submit-battery span:first-child, .btn-payment-confirm span:first-child, 
+.btn-generate-qr span:first-child, .btn-complete-swap span:first-child, .btn-open-qr span:first-child {
+    font-size: 1.1rem;
+}
+
+/* Warning Box */
+.warning-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1));
+    border-radius: 10px;
+    border: 1px solid rgba(245,158,11,0.4);
+    color: #fbbf24;
+}
+.warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.warning-box strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #fbbf24;
+}
+.warning-box p {
+    margin: 0;
+    color: rgba(251,191,36,0.9);
+    font-size: 0.9rem;
+}
+
+/* Payment Status Box */
+.payment-status-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 10px;
+}
+.success-status {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(21,128,61,0.1));
+    border: 1px solid rgba(34,197,94,0.4);
+    color: #10b981;
+}
+.status-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.payment-status-box strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #10b981;
+}
+.payment-status-box p {
+    margin: 0;
+    color: rgba(16,185,129,0.9);
+    font-size: 0.9rem;
+}
+
+/* Payment Action Box */
+.payment-action-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.payment-info {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(67,56,202,0.08);
+    border-radius: 10px;
+    border: 1px solid rgba(67,56,202,0.2);
+}
+.payment-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+.payment-info strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #f3f4f6;
+    font-size: 1rem;
+}
+.payment-info p {
+    margin: 0;
+    color: rgba(243,244,246,0.7);
+    font-size: 0.9rem;
+}
+.payment-form {
+    width: 100%;
+}
+
+/* Battery Info Box */
+.battery-info-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(67,56,202,0.1), rgba(34,197,94,0.05));
+    border-radius: 10px;
+    border: 1px solid rgba(67,56,202,0.3);
+    margin-bottom: 1rem;
+}
+.battery-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+.battery-info-box strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: rgba(243,244,246,0.8);
+    font-size: 0.9rem;
+}
+.battery-details {
+    margin: 0;
+    color: #f3f4f6;
+    font-weight: 600;
+    font-size: 1rem;
+}
+.complete-description {
+    margin: 0 0 1.25rem 0;
+    color: rgba(243,244,246,0.75);
+    font-size: 0.9rem;
+}
+
+/* QR Display */
+.qr-display-container {
+    margin-top: 1rem;
+}
+.qr-display-box {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(67,56,202,0.12), rgba(34,197,94,0.08));
+    border-radius: 12px;
+    border: 1px solid rgba(67,56,202,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.qr-info {
+    display: flex;
+    gap: 1rem;
+}
+.qr-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+.qr-info strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #f3f4f6;
+}
+.qr-info p {
+    margin: 0;
+    color: rgba(243,244,246,0.7);
+    font-size: 0.9rem;
+}
+
+/* Status Badges */
 .status-badge { padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; }
 .status-badge.pending { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
 .status-badge.confirmed { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1)); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
 .status-badge.checked-in { background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(21,128,61,0.1)); color: #10b981; border: 1px solid rgba(34,197,94,0.3); }
 .status-badge.completed { background: linear-gradient(135deg, rgba(107,114,128,0.2), rgba(75,85,99,0.1)); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+.status-badge.canceled { background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(185,28,28,0.1)); color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
 
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -188,8 +752,35 @@
     .reservation-detail-section { grid-template-columns: 1fr; }
     .detail-grid { grid-template-columns: 1fr; }
     .action-buttons { flex-direction: column; }
+    .step-header { flex-wrap: wrap; }
+    .payment-info, .battery-info-box, .qr-info { flex-direction: column; }
 }
 </style>
+
+<script th:inline="javascript">
+    // Auto refresh when redirected from PayOS payment callback
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoRefresh = urlParams.get('autoRefresh');
+        const paymentSuccess = urlParams.get('paymentSuccess');
+        
+        if (autoRefresh === 'true') {
+            // Show success message if payment was successful
+            if (paymentSuccess === 'true') {
+                console.log('Payment successful, page will refresh in 2 seconds...');
+            }
+            
+            // Remove query parameters to prevent infinite refresh
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Refresh page after 2 seconds to show updated payment status
+            setTimeout(function() {
+                window.location.reload();
+            }, 2000);
+        }
+    })();
+</script>
 
 </body>
 </html>

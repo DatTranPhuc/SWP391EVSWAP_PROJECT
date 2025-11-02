@@ -96,8 +96,18 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="vehicleType">Loại xe tương thích</label>
+                    <select id="vehicleType" th:field="*{vehicleType}" class="form-control-select" required>
+                        <option value="">-- Chọn loại xe --</option>
+                        <option value="motorcycle">Xe máy điện</option>
+                        <option value="car">Ô tô điện</option>
+                    </select>
+                    <small class="form-error" th:if="${#fields.hasErrors('vehicleType')}" th:errors="*{vehicleType}"></small>
+                </div>
+
+                <div class="form-group">
                     <label for="model">Model Pin</label>
-                    <input type="text" id="model" th:field="*{model}" placeholder="Ví dụ: Model-X, Vin-A1">
+                    <input type="text" id="model" th:field="*{model}" placeholder="Ví dụ: MODEL-A, MODEL-B">
                     <small class="form-error" th:if="${#fields.hasErrors('model')}" th:errors="*{model}"></small>
                 </div>
 
@@ -161,6 +171,7 @@
                     <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Loại xe</th>
                         <th>Model</th>
                         <th>SOH</th>
                         <th>SOC</th>
@@ -171,6 +182,7 @@
                     <tbody>
                     <tr th:each="battery : ${batteryList}">
                         <td th:text="${battery.batteryId}">#101</td>
+                        <td th:text="${battery.vehicleType == 'motorcycle'} ? 'Xe máy điện' : (${battery.vehicleType} == 'car' ? 'Ô tô điện' : 'N/A')">N/A</td>
                         <td th:text="${battery.model}">Model-X</td>
                         <td th:text="${battery.sohPercent + '%'}">98%</td>
                         <td th:text="${battery.socPercent + '%'}">100%</td>

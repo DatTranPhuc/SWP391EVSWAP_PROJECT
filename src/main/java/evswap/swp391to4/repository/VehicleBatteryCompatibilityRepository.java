@@ -18,6 +18,11 @@ public interface VehicleBatteryCompatibilityRepository extends JpaRepository<Veh
      * Kiểm tra xe có tương thích với model pin không
      */
     boolean existsByVehicleVehicleIdAndBatteryModel(Integer vehicleId, String batteryModel);
+    
+    /**
+     * Kiểm tra vehicle type có tương thích với battery model không
+     */
+    boolean existsByVehicleVehicleTypeAndBatteryModel(String vehicleType, String batteryModel);
 }
 
 

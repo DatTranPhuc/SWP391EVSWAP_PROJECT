@@ -44,6 +44,8 @@ public class DataSeeder implements CommandLineRunner {
             Station s = Station.builder()
                     .name("EVS-001 - District 5")
                     .address("123 Nguyen Van Cu, District 5, HCM")
+                    .latitude(new BigDecimal("10.7769"))
+                    .longitude(new BigDecimal("106.7009"))
                     .status("active")
                     .build();
             return stationRepository.save(s);
@@ -78,6 +80,7 @@ public class DataSeeder implements CommandLineRunner {
                             .vin("VIN-TEST-0001")
                             .plateNumber("59A1-000.01")
                             .model("MODEL-A")
+                            .vehicleType("motorcycle")
                             .createdAt(Instant.now())
                             .build();
                     return vehicleRepository.save(v);
@@ -85,9 +88,11 @@ public class DataSeeder implements CommandLineRunner {
 
         // Batteries at station
         if (batteryRepository.findAll().isEmpty()) {
+            // Motorcycle batteries - MODEL-A
             Battery b1 = batteryRepository.save(Battery.builder()
                     .station(station)
                     .model("MODEL-A")
+                    .vehicleType("motorcycle")
                     .state("full")
                     .sohPercent(90)
                     .socPercent(100)
@@ -96,25 +101,92 @@ public class DataSeeder implements CommandLineRunner {
             Battery b2 = batteryRepository.save(Battery.builder()
                     .station(station)
                     .model("MODEL-A")
-                    .state("charging")
+                    .vehicleType("motorcycle")
+                    .state("full")
                     .sohPercent(95)
-                    .socPercent(50)
+                    .socPercent(100)
                     .build());
 
             Battery b3 = batteryRepository.save(Battery.builder()
                     .station(station)
+                    .model("MODEL-A")
+                    .vehicleType("motorcycle")
+                    .state("charging")
+                    .sohPercent(98)
+                    .socPercent(50)
+                    .build());
+
+            // Car batteries - MODEL-B
+            Battery b4 = batteryRepository.save(Battery.builder()
+                    .station(station)
                     .model("MODEL-B")
+                    .vehicleType("car")
+                    .state("full")
+                    .sohPercent(85)
+                    .socPercent(100)
+                    .build());
+
+            Battery b5 = batteryRepository.save(Battery.builder()
+                    .station(station)
+                    .model("MODEL-B")
+                    .vehicleType("car")
+                    .state("full")
+                    .sohPercent(82)
+                    .socPercent(100)
+                    .build());
+
+            // Ineligible battery (SOH < 80%)
+            Battery b6 = batteryRepository.save(Battery.builder()
+                    .station(station)
+                    .model("MODEL-A")
+                    .vehicleType("motorcycle")
                     .state("full")
                     .sohPercent(70)
                     .socPercent(100)
                     .build());
 
-            // Compatibility: vehicle compatible with MODEL-A battery b1
+            // Compatibility: motorcycle vehicle compatible with MODEL-A batteries
             compatibilityRepository.saveAll(List.of(
                     VehicleBatteryCompatibility.builder()
                             .id(new VehicleBatteryId(vehicle.getVehicleId(), b1.getBatteryId()))
                             .vehicle(vehicle)
                             .battery(b1)
+                            .build(),
+                    VehicleBatteryCompatibility.builder()
+                            .id(new VehicleBatteryId(vehicle.getVehicleId(), b2.getBatteryId()))
+                            .vehicle(vehicle)
+                            .battery(b2)
+                            .build()
+            ));
+
+            // Create a car vehicle for testing car batteries
+            Vehicle carVehicle = vehicleRepository.findByDriverDriverIdOrderByCreatedAtDesc(driver.getDriverId())
+                    .stream()
+                    .filter(v -> "car".equals(v.getVehicleType()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Vehicle cv = Vehicle.builder()
+                                .driver(driver)
+                                .vin("VIN-CAR-0001")
+                                .plateNumber("30A-12345")
+                                .model("VinFast VF8")
+                                .vehicleType("car")
+                                .createdAt(Instant.now())
+                                .build();
+                        return vehicleRepository.save(cv);
+                    });
+
+            // Compatibility: car vehicle compatible with MODEL-B batteries
+            compatibilityRepository.saveAll(List.of(
+                    VehicleBatteryCompatibility.builder()
+                            .id(new VehicleBatteryId(carVehicle.getVehicleId(), b4.getBatteryId()))
+                            .vehicle(carVehicle)
+                            .battery(b4)
+                            .build(),
+                    VehicleBatteryCompatibility.builder()
+                            .id(new VehicleBatteryId(carVehicle.getVehicleId(), b5.getBatteryId()))
+                            .vehicle(carVehicle)
+                            .battery(b5)
                             .build()
             ));
         }
@@ -136,8 +208,8 @@ public class DataSeeder implements CommandLineRunner {
         System.out.println("Seeded test data:\n" +
                 "- Driver: " + driverEmail + " / " + driverPass + " (wallet: 200,000 VND)\n" +
                 "- Staff:  " + staffEmail + " / " + staffPass + " (station: " + station.getName() + ")\n" +
-                "- Vehicle: " + vehicle.getModel() + " (" + vehicle.getPlateNumber() + ")\n" +
-                "- Station has eligible battery MODEL-A (full, 100% SOC, SOH>=80)");
+                "- Motorcycle: " + vehicle.getModel() + " (" + vehicle.getPlateNumber() + ")\n" +
+                "- Station has 2 eligible motorcycle batteries (MODEL-A) and 2 eligible car batteries (MODEL-B)");
     }
 }
 

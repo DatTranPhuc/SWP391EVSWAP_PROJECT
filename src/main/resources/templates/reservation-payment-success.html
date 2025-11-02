@@ -44,8 +44,12 @@
     <section class="success-content">
         <div class="success-card">
             <div class="success-icon">✓</div>
-            <h2>Đặt lịch và thanh toán thành công!</h2>
-            <p>Lịch đổi pin của bạn đã được xác nhận. Vui lòng đến trạm đúng giờ để thực hiện đổi pin.</p>
+            <!-- Conditional message based on payment method -->
+            <h2 th:if="${reservation.paymentMethod == 'wallet'}" class="success-title">Đặt lịch và thanh toán thành công!</h2>
+            <h2 th:if="${reservation.paymentMethod != 'wallet'}" class="success-title">Đặt lịch thành công!</h2>
+            
+            <p th:if="${reservation.paymentMethod == 'wallet'}">Lịch đổi pin của bạn đã được xác nhận. Vui lòng đến trạm đúng giờ để thực hiện đổi pin.</p>
+            <p th:if="${reservation.paymentMethod != 'wallet'}">Lịch đổi pin của bạn đã được xác nhận. Bạn sẽ thanh toán khi hoàn tất đổi pin tại trạm.</p>
             
             <div class="booking-details">
                 <h3>Thông tin đặt lịch</h3>
@@ -70,23 +74,17 @@
                         <span class="label">Phương tiện:</span>
                         <span class="value" th:text="${reservation.vehicle.model + ' - ' + (reservation.vehicle.plateNumber == null ? reservation.vehicle.vin : reservation.vehicle.plateNumber)}">VinFast VF8</span>
                     </div>
-                </div>
-            </div>
-
-            <div class="qr-section">
-                <h3>QR Code Check-in</h3>
-                <div class="qr-placeholder">
-                    <div class="qr-code" th:text="${reservation.qrToken}">QR_CODE</div>
-                    <p>Quét mã QR này tại trạm để check-in</p>
-                    <p class="qr-expiry" th:if="${reservation.qrExpiresAt != null}">
-                        Hết hạn: <span th:text="${#temporals.format(reservation.qrExpiresAt, 'dd/MM/yyyy HH:mm')}">25/12/2024 10:00</span>
-                    </p>
+                    <div class="detail-item" th:if="${reservation.paymentMethod != null}">
+                        <span class="label">Phương thức thanh toán:</span>
+                        <span class="value" th:text="${reservation.paymentMethod == 'wallet' ? 'Thanh toán ví' : (reservation.paymentMethod == 'cash' ? 'Tiền mặt' : 'Chuyển khoản')}">Thanh toán</span>
+                    </div>
                 </div>
             </div>
 
             <div class="next-steps">
                 <h3>Bước tiếp theo</h3>
                 <ol>
+                    <li>Đợi nhân xác nhận từ nhân viên</li>
                     <li>Đến trạm đúng giờ đã đặt</li>
                     <li>Quét QR code để check-in</li>
                     <li>Nhân viên sẽ hỗ trợ bạn đổi pin</li>
@@ -150,7 +148,7 @@
     margin: 0 auto 1.5rem;
 }
 
-.success-card h2 {
+.success-card h2.success-title {
     color: #28a745;
     margin-bottom: 1rem;
 }
@@ -196,40 +194,6 @@
 .value {
     color: #333;
     font-weight: 500;
-}
-
-.qr-section {
-    margin-bottom: 2rem;
-}
-
-.qr-section h3 {
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-.qr-placeholder {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1.5rem;
-    border: 2px dashed rgba(99,102,241,.3);
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(249,250,251,.9), rgba(243,244,246,.9));
-}
-
-.qr-code {
-    width: 160px;
-    height: 160px;
-    background: #ffffff;
-    border: 2px solid rgba(99,102,241,.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: #4b5563;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
 }
 
 .next-steps {

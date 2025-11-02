@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import evswap.swp391to4.dto.FeedbackRequest;
@@ -30,12 +31,14 @@ public class FeedbackController {
 
     private final FeedbackService feedbackService;
     private final StationService stationService;
+    private final evswap.swp391to4.service.ReservationService reservationService;
 
     /**
      * Hiển thị trang feedback (form + danh sách feedback của driver)
      */
     @GetMapping
-    public String feedbackPage(HttpSession session, Model model) {
+    public String feedbackPage(@RequestParam(value = "reservationId", required = false) Integer reservationId,
+                              HttpSession session, Model model) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
             return "redirect:/login";
@@ -50,7 +53,26 @@ public class FeedbackController {
         model.addAttribute("feedbackList", feedbackList);
 
         // Form object
-        model.addAttribute("feedback", new FeedbackRequest());
+        FeedbackRequest feedbackRequest = new FeedbackRequest();
+        
+        // Pre-select station if reservationId is provided
+        if (reservationId != null) {
+            try {
+                evswap.swp391to4.entity.Reservation reservation = 
+                    reservationService.getReservationById(reservationId);
+                
+                // Verify reservation belongs to this driver
+                if (reservation.getDriver().getDriverId().equals(driver.getDriverId())) {
+                    // Pre-select the station from reservation
+                    feedbackRequest.setStationId(reservation.getStation().getStationId());
+                    model.addAttribute("preselectedStationId", reservation.getStation().getStationId());
+                }
+            } catch (Exception e) {
+                // If reservation not found or error, just ignore and continue
+            }
+        }
+        
+        model.addAttribute("feedback", feedbackRequest);
 
         return "feedback";
     }

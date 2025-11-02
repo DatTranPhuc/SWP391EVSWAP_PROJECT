@@ -101,6 +101,10 @@
                         <span class="detail-value" th:text="${card.model()}">VinFast Feliz S</span>
                     </div>
                     <div class="detail-item">
+                        <span class="detail-label">Loại xe</span>
+                        <span class="detail-value" th:text="${card.vehicleType() == 'motorcycle' ? 'Xe máy điện' : 'Ô tô điện'}">Xe máy điện</span>
+                    </div>
+                    <div class="detail-item">
                         <span class="detail-label">Số VIN</span>
                         <span class="detail-value" th:text="${card.vin()}">VF9S093983927239</span>
                     </div>
@@ -126,6 +130,14 @@
                 <label>
                     <span>Model xe</span>
                     <input type="text" th:field="*{model}" placeholder="Ví dụ: VinFast Feliz S" required>
+                </label>
+                <label>
+                    <span>Loại xe</span>
+                    <select th:field="*{vehicleType}" required style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 20, 30, 0.72); border: 1px solid rgba(255,255,255,0.1); color: #f3f4f6;">
+                        <option value="">-- Chọn loại xe --</option>
+                        <option value="motorcycle">Xe máy điện</option>
+                        <option value="car">Ô tô điện</option>
+                    </select>
                 </label>
                 <label>
                     <span>Số VIN</span>

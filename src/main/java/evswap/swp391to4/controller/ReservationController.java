@@ -29,6 +29,12 @@ import evswap.swp391to4.service.BatteryService;
 import evswap.swp391to4.service.StationService;
 import evswap.swp391to4.service.VehicleService;
 import evswap.swp391to4.service.WalletService;
+import evswap.swp391to4.service.FeedbackService;
+import evswap.swp391to4.service.PaymentService;
+import evswap.swp391to4.service.QRCodeService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +48,9 @@ public class ReservationController {
     private final VehicleService vehicleService;
     private final WalletService walletService;
     private final BatteryService batteryService;
+    private final FeedbackService feedbackService;
+    private final PaymentService paymentService;
+    private final QRCodeService qrCodeService;
 
     @GetMapping("/schedule")
     public String showSchedulePage(@RequestParam(value = "q", required = false) String query,
@@ -61,7 +70,15 @@ public class ReservationController {
         model.addAttribute("searchQuery", query);
         model.addAttribute("driverName", driver.getFullName());
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("upcomingReservations", reservationService.getUpcomingReservations(driver.getDriverId()));
+        
+        // Lấy 2 danh sách: lịch đặt (scheduled) và lịch sử đổi (history)
+        List<evswap.swp391to4.service.ReservationService.ReservationSummary> scheduledReservations = 
+            reservationService.getScheduledReservations(driver.getDriverId());
+        List<evswap.swp391to4.service.ReservationService.ReservationSummary> swapHistory = 
+            reservationService.getSwapHistory(driver.getDriverId());
+        
+        model.addAttribute("scheduledReservations", scheduledReservations);
+        model.addAttribute("swapHistory", swapHistory);
 
         if (!model.containsAttribute("currentStep")) {
             model.addAttribute("currentStep", "search");
@@ -153,9 +170,34 @@ public class ReservationController {
         }
 
         try {
-            Reservation reservation = reservationService.createReservationWithPayment(driver.getDriverId(), form.getStationId(), form.getVehicleId(), reservedStart);
-            redirect.addFlashAttribute("reservationSuccess", "Đặt lịch và thanh toán thành công!");
-            redirect.addFlashAttribute("currentStep", "payment");
+            String paymentMethod = form.getPaymentMethod();
+            if (paymentMethod == null || paymentMethod.isBlank()) {
+                paymentMethod = "wallet"; // Default to wallet
+            }
+            
+            Reservation reservation = reservationService.createReservationWithPaymentMethod(
+                driver.getDriverId(), 
+                form.getStationId(), 
+                form.getVehicleId(), 
+                reservedStart,
+                paymentMethod,
+                false); // Not instant swap
+            
+            // Determine success message based on new status flow
+            String successMsg;
+            String currentStep;
+            if ("confirmed".equals(reservation.getStatus())) {
+                // Wallet payment: auto-confirmed
+                successMsg = "Đặt lịch và thanh toán thành công! Lịch đã được xác nhận tự động. Vui lòng đến trạm đúng giờ.";
+                currentStep = "swap"; // Ready for check-in
+            } else {
+                // Cash/transfer: pending staff confirmation
+                successMsg = "Đặt lịch thành công! Vui lòng đợi staff xác nhận và thanh toán tại trạm.";
+                currentStep = "payment";
+            }
+            
+            redirect.addFlashAttribute("reservationSuccess", successMsg);
+            redirect.addFlashAttribute("currentStep", currentStep);
             redirect.addAttribute("stationId", form.getStationId());
             return "redirect:/reservations/payment-success?reservationId=" + reservation.getReservationId();
         } catch (Exception e) {
@@ -201,7 +243,7 @@ public class ReservationController {
     }
 
     @GetMapping("/my-reservations")
-    public String myReservations(@RequestParam(value = "status", required = false) String status,
+    public String myReservations(@RequestParam(value = "tab", required = false) String tab,
                                 HttpSession session, Model model, RedirectAttributes redirect) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
         if (driver == null) {
@@ -209,20 +251,22 @@ public class ReservationController {
             return "redirect:/login";
         }
         
-        List<evswap.swp391to4.service.ReservationService.ReservationSummary> reservations = 
-            reservationService.getUpcomingReservations(driver.getDriverId());
+        // Lấy 2 danh sách: lịch đặt (scheduled) và lịch sử đổi (history)
+        List<evswap.swp391to4.service.ReservationService.ReservationSummary> scheduledReservations = 
+            reservationService.getScheduledReservations(driver.getDriverId());
+        List<evswap.swp391to4.service.ReservationService.ReservationSummary> swapHistory = 
+            reservationService.getSwapHistory(driver.getDriverId());
         
-        // Filter by status if provided
-        if (status != null && !status.isEmpty() && !"all".equals(status)) {
-            reservations = reservations.stream()
-                .filter(r -> status.equalsIgnoreCase(r.status()))
-                .collect(java.util.stream.Collectors.toList());
+        // Mặc định hiển thị tab "scheduled" nếu không có tab được chỉ định
+        if (tab == null || tab.isEmpty()) {
+            tab = "scheduled";
         }
         
         model.addAttribute("driverName", driver.getFullName());
         model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-        model.addAttribute("upcomingReservations", reservations);
-        model.addAttribute("currentStatus", status);
+        model.addAttribute("scheduledReservations", scheduledReservations);
+        model.addAttribute("swapHistory", swapHistory);
+        model.addAttribute("currentTab", tab);
         return "reservation-my-list";
     }
 
@@ -242,6 +286,24 @@ public class ReservationController {
             redirect.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/reservations/my-reservations";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteReservation(@PathVariable Integer id,
+                                    HttpSession session,
+                                    RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để xóa lịch sử");
+            return "redirect:/login";
+        }
+        try {
+            reservationService.deleteReservationFromHistory(id, driver.getDriverId());
+            redirect.addFlashAttribute("success", "Đã xóa lịch sử thành công.");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/reservations/my-reservations?tab=history";
     }
 
     @GetMapping("/{id}")
@@ -265,18 +327,107 @@ public class ReservationController {
             model.addAttribute("reservation", reservation);
             model.addAttribute("driverName", driver.getFullName());
             model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
-            model.addAttribute("currentStep", switch (reservation.getStatus() == null ? "" : reservation.getStatus()) {
-                case "pending" -> "payment"; // sau khi thanh toán, đợi xác nhận
-                case "confirmed" -> "swap";
-                case "checked_in" -> "swap";
-                case "completed" -> "done";
-                default -> "schedule";
-            });
+            
+            // Determine current step based on status and reservation type
+            String currentStep;
+            boolean isInstant = reservation.getIsInstantSwap() != null && reservation.getIsInstantSwap();
+            String status = reservation.getStatus() == null ? "" : reservation.getStatus();
+            
+            if ("completed".equals(status)) {
+                currentStep = "done";
+            } else if ("checked_in".equals(status)) {
+                currentStep = "swap"; // Ready for staff to process
+            } else if ("confirmed".equals(status)) {
+                currentStep = "swap"; // Ready for check-in
+            } else if ("pending".equals(status)) {
+                // Pending: waiting for staff confirmation (cash/transfer scheduled)
+                currentStep = "payment";
+            } else {
+                currentStep = "schedule";
+            }
+            
+            model.addAttribute("currentStep", currentStep);
+            model.addAttribute("isInstantSwap", isInstant);
+
+            // Check if feedback was already created for this station
+            if ("completed".equals(reservation.getStatus())) {
+                boolean hasFeedback = feedbackService.hasFeedbackForStation(
+                    driver.getDriverId(), 
+                    reservation.getStation().getStationId());
+                model.addAttribute("hasFeedback", hasFeedback);
+            }
 
             return "reservation-detail";
         } catch (Exception e) {
             redirect.addFlashAttribute("error", "Không tìm thấy reservation: " + e.getMessage());
             return "redirect:/reservations/my-reservations";
+        }
+    }
+
+    /**
+     * Xử lý callback từ PayOS sau khi thanh toán
+     * URL: GET /reservations/payment-callback
+     */
+    @GetMapping("/payment-callback")
+    public String paymentCallback(@RequestParam("reservationId") Integer reservationId,
+                                  @RequestParam(value = "code", required = false) String code,
+                                  RedirectAttributes redirect) {
+        try {
+            // Verify payment status if code is provided
+            // code = "00" means success in PayOS
+            boolean paymentSuccess = code != null && "00".equals(code);
+            
+            if (paymentSuccess) {
+                // Tìm payment và verify status, sau đó confirm reservation nếu cần
+                try {
+                    Reservation reservation = reservationService.getReservationById(reservationId);
+                    
+                    // Tìm payment record cho reservation này
+                    java.util.List<evswap.swp391to4.entity.Payment> payments = 
+                        paymentService.getPaymentsByReservation(reservation);
+                    
+                    // Tìm payment PayOS gần nhất chưa thành công
+                    evswap.swp391to4.entity.Payment payosPayment = payments.stream()
+                        .filter(p -> "payos".equalsIgnoreCase(p.getMethod()))
+                        .filter(p -> !"succeed".equalsIgnoreCase(p.getStatus()))
+                        .max(java.util.Comparator.comparing(evswap.swp391to4.entity.Payment::getPaidAt, 
+                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                        .orElse(null);
+                    
+                    if (payosPayment != null) {
+                        // Reconcile payment status từ PayOS API
+                        evswap.swp391to4.entity.Payment reconciled = 
+                            paymentService.reconcilePayOsPaymentById(payosPayment.getPaymentId());
+                        
+                        // Reload reservation để lấy status mới nhất (có thể đã được webhook cập nhật)
+                        reservation = reservationService.getReservationById(reservationId);
+                        
+                        // Nếu payment đã thành công và reservation vẫn pending, tự động confirm
+                        if ("succeed".equalsIgnoreCase(reconciled.getStatus()) && 
+                            "pending".equalsIgnoreCase(reservation.getStatus())) {
+                            try {
+                                reservationService.confirmReservation(reservationId);
+                            } catch (Exception e) {
+                                // Log lỗi nhưng không fail callback
+                                System.err.println("Failed to confirm reservation: " + e.getMessage());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Log lỗi nhưng vẫn redirect
+                    System.err.println("Error processing payment callback: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            
+            // Redirect to staff reservation detail page with auto refresh
+            // This allows staff to see updated payment status immediately
+            redirect.addFlashAttribute("paymentSuccess", paymentSuccess);
+            return "redirect:/staff/reservations/" + reservationId + "?paymentSuccess=true&autoRefresh=true";
+        } catch (Exception e) {
+            // If error, still redirect to staff page but with error message
+            redirect.addFlashAttribute("error", "Có lỗi xảy ra khi xử lý thanh toán: " + e.getMessage());
+            return "redirect:/staff/reservations/" + reservationId;
         }
     }
 
@@ -324,6 +475,125 @@ public class ReservationController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Serve QR code image cho driver
+     * URL: GET /reservations/qr-code/{token}
+     */
+    @GetMapping("/qr-code/{token}")
+    public ResponseEntity<byte[]> getQrCodeImage(@PathVariable String token,
+                                                  HttpSession session) {
+        try {
+            Driver driver = (Driver) session.getAttribute("loggedInDriver");
+            if (driver == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            
+            byte[] qrImage = qrCodeService.generateQrCodeImage(token);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            headers.setContentLength(qrImage.length);
+            headers.setCacheControl("public, max-age=3600"); // Cache 1 giờ
+            
+            return new ResponseEntity<>(qrImage, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Trang instant swap payment (hiển thị sau khi user đến trạm)
+     * URL: GET /reservations/instant-swap?stationId={id}
+     */
+    @GetMapping("/instant-swap")
+    public String showInstantSwapPayment(@RequestParam("stationId") Integer stationId,
+                                        HttpSession session,
+                                        Model model,
+                                        RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đổi pin ngay");
+            return "redirect:/login";
+        }
+
+        StationResponse selectedStation;
+        try {
+            selectedStation = stationService.findById(stationId);
+        } catch (Exception e) {
+            redirect.addFlashAttribute("reservationError", "Không tìm thấy trạm đã chọn");
+            return "redirect:/reservations/schedule";
+        }
+
+        model.addAttribute("selectedStation", selectedStation);
+        model.addAttribute("driverName", driver.getFullName());
+        model.addAttribute("driverInitial", extractInitial(driver.getFullName()));
+        model.addAttribute("vehicles", vehicleService.getVehiclesForDriver(driver.getDriverId()));
+        model.addAttribute("walletBalance", walletService.getBalance(driver.getDriverId()));
+
+        ReservationScheduleForm form = new ReservationScheduleForm();
+        form.setStationId(stationId);
+        model.addAttribute("reservationForm", form);
+
+        return "reservation-instant-swap-payment";
+    }
+
+    /**
+     * Submit instant swap reservation
+     * URL: POST /reservations/instant-swap
+     */
+    @PostMapping("/instant-swap")
+    public String submitInstantSwap(@ModelAttribute("reservationForm") ReservationScheduleForm form,
+                                   HttpSession session,
+                                   RedirectAttributes redirect) {
+        Driver driver = (Driver) session.getAttribute("loggedInDriver");
+        if (driver == null) {
+            redirect.addFlashAttribute("loginRequired", "Vui lòng đăng nhập để đổi pin ngay");
+            return "redirect:/login";
+        }
+
+        if (form.getStationId() == null) {
+            redirect.addFlashAttribute("reservationError", "Vui lòng chọn trạm đổi pin");
+            return "redirect:/reservations/schedule";
+        }
+
+        if (form.getVehicleId() == null) {
+            redirect.addFlashAttribute("reservationError", "Vui lòng chọn phương tiện");
+            redirect.addAttribute("stationId", form.getStationId());
+            return "redirect:/reservations/instant-swap";
+        }
+
+        try {
+            String paymentMethod = form.getPaymentMethod();
+            if (paymentMethod == null || paymentMethod.isBlank()) {
+                paymentMethod = "cash"; // Default to cash for instant swap
+            }
+            
+            // Create instant swap reservation with current time
+            Reservation reservation = reservationService.createReservationWithPaymentMethod(
+                driver.getDriverId(), 
+                form.getStationId(), 
+                form.getVehicleId(), 
+                Instant.now(), // Current time for instant swap
+                paymentMethod,
+                true); // isInstantSwap = true
+            
+            // Instant swap goes directly to checked_in status
+            String successMsg;
+            if ("checked_in".equals(reservation.getStatus())) {
+                successMsg = "Đổi pin ngay đã được tạo! Bạn đã được check-in tự động. Vui lòng chờ staff xử lý.";
+            } else {
+                successMsg = "Đặt lịch thành công! Vui lòng chờ staff xử lý.";
+            }
+            
+            redirect.addFlashAttribute("reservationSuccess", successMsg);
+            return "redirect:/reservations/" + reservation.getReservationId();
+        } catch (Exception e) {
+            redirect.addFlashAttribute("reservationError", e.getMessage());
+            redirect.addAttribute("stationId", form.getStationId());
+            return "redirect:/reservations/instant-swap";
         }
     }
 }

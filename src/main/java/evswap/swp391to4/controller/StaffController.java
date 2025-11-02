@@ -18,20 +18,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import evswap.swp391to4.dto.TicketSupportResponse;
 import evswap.swp391to4.dto.TicketUpdateRequest;
+import evswap.swp391to4.dto.AvailableBatteryResponse;
 
 import evswap.swp391to4.service.TicketSupportService;
 import evswap.swp391to4.service.ReservationService;
+import evswap.swp391to4.service.PaymentService;
+import evswap.swp391to4.service.QRCodeService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 
 
@@ -41,9 +41,10 @@ import evswap.swp391to4.service.ReservationService;
 public class StaffController {
 
     private final BatteryService batteryService;
-
     private final TicketSupportService ticketService;
     private final ReservationService reservationService;
+    private final PaymentService paymentService;
+    private final QRCodeService qrCodeService;
 
 
     // (Hàm checkStaffLogin giữ nguyên)
@@ -429,7 +430,9 @@ public class StaffController {
      * URL: GET /staff/reservations/{id}
      */
     @GetMapping("/reservations/{id}")
-    public String viewReservationDetail(@PathVariable Integer id, Model model, HttpSession session, RedirectAttributes redirect) {
+    public String viewReservationDetail(@PathVariable Integer id, 
+                                       @RequestParam(value = "paymentSuccess", required = false) Boolean paymentSuccess,
+                                       Model model, HttpSession session, RedirectAttributes redirect) {
         try {
             Staff staff = checkStaffLogin(session);
 
@@ -445,11 +448,38 @@ public class StaffController {
 
             model.addAttribute("reservation", reservation);
             model.addAttribute("stationName", staff.getStation().getName());
+            
+            // Show payment success message if redirected from PayOS (use model attribute instead of flash to avoid double redirect)
+            if (Boolean.TRUE.equals(paymentSuccess)) {
+                model.addAttribute("paymentSuccessMessage", "Thanh toán thành công! Trang sẽ tự động làm mới để hiển thị trạng thái thanh toán cập nhật.");
+            }
+            
+            // Load available batteries for this vehicle at this station if status is checked_in
+            if ("checked_in".equals(reservation.getStatus()) || "confirmed".equals(reservation.getStatus())) {
+                if (reservation.getVehicle() != null) {
+                    List<AvailableBatteryResponse> availableBatteries = 
+                        batteryService.findEligibleBatteriesForVehicle(
+                            reservation.getStation().getStationId(), 
+                            reservation.getVehicle().getVehicleId());
+                    model.addAttribute("availableBatteries", availableBatteries);
+                }
+            }
+            
             return "staff/reservation-detail";
 
         } catch (IllegalStateException e) {
+            // Preserve the redirect URL with paymentSuccess parameter if present
+            String redirectUrl = "/staff/reservations/" + id;
+            if (Boolean.TRUE.equals(paymentSuccess)) {
+                redirectUrl += "?paymentSuccess=true";
+            }
             redirect.addFlashAttribute("loginError", e.getMessage());
-            return "redirect:/login";
+            // Pass redirect URL as query parameter so it persists through redirect
+            try {
+                return "redirect:/login?redirect=" + java.net.URLEncoder.encode(redirectUrl, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Exception ex) {
+                return "redirect:/login";
+            }
         }
     }
 
@@ -548,6 +578,340 @@ public class StaffController {
         }
 
         return "redirect:/staff/reservations/" + id;
+    }
+
+    /**
+     * Xác nhận thanh toán tiền mặt tại trạm
+     * URL: POST /staff/reservations/{id}/confirm-cash-payment
+     */
+    @PostMapping("/reservations/{id}/confirm-cash-payment")
+    public String confirmCashPayment(@PathVariable Integer id,
+                                     HttpSession session,
+                                     RedirectAttributes redirect) {
+        try {
+            checkStaffLogin(session);
+
+            reservationService.confirmCashPayment(id);
+
+            redirect.addFlashAttribute("success", "Đã xác nhận thanh toán tiền mặt!");
+        } catch (IllegalStateException e) {
+            redirect.addFlashAttribute("loginError", e.getMessage());
+            return "redirect:/login";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/staff/reservations/" + id;
+    }
+
+    /**
+     * Tạo QR chuyển khoản PayOS cho reservation
+     * URL: POST /staff/reservations/{id}/create-transfer-qr
+     */
+    @PostMapping("/reservations/{id}/create-transfer-qr")
+    public String createTransferQr(@PathVariable Integer id,
+                                   HttpSession session,
+                                   RedirectAttributes redirect) {
+        try {
+            checkStaffLogin(session);
+
+            evswap.swp391to4.entity.Reservation reservation = reservationService.getReservationById(id);
+            evswap.swp391to4.entity.Driver driver = reservation.getDriver();
+            java.math.BigDecimal amount = reservation.getPriceAmount();
+
+            paymentService.createSwapPaymentRequest(driver, reservation, amount);
+
+            redirect.addFlashAttribute("success", "Đã tạo QR code thanh toán! QR code sẽ hiển thị trong trang chi tiết.");
+        } catch (IllegalStateException e) {
+            // Check if it's an authentication error (contains "chưa đăng nhập" or "Bạn chưa")
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                redirect.addFlashAttribute("loginError", e.getMessage());
+                return "redirect:/login";
+            }
+            // Otherwise it's a business logic error (like PayOS error)
+            redirect.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/staff/reservations/" + id;
+    }
+
+    /**
+     * Hiển thị QR code PayOS cho reservation
+     * URL: GET /staff/reservations/{id}/payment-qr
+     */
+    @GetMapping("/reservations/{id}/payment-qr")
+    @ResponseBody
+    public java.util.Map<String, Object> getPaymentQr(@PathVariable Integer id,
+                                                       HttpSession session) {
+        try {
+            checkStaffLogin(session);
+
+            evswap.swp391to4.entity.Reservation reservation = reservationService.getReservationById(id);
+            
+            // Check if reservation belongs to this station
+            Staff staff = (Staff) session.getAttribute("loggedInStaff");
+            if (!reservation.getStation().getStationId().equals(staff.getStation().getStationId())) {
+                return java.util.Map.of("error", "Reservation không thuộc trạm của bạn");
+            }
+            
+            // Tìm payment record cho reservation này
+            java.util.List<evswap.swp391to4.entity.Payment> payments = paymentService.getPaymentsByReservation(reservation);
+            
+            evswap.swp391to4.entity.Payment payment = payments.stream()
+                .filter(p -> p.getCheckoutUrl() != null && !p.getCheckoutUrl().isBlank())
+                .filter(p -> "pending".equals(p.getStatus()) || "succeed".equals(p.getStatus()))
+                .findFirst()
+                .orElse(null);
+            
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            if (payment != null) {
+                result.put("qrUrl", payment.getCheckoutUrl());
+                result.put("paymentStatus", payment.getStatus());
+                result.put("reservationPaymentStatus", reservation.getPaymentStatus());
+            } else {
+                result.put("error", "Chưa có QR code thanh toán cho reservation này");
+            }
+            
+            return result;
+        } catch (IllegalStateException e) {
+            // Check if it's an authentication error
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                return java.util.Map.of("error", "Authentication required", "authError", true);
+            }
+            return java.util.Map.of("error", e.getMessage());
+        } catch (Exception e) {
+            return java.util.Map.of("error", "Lỗi: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * API để check payment status (nhẹ hơn, chỉ trả về status)
+     * URL: GET /staff/reservations/{id}/payment-status
+     */
+    @GetMapping("/reservations/{id}/payment-status")
+    @ResponseBody
+    public java.util.Map<String, Object> getPaymentStatus(@PathVariable Integer id,
+                                                           HttpSession session) {
+        try {
+            checkStaffLogin(session);
+
+            evswap.swp391to4.entity.Reservation reservation = reservationService.getReservationById(id);
+            
+            // Check if reservation belongs to this station
+            Staff staff = (Staff) session.getAttribute("loggedInStaff");
+            if (!reservation.getStation().getStationId().equals(staff.getStation().getStationId())) {
+                return java.util.Map.of("error", "Reservation không thuộc trạm của bạn");
+            }
+            
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("paymentStatus", reservation.getPaymentStatus());
+            result.put("paymentMethod", reservation.getPaymentMethod());
+            
+            // Check latest payment status
+            java.util.List<evswap.swp391to4.entity.Payment> payments = paymentService.getPaymentsByReservation(reservation);
+            if (!payments.isEmpty()) {
+                evswap.swp391to4.entity.Payment latestPayment = payments.stream()
+                    .max(java.util.Comparator.comparing(evswap.swp391to4.entity.Payment::getPaidAt, 
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                    .orElse(null);
+                if (latestPayment != null) {
+                    result.put("latestPaymentStatus", latestPayment.getStatus());
+                }
+            }
+            
+            return result;
+        } catch (IllegalStateException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                return java.util.Map.of("error", "Authentication required", "authError", true);
+            }
+            return java.util.Map.of("error", e.getMessage());
+        } catch (Exception e) {
+            return java.util.Map.of("error", "Lỗi: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Trang check-in với QR code scanner
+     * URL: GET /staff/check-in
+     */
+    @GetMapping("/check-in")
+    public String checkInPage(@RequestParam(value = "reservationId", required = false) Integer reservationId,
+                              HttpSession session,
+                              Model model,
+                              RedirectAttributes redirect) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            model.addAttribute("stationName", staff.getStation().getName());
+            
+            // Nếu có reservationId, pre-load thông tin reservation
+            if (reservationId != null) {
+                try {
+                    evswap.swp391to4.entity.Reservation reservation = reservationService.getReservationById(reservationId);
+                    // Kiểm tra reservation thuộc trạm
+                    if (reservation.getStation().getStationId().equals(staff.getStation().getStationId())) {
+                        model.addAttribute("preloadReservation", reservation);
+                    }
+                } catch (Exception e) {
+                    // Ignore error, chỉ không pre-load
+                }
+            }
+            
+            return "staff/check-in";
+        } catch (IllegalStateException e) {
+            redirect.addFlashAttribute("loginError", e.getMessage());
+            return "redirect:/login";
+        }
+    }
+
+    /**
+     * Xử lý check-in từ QR token hoặc manual token
+     * URL: POST /staff/check-in
+     */
+    @PostMapping("/check-in")
+    public String processCheckIn(@RequestParam(value = "qrToken", required = false) String qrToken,
+                                 HttpSession session,
+                                 RedirectAttributes redirect) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            
+            if (qrToken == null || qrToken.isBlank()) {
+                redirect.addFlashAttribute("error", "Vui lòng nhập QR token hoặc quét QR code");
+                return "redirect:/staff/check-in";
+            }
+            
+            // Validate và lấy reservation
+            evswap.swp391to4.entity.Reservation reservation = 
+                reservationService.getReservationByQrToken(qrToken, staff.getStation().getStationId());
+            
+            // Check-in reservation
+            reservationService.checkInReservation(reservation.getReservationId());
+            
+            redirect.addFlashAttribute("success", "Check-in thành công! Reservation #" + reservation.getReservationId());
+            return "redirect:/staff/reservations/" + reservation.getReservationId();
+            
+        } catch (IllegalStateException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                redirect.addFlashAttribute("loginError", e.getMessage());
+                return "redirect:/login";
+            }
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/staff/check-in";
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            return "redirect:/staff/check-in";
+        }
+    }
+
+    /**
+     * API để serve QR code image
+     * URL: GET /api/qr-code/{token}
+     */
+    @GetMapping("/api/qr-code/{token}")
+    @ResponseBody
+    public ResponseEntity<byte[]> getQrCodeImage(@PathVariable String token) {
+        try {
+            byte[] qrImage = qrCodeService.generateQrCodeImage(token);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            headers.setContentLength(qrImage.length);
+            headers.setCacheControl("public, max-age=3600"); // Cache 1 giờ
+            
+            return new ResponseEntity<>(qrImage, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * API để check-in từ QR code scan (camera hoặc upload ảnh)
+     * URL: POST /api/check-in/qr-scan
+     */
+    @PostMapping("/api/check-in/qr-scan")
+    @ResponseBody
+    public java.util.Map<String, Object> checkInFromQrScan(@RequestParam(value = "qrToken", required = false) String qrToken,
+                                                           @RequestParam(value = "image", required = false) MultipartFile imageFile,
+                                                           HttpSession session) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            
+            String token = null;
+            
+            // Nếu có qrToken trực tiếp, dùng luôn
+            if (qrToken != null && !qrToken.isBlank()) {
+                token = qrToken.trim();
+            } 
+            // Nếu có upload ảnh, decode QR code từ ảnh
+            else if (imageFile != null && !imageFile.isEmpty()) {
+                byte[] imageBytes = imageFile.getBytes();
+                token = qrCodeService.decodeQrCodeFromImage(imageBytes);
+            } 
+            else {
+                return java.util.Map.of("success", false, "error", "Vui lòng cung cấp QR token hoặc upload ảnh QR code");
+            }
+            
+            // Validate và lấy reservation
+            evswap.swp391to4.entity.Reservation reservation = 
+                reservationService.getReservationByQrToken(token, staff.getStation().getStationId());
+            
+            // Trả về thông tin reservation để staff xem trước khi confirm
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("success", true);
+            result.put("reservationId", reservation.getReservationId());
+            result.put("driverName", reservation.getDriver().getFullName());
+            result.put("vehicleInfo", reservation.getVehicle().getModel() + " - " + 
+                      (reservation.getVehicle().getPlateNumber() != null ? 
+                       reservation.getVehicle().getPlateNumber() : reservation.getVehicle().getVin()));
+            result.put("reservedStart", reservation.getReservedStart().toString());
+            result.put("status", reservation.getStatus());
+            result.put("qrToken", token);
+            
+            return result;
+            
+        } catch (IllegalStateException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                return java.util.Map.of("success", false, "error", "Authentication required", "authError", true);
+            }
+            return java.util.Map.of("success", false, "error", e.getMessage());
+        } catch (Exception e) {
+            return java.util.Map.of("success", false, "error", "Lỗi: " + e.getMessage());
+        }
+    }
+
+    /**
+     * API để confirm check-in sau khi verify QR code
+     * URL: POST /api/check-in/confirm
+     */
+    @PostMapping("/api/check-in/confirm")
+    @ResponseBody
+    public java.util.Map<String, Object> confirmCheckIn(@RequestParam("qrToken") String qrToken,
+                                                        HttpSession session) {
+        try {
+            Staff staff = checkStaffLogin(session);
+            
+            // Validate và lấy reservation
+            evswap.swp391to4.entity.Reservation reservation = 
+                reservationService.getReservationByQrToken(qrToken, staff.getStation().getStationId());
+            
+            // Check-in reservation
+            reservationService.checkInReservation(reservation.getReservationId());
+            
+            return java.util.Map.of(
+                "success", true,
+                "message", "Check-in thành công!",
+                "reservationId", reservation.getReservationId()
+            );
+            
+        } catch (IllegalStateException e) {
+            if (e.getMessage() != null && (e.getMessage().contains("chưa đăng nhập") || e.getMessage().contains("Bạn chưa"))) {
+                return java.util.Map.of("success", false, "error", "Authentication required", "authError", true);
+            }
+            return java.util.Map.of("success", false, "error", e.getMessage());
+        } catch (Exception e) {
+            return java.util.Map.of("success", false, "error", "Lỗi: " + e.getMessage());
+        }
     }
 
 }

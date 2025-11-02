@@ -1,27 +1,28 @@
 package evswap.swp391to4.service;
 
-import evswap.swp391to4.dto.BatteryCreateRequest;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import evswap.swp391to4.dto.AvailableBatteryResponse;
+import evswap.swp391to4.dto.BatteryCreateRequest;
 import evswap.swp391to4.entity.Battery;
 import evswap.swp391to4.entity.Staff;
 import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.BatteryRepository;
-import evswap.swp391to4.repository.VehicleBatteryCompatibilityRepository;
+import evswap.swp391to4.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BatteryService {
 
     private final BatteryRepository batteryRepo;
-    private final VehicleBatteryCompatibilityRepository compatibilityRepo;
+    private final VehicleRepository vehicleRepo;
 
     @Transactional(readOnly = true)
     public List<Battery> searchBatteriesForStation(Station station, String searchType, String searchTerm) {
@@ -106,6 +107,7 @@ public class BatteryService {
         for (int i = 0; i < quantity; i++) {
             Battery newBattery = Battery.builder()
                     .model(dto.getModel())
+                    .vehicleType(dto.getVehicleType())
                     .station(staffStation)
                     .state(dto.getState().toLowerCase())
                     .sohPercent(dto.getSohPercent())
@@ -122,21 +124,24 @@ public class BatteryService {
      * - state = "full"
      * - soc = 100%
      * - soh >= 80%
-     * - Tương thích với xe
+     * - vehicleType khớp với xe
      */
     @Transactional(readOnly = true)
     public List<AvailableBatteryResponse> findEligibleBatteriesForVehicle(Integer stationId, Integer vehicleId) {
+        // Lấy thông tin xe để lấy vehicleType
+        Vehicle vehicle = vehicleRepo.findById(vehicleId)
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy xe với ID: " + vehicleId));
+        
+        String vehicleType = vehicle.getVehicleType();
+        
         // Lấy danh sách pin tại trạm với điều kiện cơ bản
         List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
             stationId, "full", 100, 80);
 
-        // Lọc theo tương thích với xe
+        // Lọc theo vehicleType khớp
         List<AvailableBatteryResponse> result = new ArrayList<>();
         for (Battery battery : eligibleBatteries) {
-            boolean isCompatible = compatibilityRepo.existsByVehicleVehicleIdAndBatteryModel(
-                vehicleId, battery.getModel());
-            
-            if (isCompatible) {
+            if (vehicleType != null && vehicleType.equalsIgnoreCase(battery.getVehicleType())) {
                 result.add(AvailableBatteryResponse.builder()
                     .batteryId(battery.getBatteryId())
                     .model(battery.getModel())
@@ -180,5 +185,30 @@ public class BatteryService {
     @Transactional(readOnly = true)
     public Battery getBatteryById(Integer batteryId) {
         return batteryRepo.findById(batteryId).orElse(null);
+    }
+
+    /**
+     * Đếm số pin khả dụng cho loại xe cụ thể (motorcycle/car) tại trạm
+     * Pin khả dụng: state="full", SOC=100%, SOH>=80%, và vehicleType khớp
+     */
+    @Transactional(readOnly = true)
+    public Integer countAvailableBatteriesByVehicleType(Integer stationId, String vehicleType) {
+        if (vehicleType == null || vehicleType.isBlank()) {
+            return 0;
+        }
+
+        // Lấy tất cả pin đủ điều kiện cơ bản và loại xe tại trạm
+        List<Battery> eligibleBatteries = batteryRepo.findByStationStationIdAndStateAndSocPercentAndSohPercentGreaterThanEqual(
+            stationId, "full", 100, 80);
+
+        // Count batteries matching this vehicle type
+        int count = 0;
+        for (Battery battery : eligibleBatteries) {
+            if (vehicleType.equalsIgnoreCase(battery.getVehicleType())) {
+                count++;
+            }
+        }
+        
+        return count;
     }
 }

@@ -19,6 +19,7 @@ public class StationService {
 
     private final StationRepository stationRepo;
     private final StaffRepository staffRepo;
+    private final BatteryService batteryService;
 
     /**
      * Tạo một trạm mới dựa trên yêu cầu.
@@ -81,15 +82,23 @@ public class StationService {
 
         // Chuyển đổi (map) danh sách kết quả từ projection sang StationResponse DTO
         return results.stream()
-                .map(result -> StationResponse.builder()
-                        .stationId(result.getStationId())
-                        .name(result.getName())
-                        .address(result.getAddress())
-                        .status(result.getStatus())
-                        .latitude(result.getLatitude())
-                        .longitude(result.getLongitude())
-                        .distance(result.getDistance()) // Lấy distance trực tiếp từ kết quả
-                        .build())
+                .map(result -> {
+                    // Calculate available batteries for both vehicle types
+                    Integer motorcycleBatteries = batteryService.countAvailableBatteriesByVehicleType(result.getStationId(), "motorcycle");
+                    Integer carBatteries = batteryService.countAvailableBatteriesByVehicleType(result.getStationId(), "car");
+                    
+                    return StationResponse.builder()
+                            .stationId(result.getStationId())
+                            .name(result.getName())
+                            .address(result.getAddress())
+                            .status(result.getStatus())
+                            .latitude(result.getLatitude())
+                            .longitude(result.getLongitude())
+                            .distance(result.getDistance()) // Lấy distance trực tiếp từ kết quả
+                            .availableMotorcycleBatteries(motorcycleBatteries)
+                            .availableCarBatteries(carBatteries)
+                            .build();
+                })
                 .toList();
     }
 
@@ -167,6 +176,10 @@ public class StationService {
      * @return DTO StationResponse.
      */
     private StationResponse toResponse(Station s) {
+        // Calculate available batteries for both vehicle types
+        Integer motorcycleBatteries = batteryService.countAvailableBatteriesByVehicleType(s.getStationId(), "motorcycle");
+        Integer carBatteries = batteryService.countAvailableBatteriesByVehicleType(s.getStationId(), "car");
+        
         return StationResponse.builder()
                 .stationId(s.getStationId())
                 .name(s.getName())
@@ -174,6 +187,8 @@ public class StationService {
                 .latitude(s.getLatitude())
                 .longitude(s.getLongitude())
                 .status(s.getStatus())
+                .availableMotorcycleBatteries(motorcycleBatteries)
+                .availableCarBatteries(carBatteries)
                 // Lưu ý: trường distance sẽ là null/0.0 khi gọi từ đây, đó là điều mong muốn.
                 .build();
     }

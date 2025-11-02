@@ -36,7 +36,11 @@ public class AuthController {
 
     // ===== LOGIN =====
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(@RequestParam(value = "redirect", required = false) String redirectUrl,
+                           Model model) {
+        if (redirectUrl != null && !redirectUrl.isEmpty()) {
+            model.addAttribute("redirectUrl", redirectUrl);
+        }
         return "login";
     }
 
@@ -44,6 +48,7 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
+                        @RequestParam(value = "redirect", required = false) String redirectUrl,
                         HttpSession session,
                         RedirectAttributes redirect) {
         try {
@@ -51,6 +56,10 @@ public class AuthController {
             Driver driver = driverService.login(email, password);
             session.setAttribute("loggedInDriver", driver);
             redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + driver.getFullName());
+            // Check if there's a redirect URL (for driver pages)
+            if (redirectUrl != null && !redirectUrl.isEmpty() && redirectUrl.startsWith("/")) {
+                return "redirect:" + redirectUrl;
+            }
             return "redirect:/dashboard";
         } catch (Exception driverException) {
 
@@ -59,6 +68,10 @@ public class AuthController {
                 Staff staff = staffService.login(email, password); // <-- LOGIC MỚI CỦA STAFF
                 session.setAttribute("loggedInStaff", staff);
                 redirect.addFlashAttribute("loginSuccess", "Login thành công! Chào " + staff.getFullName());
+                // Check if there's a redirect URL (for staff pages)
+                if (redirectUrl != null && !redirectUrl.isEmpty() && redirectUrl.startsWith("/staff/")) {
+                    return "redirect:" + redirectUrl;
+                }
                 return "redirect:/staff/dashboard"; // <-- CHUYỂN HƯỚNG TỚI TRANG CỦA STAFF
 
             } catch (Exception staffException) {
@@ -68,12 +81,19 @@ public class AuthController {
                     Admin admin = adminService.login(email, password);
                     session.setAttribute("loggedInAdmin", admin);
                     redirect.addFlashAttribute("loginSuccess", "Admin login thành công! Chào " + admin.getFullName());
+                    // Check if there's a redirect URL (for admin pages)
+                    if (redirectUrl != null && !redirectUrl.isEmpty() && redirectUrl.startsWith("/admin/")) {
+                        return "redirect:" + redirectUrl;
+                    }
                     return "redirect:/admin/dashboard";
 
                 } catch (Exception adminException) {
                     // 4. CẢ 3 ĐỀU THẤT BẠI
                     // Hiển thị lỗi của lần đăng nhập thất bại cuối cùng (Admin)
                     redirect.addFlashAttribute("loginError", adminException.getMessage());
+                    if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                        return "redirect:/login?redirect=" + java.net.URLEncoder.encode(redirectUrl, java.nio.charset.StandardCharsets.UTF_8);
+                    }
                     return "redirect:/login";
                 }
             }

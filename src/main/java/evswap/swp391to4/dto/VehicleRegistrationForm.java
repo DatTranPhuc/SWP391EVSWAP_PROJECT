@@ -7,4 +7,5 @@ public class VehicleRegistrationForm {
     private String model;
     private String vin;
     private String plateNumber;
+    private String vehicleType; // "motorcycle" or "car"
 }

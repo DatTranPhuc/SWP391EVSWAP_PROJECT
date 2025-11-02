@@ -32,4 +32,11 @@ public class SwapTransaction {
     private Instant swappedAt;
 
     private String result; // success/failed/aborted
+
+    @Column(name = "payment_confirmed_at")
+    private Instant paymentConfirmedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_confirmed_by")
+    private Staff paymentConfirmedBy;
 }

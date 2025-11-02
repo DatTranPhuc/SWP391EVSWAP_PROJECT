@@ -18,6 +18,9 @@ public class BatteryCreateRequest {
     @NotBlank(message = "Model không được để trống")
     private String model;
 
+    @NotBlank(message = "Loại xe không được để trống")
+    private String vehicleType; // motorcycle/car
+
     @NotBlank(message = "Trạng thái ban đầu không được để trống")
     private String state;
 
