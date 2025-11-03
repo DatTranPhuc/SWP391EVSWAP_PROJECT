@@ -38,145 +38,157 @@
 
 <main>
     <div class="container">
-        <div class="feedback-content">
-            
-            <!-- Alert Messages -->
-            <div th:if="${success}" class="alert success auto-dismiss">
-                <div class="alert-content" th:text="${success}"></div>
-                <div class="progress-bar"></div>
-            </div>
-            <div th:if="${error}" class="alert error auto-dismiss">
-                <div class="alert-content" th:text="${error}"></div>
-                <div class="progress-bar"></div>
-            </div>
-
-            <!-- Feedback Form -->
-            <section class="feedback-form-section">
-                <h2>Gửi báo cáo mới</h2>
-                <form th:action="@{/feedback}" th:object="${feedback}" method="post" class="feedback-form">
-                    
-                    <div class="form-group">
-                        <label for="stationId">Chọn trạm</label>
-                        <div class="form-error" th:if="${#lists.isEmpty(stations)}">
-                            Không có trạm đủ điều kiện để đánh giá (trong 15 ngày gần đây).
-                        </div>
-                        <div class="custom-select-wrapper">
-                            <div class="custom-select" id="station-select">
-                                <div class="custom-select-trigger">
-                                    <span class="selected-value">-- Chọn trạm --</span>
-                                    <div class="arrow">▼</div>
-                                </div>
-                                <div class="custom-options">
-                                    <div class="custom-option" data-value="">
-                                        <span class="text">-- Chọn trạm --</span>
-                                    </div>
-                                    <div th:each="station : ${stations}" 
-                                         class="custom-option" 
-                                         th:data-value="${station.stationId}">
-                                        <span class="text" th:text="${station.name + ' - ' + station.address}"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="stationId" name="stationId" th:field="*{stationId}" th:attr="value=${preselectedStationId != null ? preselectedStationId : feedback.stationId}" required>
-                        </div>
-                        <div class="form-error" th:if="${stationIdError}" th:text="${stationIdError}"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="rating">Đánh giá</label>
-                        <div class="custom-select-wrapper">
-                            <div class="custom-select" id="rating-select">
-                                <div class="custom-select-trigger">
-                                    <span class="selected-value">-- Chọn đánh giá --</span>
-                                    <div class="arrow">▼</div>
-                                </div>
-                                <div class="custom-options">
-                                    <div class="custom-option" data-value="">
-                                        <span class="text">-- Chọn đánh giá --</span>
-                                    </div>
-                                    <div class="custom-option" data-value="1">
-                                        <span class="stars">⭐</span>
-                                        <span class="text">(1 sao) - Rất tệ</span>
-                                    </div>
-                                    <div class="custom-option" data-value="2">
-                                        <span class="stars">⭐⭐</span>
-                                        <span class="text">(2 sao) - Tệ</span>
-                                    </div>
-                                    <div class="custom-option" data-value="3">
-                                        <span class="stars">⭐⭐⭐</span>
-                                        <span class="text">(3 sao) - Bình thường</span>
-                                    </div>
-                                    <div class="custom-option" data-value="4">
-                                        <span class="stars">⭐⭐⭐⭐</span>
-                                        <span class="text">(4 sao) - Tốt</span>
-                                    </div>
-                                    <div class="custom-option" data-value="5">
-                                        <span class="stars">⭐⭐⭐⭐⭐</span>
-                                        <span class="text">(5 sao) - Rất tốt</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="rating" name="rating" th:field="*{rating}" required>
-                        </div>
-                        <div class="form-error" th:if="${ratingError}" th:text="${ratingError}"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="comment">Nhận xét</label>
-                        <textarea id="comment" th:field="*{comment}" 
-                                  placeholder="Chia sẻ trải nghiệm của bạn về trạm này..." 
-                                  rows="4" maxlength="500"></textarea>
-                        <div class="form-error" th:if="${commentError}" th:text="${commentError}"></div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn ghost" onclick="resetForm()">Tạo mới</button>
-                        <button type="submit" class="btn primary" th:attr="disabled=${#lists.isEmpty(stations)}">Gửi báo cáo</button>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Feedback History -->
-            <section class="feedback-history-section">
-                <h2>Lịch sử báo cáo của bạn</h2>
-                
-                <div th:if="${#lists.isEmpty(feedbackList)}" class="empty-state">
-                    <p>Bạn chưa gửi báo cáo nào.</p>
-                </div>
-
-                <div th:unless="${#lists.isEmpty(feedbackList)}" class="feedback-list">
-                    <div th:each="feedback : ${feedbackList}" class="feedback-item">
-                        <div class="feedback-header">
-                            <h3 th:text="${feedback.stationName}">Tên trạm</h3>
-                            <div class="feedback-rating">
-                                <span th:each="i : ${#numbers.sequence(1, feedback.rating)}">⭐</span>
-                                <span th:if="${feedback.rating < 5}" 
-                                      th:each="i : ${#numbers.sequence(feedback.rating + 1, 5)}" 
-                                      class="rating-empty"></span>
-                            </div>
-                        </div>
-                        <div class="feedback-content">
-                            <p th:text="${feedback.comment}">Nội dung báo cáo</p>
-                        </div>
-                        <div class="feedback-footer">
-                            <span class="feedback-date" th:text="${#temporals.format(feedback.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày tạo</span>
-                            <div class="feedback-actions">
-                                <button type="button" class="btn primary small" 
-                                        th:onclick="'editFeedback(' + ${feedback.feedbackId} + ', \'' + ${feedback.stationName} + '\', ' + ${feedback.rating} + ', \'' + ${feedback.comment} + '\', ' + ${feedback.stationId} + ')'">
-                                    Sửa
-                                </button>
-                                <form th:action="@{/feedback/delete/{id}(id=${feedback.feedbackId})}" method="post" style="display: inline;">
-                                    <button type="submit" class="btn ghost small" 
-                                            onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');">
-                                        Xóa
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert success auto-dismiss">
+            <div class="alert-content" th:text="${success}"></div>
+            <div class="progress-bar"></div>
         </div>
+        <div th:if="${error}" class="alert error auto-dismiss">
+            <div class="alert-content" th:text="${error}"></div>
+            <div class="progress-bar"></div>
+        </div>
+
+        <section class="feedback-section">
+            <div class="feedback-content">
+                <!-- Feedback Form - Left Side -->
+                <div class="feedback-left">
+                    <section class="feedback-form-section">
+                        <h2>Gửi báo cáo mới</h2>
+                        <form th:action="@{/feedback}" th:object="${feedback}" method="post" class="feedback-form">
+                            
+                            <div class="form-group">
+                                <label for="stationId">Chọn trạm</label>
+                                <div class="form-error" th:if="${#lists.isEmpty(stations)}">
+                                    Không có trạm đủ điều kiện để đánh giá (trong 15 ngày gần đây).
+                                </div>
+                                <div class="custom-select-wrapper">
+                                    <div class="custom-select" id="station-select">
+                                        <div class="custom-select-trigger">
+                                            <span class="selected-value">-- Chọn trạm --</span>
+                                            <div class="arrow">▼</div>
+                                        </div>
+                                        <div class="custom-options">
+                                            <div class="custom-option" data-value="">
+                                                <span class="text">-- Chọn trạm --</span>
+                                            </div>
+                                            <div th:each="station : ${stations}" 
+                                                 class="custom-option" 
+                                                 th:data-value="${station.stationId}">
+                                                <span class="text" th:text="${station.name + ' - ' + station.address}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="stationId" name="stationId" th:field="*{stationId}" th:attr="value=${preselectedStationId != null ? preselectedStationId : feedback.stationId}" required>
+                                </div>
+                                <div class="form-error" th:if="${stationIdError}" th:text="${stationIdError}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rating">Đánh giá</label>
+                                <div class="custom-select-wrapper">
+                                    <div class="custom-select" id="rating-select">
+                                        <div class="custom-select-trigger">
+                                            <span class="selected-value">-- Chọn đánh giá --</span>
+                                            <div class="arrow">▼</div>
+                                        </div>
+                                        <div class="custom-options">
+                                            <div class="custom-option" data-value="">
+                                                <span class="text">-- Chọn đánh giá --</span>
+                                            </div>
+                                            <div class="custom-option" data-value="1">
+                                                <span class="stars">⭐</span>
+                                                <span class="text">(1 sao) - Rất tệ</span>
+                                            </div>
+                                            <div class="custom-option" data-value="2">
+                                                <span class="stars">⭐⭐</span>
+                                                <span class="text">(2 sao) - Tệ</span>
+                                            </div>
+                                            <div class="custom-option" data-value="3">
+                                                <span class="stars">⭐⭐⭐</span>
+                                                <span class="text">(3 sao) - Bình thường</span>
+                                            </div>
+                                            <div class="custom-option" data-value="4">
+                                                <span class="stars">⭐⭐⭐⭐</span>
+                                                <span class="text">(4 sao) - Tốt</span>
+                                            </div>
+                                            <div class="custom-option" data-value="5">
+                                                <span class="stars">⭐⭐⭐⭐⭐</span>
+                                                <span class="text">(5 sao) - Rất tốt</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="rating" name="rating" th:field="*{rating}" required>
+                                </div>
+                                <div class="form-error" th:if="${ratingError}" th:text="${ratingError}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="comment">Nhận xét</label>
+                                <textarea id="comment" th:field="*{comment}" 
+                                          placeholder="Chia sẻ trải nghiệm của bạn về trạm này..." 
+                                          rows="4" maxlength="500"></textarea>
+                                <div class="form-error" th:if="${commentError}" th:text="${commentError}"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn ghost" onclick="resetForm()">Tạo mới</button>
+                                <button type="submit" class="btn primary" th:attr="disabled=${#lists.isEmpty(stations)}">Gửi báo cáo</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <!-- Feedback History - Right Side -->
+                <div class="feedback-right">
+                    <section class="feedback-history-section">
+                        <div class="feedback-history-header">
+                            <h2>Lịch sử báo cáo của bạn</h2>
+                        </div>
+                        <div class="feedback-scroll">
+                            <div th:if="${#lists.isEmpty(feedbackList)}" class="empty-state">
+                                <p>Bạn chưa gửi báo cáo nào.</p>
+                            </div>
+
+                            <div th:unless="${#lists.isEmpty(feedbackList)}" class="feedback-list">
+                                <div th:each="feedback : ${feedbackList}" class="feedback-item">
+                                    <div class="feedback-header">
+                                        <h3 th:text="${feedback.stationName}">Tên trạm</h3>
+                                        <div class="feedback-rating">
+                                            <span th:each="i : ${#numbers.sequence(1, feedback.rating)}">⭐</span>
+                                            <span th:if="${feedback.rating < 5}" 
+                                                  th:each="i : ${#numbers.sequence(feedback.rating + 1, 5)}" 
+                                                  class="rating-empty"></span>
+                                        </div>
+                                    </div>
+                                    <div class="feedback-item-content">
+                                        <p th:text="${feedback.comment}">Nội dung báo cáo</p>
+                                    </div>
+                                    <div class="feedback-footer">
+                                        <span class="feedback-date" th:text="${#temporals.format(feedback.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày tạo</span>
+                                        <div class="feedback-actions">
+                                            <button type="button" class="btn primary small edit-feedback-btn" 
+                                                    th:attr="data-feedback-id=${feedback.feedbackId}, 
+                                                            data-station-name=${feedback.stationName}, 
+                                                            data-rating=${feedback.rating},
+                                                            data-comment=${feedback.comment},
+                                                            data-station-id=${feedback.stationId}">
+                                                Sửa
+                                            </button>
+                                            <form th:action="@{/feedback/delete/{id}(id=${feedback.feedbackId})}" method="post" style="display: inline;">
+                                                <button type="submit" class="btn ghost small" 
+                                                        onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');">
+                                                    Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
 
@@ -237,10 +249,22 @@
  * LAYOUT CONTAINER - KHUNG CHÍNH
  * ========================================
  */
+.feedback-section {
+    padding: 3rem 0;
+}
+
 .feedback-content {
-    max-width: 800px;                    /* Giới hạn chiều rộng tối đa */
-    margin: 0 auto;                      /* Căn giữa trang */
-    padding: 2rem 0;                        /* Khoảng cách trên/dưới */
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+
+.feedback-left {
+    position: sticky;
+    top: 96px;
+    height: fit-content;
 }
 
 /* 
@@ -249,15 +273,55 @@
  * ========================================
  * Áp dụng cho cả form gửi feedback và lịch sử feedback
  */
-.feedback-form-section, 
-.feedback-history-section {
+.feedback-form-section {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
     backdrop-filter: blur(20px);         /* Hiệu ứng kính mờ */
     border-radius: 20px;                 /* Bo góc lớn - mềm mại */
     padding: 2rem;                       /* Khoảng cách trong */
-    margin-bottom: 2rem;                  /* Khoảng cách giữa các sections */
     border: 1px solid rgba(255, 255, 255, 0.15);  /* Viền trong suốt */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);   /* Bóng đổ nhẹ */
+}
+
+.feedback-history-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 220px);
+}
+
+.feedback-history-header {
+    flex: 0 0 auto;
+    margin: 0 0 1rem 0;
+}
+
+.feedback-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar */
+.feedback-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.feedback-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.feedback-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.feedback-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* 
@@ -739,9 +803,13 @@
     content: "☆";
 }
 
-.feedback-content p {
-    color: rgba(243, 244, 246, 0.8);
+.feedback-item-content {
     margin-bottom: 1rem;
+}
+
+.feedback-item-content p {
+    color: rgba(243, 244, 246, 0.8);
+    margin: 0;
     line-height: 1.6;
 }
 
@@ -792,12 +860,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedValue = trigger.querySelector('.selected-value');
         
         // Initialize from existing value (including preselected)
-        const initialValue = hiddenInput.value;
-        if (initialValue && selectId === 'station-select') {
+        let initialValue = hiddenInput.value;
+        if (initialValue) {
             const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
             if (selectedOption) {
                 const text = selectedOption.querySelector('.text').textContent;
-                selectedValue.textContent = text;
+                const stars = selectedOption.querySelector('.stars');
+                
+                if (stars) {
+                    selectedValue.textContent = stars.textContent + ' ' + text;
+                } else {
+                    selectedValue.textContent = text;
+                }
                 selectedOption.classList.add('selected');
             }
         }
@@ -905,22 +979,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Set initial value if form is pre-filled
-        const initialValue = hiddenInput.value;
-        if (initialValue) {
-            const selectedOption = customSelect.querySelector(`[data-value="${initialValue}"]`);
-            if (selectedOption) {
-                const text = selectedOption.querySelector('.text').textContent;
-                const stars = selectedOption.querySelector('.stars');
-                
-                if (stars) {
-                    selectedValue.textContent = stars.textContent + ' ' + text;
-                } else {
-                    selectedValue.textContent = text;
-                }
-                selectedOption.classList.add('selected');
-            }
-        }
+        // No need to set initial value again - already done above
     }
 });
 
@@ -939,10 +998,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500); // 0.5s animation duration
         }, 3000); // 3 seconds
     });
+    
+    // Initialize edit feedback button handlers
+    document.querySelectorAll('.edit-feedback-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const feedbackId = this.getAttribute('data-feedback-id');
+            const stationName = this.getAttribute('data-station-name');
+            const rating = this.getAttribute('data-rating');
+            const comment = this.getAttribute('data-comment');
+            const stationId = this.getAttribute('data-station-id');
+            editFeedback(feedbackId, stationName, rating, comment, stationId);
+        });
+    });
 });
-</script>
 
-<script>
 // Edit Feedback Function
 function editFeedback(feedbackId, stationName, rating, comment, stationId) {
     // Tìm form feedback
@@ -950,21 +1019,61 @@ function editFeedback(feedbackId, stationName, rating, comment, stationId) {
     if (!form) return;
     
     // Điền dữ liệu vào form
-    const stationSelect = form.querySelector('#station');
-    const ratingInputs = form.querySelectorAll('input[name="rating"]');
-    const commentTextarea = form.querySelector('#comment');
+    const hiddenStationInput = document.getElementById('stationId');
+    const hiddenRatingInput = document.getElementById('rating');
+    const customStationSelect = document.getElementById('station-select');
+    const customRatingSelect = document.getElementById('rating-select');
+    const commentTextarea = document.getElementById('comment');
     
     // Set station
-    if (stationSelect) {
-        stationSelect.value = stationId;
-        // Trigger change event để update custom select
-        stationSelect.dispatchEvent(new Event('change'));
+    if (hiddenStationInput) {
+        hiddenStationInput.value = stationId;
+    }
+    
+    // Update custom station select display
+    if (customStationSelect) {
+        const trigger = customStationSelect.querySelector('.custom-select-trigger');
+        const selectedValue = trigger.querySelector('.selected-value');
+        const options = customStationSelect.querySelectorAll('.custom-option');
+        
+        // Remove previous selection
+        options.forEach(opt => opt.classList.remove('selected'));
+        
+        // Find and select the matching option
+        const selectedOption = customStationSelect.querySelector(`[data-value="${stationId}"]`);
+        if (selectedOption) {
+            selectedValue.textContent = selectedOption.querySelector('.text').textContent;
+            selectedOption.classList.add('selected');
+        }
     }
     
     // Set rating
-    ratingInputs.forEach(input => {
-        input.checked = (input.value == rating);
-    });
+    if (hiddenRatingInput) {
+        hiddenRatingInput.value = rating;
+    }
+    
+    // Update custom rating select display
+    if (customRatingSelect) {
+        const trigger = customRatingSelect.querySelector('.custom-select-trigger');
+        const selectedValue = trigger.querySelector('.selected-value');
+        const options = customRatingSelect.querySelectorAll('.custom-option');
+        
+        // Remove previous selection
+        options.forEach(opt => opt.classList.remove('selected'));
+        
+        // Find and select the matching option
+        const selectedOption = customRatingSelect.querySelector(`[data-value="${rating}"]`);
+        if (selectedOption) {
+            const stars = selectedOption.querySelector('.stars');
+            const text = selectedOption.querySelector('.text');
+            if (stars && text) {
+                selectedValue.textContent = stars.textContent + ' ' + text.textContent;
+            } else {
+                selectedValue.textContent = text.textContent;
+            }
+            selectedOption.classList.add('selected');
+        }
+    }
     
     // Set comment
     if (commentTextarea) {
@@ -988,7 +1097,9 @@ function editFeedback(feedbackId, stationName, rating, comment, stationId) {
         commentTextarea.focus();
     }
 }
+</script>
 
+<script>
 // Reset form khi click "Tạo mới"
 function resetForm() {
     const form = document.querySelector('.feedback-form');
@@ -1000,20 +1111,32 @@ function resetForm() {
     // Reset button text
     const submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) {
-        submitBtn.textContent = 'Gửi Feedback';
+        submitBtn.textContent = 'Gửi báo cáo';
     }
     
     // Clear form
     form.reset();
     
-    // Reset custom select
-    const customSelect = document.getElementById('station-select');
+    // Reset custom selects
+    resetCustomSelect('station-select', 'stationId', '-- Chọn trạm --');
+    resetCustomSelect('rating-select', 'rating', '-- Chọn đánh giá --');
+}
+
+function resetCustomSelect(selectId, inputId, placeholder) {
+    const customSelect = document.getElementById(selectId);
     if (customSelect) {
         const trigger = customSelect.querySelector('.custom-select-trigger');
         const selectedValue = trigger.querySelector('.selected-value');
+        const options = customSelect.querySelectorAll('.custom-option');
+        const hiddenInput = document.getElementById(inputId);
+        
         if (selectedValue) {
-            selectedValue.textContent = 'Chọn trạm';
+            selectedValue.textContent = placeholder;
         }
+        if (hiddenInput) {
+            hiddenInput.value = '';
+        }
+        options.forEach(opt => opt.classList.remove('selected'));
     }
 }
 </script>

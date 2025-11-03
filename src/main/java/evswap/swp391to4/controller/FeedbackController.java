@@ -19,7 +19,6 @@ import evswap.swp391to4.dto.FeedbackResponse;
 import evswap.swp391to4.dto.StationResponse;
 import evswap.swp391to4.entity.Driver;
 import evswap.swp391to4.service.FeedbackService;
-import evswap.swp391to4.service.StationService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 public class FeedbackController {
 
     private final FeedbackService feedbackService;
-    private final StationService stationService;
     private final evswap.swp391to4.service.ReservationService reservationService;
 
     /**
@@ -70,6 +68,11 @@ public class FeedbackController {
             } catch (Exception e) {
                 // If reservation not found or error, just ignore and continue
             }
+        } else if (!stations.isEmpty()) {
+            // If no reservationId provided, auto-select the most recent station (first in list)
+            StationResponse mostRecentStation = stations.get(0);
+            feedbackRequest.setStationId(mostRecentStation.getStationId());
+            model.addAttribute("preselectedStationId", mostRecentStation.getStationId());
         }
         
         model.addAttribute("feedback", feedbackRequest);
@@ -108,15 +111,29 @@ public class FeedbackController {
         try {
             feedbackService.createFeedback(feedback, driver);
             model.addAttribute("success", "Gửi feedback thành công!");
-            model.addAttribute("feedback", new FeedbackRequest());
+            
+            // Create new empty feedback request
+            FeedbackRequest newFeedbackRequest = new FeedbackRequest();
+            model.addAttribute("feedback", newFeedbackRequest);
+            
+            // Re-load stations and auto-select most recent if available
+            List<StationResponse> stations = feedbackService.getEligibleStationsForFeedback(driver.getDriverId());
+            if (!stations.isEmpty()) {
+                StationResponse mostRecentStation = stations.get(0);
+                newFeedbackRequest.setStationId(mostRecentStation.getStationId());
+                model.addAttribute("preselectedStationId", mostRecentStation.getStationId());
+            }
+            model.addAttribute("stations", stations);
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("feedback", feedback);
+            
+            // Load lại danh sách trạm đủ điều kiện
+            List<StationResponse> stations = feedbackService.getEligibleStationsForFeedback(driver.getDriverId());
+            model.addAttribute("stations", stations);
         }
-
-        // Load lại danh sách trạm đủ điều kiện
-        List<StationResponse> stations = feedbackService.getEligibleStationsForFeedback(driver.getDriverId());
-        model.addAttribute("stations", stations);
+        
+        // Always load feedback list
         List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByDriver(driver.getDriverId());
         model.addAttribute("feedbackList", feedbackList);
 

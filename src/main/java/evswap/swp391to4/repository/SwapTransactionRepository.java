@@ -27,6 +27,15 @@ public interface SwapTransactionRepository extends JpaRepository<SwapTransaction
 
     boolean existsByReservationDriverDriverIdAndStationStationIdAndResultAndSwappedAtBetween(
             Integer driverId, Integer stationId, String result, Instant from, Instant to);
+
+    @Query("select st.station from SwapTransaction st " +
+           "where st.reservation.driver.driverId = :driverId " +
+           "and st.result = 'success' " +
+           "and st.swappedAt between :from and :to " +
+           "order by st.swappedAt desc")
+    java.util.List<Station> findRecentStationsOrderedBySwapTime(@Param("driverId") Integer driverId,
+                                                                 @Param("from") Instant from,
+                                                                 @Param("to") Instant to);
 }
 
 

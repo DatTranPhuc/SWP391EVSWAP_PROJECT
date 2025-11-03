@@ -41,152 +41,160 @@
 
 <main>
     <div class="container">
-        <div class="support-content">
-            
-            <!-- Alert Messages -->
-            <div th:if="${success}" class="alert success auto-dismiss">
-                <div class="alert-content" th:text="${success}"></div>
-                <div class="progress-bar"></div>
-            </div>
-            <div th:if="${error}" class="alert error auto-dismiss">
-                <div class="alert-content" th:text="${error}"></div>
-                <div class="progress-bar"></div>
-            </div>
-
-            <!-- Ticket Form -->
-            <section class="ticket-form-section">
-                <h2>Tạo ticket hỗ trợ mới</h2>
-                <form th:action="@{/support}" th:object="${ticket}" method="post" enctype="multipart/form-data" class="ticket-form">
-                    
-                    <div class="form-group">
-                        <label for="category">Danh mục hỗ trợ</label>
-                        <div class="custom-select-wrapper">
-                            <div class="custom-select" id="category-select">
-                                <div class="custom-select-trigger">
-                                    <span class="selected-value">-- Chọn danh mục --</span>
-                                    <div class="arrow">▼</div>
-                                </div>
-                                <div class="custom-options">
-                                    <div class="custom-option" data-value="">
-                                        <span class="text">-- Chọn danh mục --</span>
-                                    </div>
-                                    <div class="custom-option" data-value="station">
-                                        <span class="category-icon">🔌</span>
-                                        <span class="text">Trạm đổi pin</span>
-                                    </div>
-                                    <div class="custom-option" data-value="battery">
-                                        <span class="category-icon">🔋</span>
-                                        <span class="text">Pin và sạc</span>
-                                    </div>
-                                    <div class="custom-option" data-value="payment">
-                                        <span class="category-icon">💳</span>
-                                        <span class="text">Thanh toán</span>
-                                    </div>
-                                    <div class="custom-option" data-value="account">
-                                        <span class="category-icon">👤</span>
-                                        <span class="text">Tài khoản</span>
-                                    </div>
-                                    <div class="custom-option" data-value="technical">
-                                        <span class="category-icon">⚙️</span>
-                                        <span class="text">Kỹ thuật</span>
-                                    </div>
-                                    <div class="custom-option" data-value="other">
-                                        <span class="category-icon">❓</span>
-                                        <span class="text">Khác</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="category" name="category" th:field="*{category}" required>
-                        </div>
-                        <div class="form-error" th:if="${categoryError}" th:text="${categoryError}"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="comment">Mô tả vấn đề</label>
-                        <textarea id="comment" th:field="*{comment}" 
-                                  placeholder="Mô tả chi tiết vấn đề bạn gặp phải..." 
-                                  rows="4" maxlength="500"></textarea>
-                        <div class="form-error" th:if="${commentError}" th:text="${commentError}"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="attachment">Tệp đính kèm (tùy chọn)</label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="attachment" name="attachment" 
-                                   accept="image/*,.pdf,.doc,.docx" 
-                                   class="file-input">
-                            <label for="attachment" class="file-upload-label">
-                                <span class="file-upload-icon">📎</span>
-                                <span class="file-upload-text">Chọn tệp đính kèm</span>
-                                <span class="file-upload-hint">Ảnh, PDF, Word (tối đa 5MB)</span>
-                            </label>
-                            <div class="file-preview" id="filePreview" style="display: none;">
-                                <div class="file-preview-item">
-                                    <span class="file-icon">📄</span>
-                                    <span class="file-name"></span>
-                                    <button type="button" class="file-remove" onclick="removeFile()">×</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-error" th:if="${attachmentError}" th:text="${attachmentError}"></div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn ghost" onclick="resetTicketForm()">Tạo mới</button>
-                        <button type="submit" class="btn primary">Gửi ticket hỗ trợ</button>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Ticket History -->
-            <section class="ticket-history-section">
-                <h2>Lịch sử ticket của bạn</h2>
-                
-                <div th:if="${#lists.isEmpty(ticketList)}" class="empty-state">
-                    <p>Bạn chưa tạo ticket hỗ trợ nào.</p>
-                </div>
-
-                <div th:unless="${#lists.isEmpty(ticketList)}" class="ticket-list">
-                    <div th:each="ticket : ${ticketList}" class="ticket-item">
-                        <div class="ticket-header">
-                            <div class="ticket-info">
-                                <h3 th:text="'Ticket #' + ${ticket.ticketId}">Ticket #1</h3>
-                                <div class="ticket-meta">
-                                    <span class="category-badge" th:class="'category-' + ${ticket.category}" th:text="${ticket.category}">station</span>
-                                    <span class="status-badge" th:class="'status-' + ${ticket.status}" th:text="${ticket.status}">open</span>
-                                </div>
-                            </div>
-                            <div class="ticket-date" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:30</div>
-                        </div>
-                        <div class="ticket-content">
-                            <p th:text="${ticket.comment}">Nội dung ticket</p>
-                        </div>
-                        <div class="ticket-footer">
-                            <div class="ticket-actions">
-                                <a th:href="@{/support/{id}(id=${ticket.ticketId})}" class="btn ghost small">Xem chi tiết</a>
-                                <button type="button" class="btn primary small" 
-                                        th:data-ticket-id="${ticket.ticketId}"
-                                        th:data-category="${ticket.category}"
-                                        th:data-comment="${ticket.comment}"
-                                        onclick="editTicketFromData(this)"
-                                        th:if="${ticket.status == 'open'}">
-                                    Sửa
-                                </button>
-                                <form th:action="@{/support/delete/{id}(id=${ticket.ticketId})}" method="post" style="display: inline;" th:if="${ticket.status == 'open'}">
-                                    <button type="submit" class="btn ghost small" 
-                                            onclick="return confirm('Bạn có chắc chắn muốn xóa ticket này?');">
-                                        Xóa
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="ticket-staff" th:if="${ticket.staffName != null}">
-                                <span>Được xử lý bởi: <strong th:text="${ticket.staffName}">Staff</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert success auto-dismiss">
+            <div class="alert-content" th:text="${success}"></div>
+            <div class="progress-bar"></div>
         </div>
+        <div th:if="${error}" class="alert error auto-dismiss">
+            <div class="alert-content" th:text="${error}"></div>
+            <div class="progress-bar"></div>
+        </div>
+
+        <section class="support-section">
+            <div class="support-content">
+                <!-- Ticket Form - Left Side -->
+                <div class="support-left">
+                    <section class="ticket-form-section">
+                        <h2>Tạo ticket hỗ trợ mới</h2>
+                        <form th:action="@{/support}" th:object="${ticket}" method="post" enctype="multipart/form-data" class="ticket-form">
+                            
+                            <div class="form-group">
+                                <label for="category">Danh mục hỗ trợ</label>
+                                <div class="custom-select-wrapper">
+                                    <div class="custom-select" id="category-select">
+                                        <div class="custom-select-trigger">
+                                            <span class="selected-value">-- Chọn danh mục --</span>
+                                            <div class="arrow">▼</div>
+                                        </div>
+                                        <div class="custom-options">
+                                            <div class="custom-option" data-value="">
+                                                <span class="text">-- Chọn danh mục --</span>
+                                            </div>
+                                            <div class="custom-option" data-value="station">
+                                                <span class="category-icon">🔌</span>
+                                                <span class="text">Trạm đổi pin</span>
+                                            </div>
+                                            <div class="custom-option" data-value="battery">
+                                                <span class="category-icon">🔋</span>
+                                                <span class="text">Pin và sạc</span>
+                                            </div>
+                                            <div class="custom-option" data-value="payment">
+                                                <span class="category-icon">💳</span>
+                                                <span class="text">Thanh toán</span>
+                                            </div>
+                                            <div class="custom-option" data-value="account">
+                                                <span class="category-icon">👤</span>
+                                                <span class="text">Tài khoản</span>
+                                            </div>
+                                            <div class="custom-option" data-value="technical">
+                                                <span class="category-icon">⚙️</span>
+                                                <span class="text">Kỹ thuật</span>
+                                            </div>
+                                            <div class="custom-option" data-value="other">
+                                                <span class="category-icon">❓</span>
+                                                <span class="text">Khác</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="category" name="category" th:field="*{category}" required>
+                                </div>
+                                <div class="form-error" th:if="${categoryError}" th:text="${categoryError}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="comment">Mô tả vấn đề</label>
+                                <textarea id="comment" th:field="*{comment}" 
+                                          placeholder="Mô tả chi tiết vấn đề bạn gặp phải..." 
+                                          rows="4" maxlength="500"></textarea>
+                                <div class="form-error" th:if="${commentError}" th:text="${commentError}"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="attachment">Tệp đính kèm (tùy chọn)</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="attachment" name="attachment" 
+                                           accept="image/*,.pdf,.doc,.docx" 
+                                           class="file-input">
+                                    <label for="attachment" class="file-upload-label">
+                                        <span class="file-upload-icon">📎</span>
+                                        <span class="file-upload-text">Chọn tệp đính kèm</span>
+                                        <span class="file-upload-hint">Ảnh, PDF, Word (tối đa 5MB)</span>
+                                    </label>
+                                    <div class="file-preview" id="filePreview" style="display: none;">
+                                        <div class="file-preview-item">
+                                            <span class="file-icon">📄</span>
+                                            <span class="file-name"></span>
+                                            <button type="button" class="file-remove" onclick="removeFile()">×</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-error" th:if="${attachmentError}" th:text="${attachmentError}"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn ghost" onclick="resetTicketForm()">Tạo mới</button>
+                                <button type="submit" class="btn primary">Gửi ticket hỗ trợ</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <!-- Ticket History - Right Side -->
+                <div class="support-right">
+                    <section class="ticket-history-section">
+                        <div class="ticket-history-header">
+                            <h2>Lịch sử ticket của bạn</h2>
+                        </div>
+                        <div class="ticket-scroll">
+                            <div th:if="${#lists.isEmpty(ticketList)}" class="empty-state">
+                                <p>Bạn chưa tạo ticket hỗ trợ nào.</p>
+                            </div>
+
+                            <div th:unless="${#lists.isEmpty(ticketList)}" class="ticket-list">
+                                <div th:each="ticket : ${ticketList}" class="ticket-item">
+                                    <div class="ticket-header">
+                                        <div class="ticket-info">
+                                            <h3 th:text="'Ticket #' + ${ticket.ticketId}">Ticket #1</h3>
+                                            <div class="ticket-meta">
+                                                <span class="category-badge" th:class="'category-' + ${ticket.category}" th:text="${ticket.category}">station</span>
+                                                <span class="status-badge" th:class="'status-' + ${ticket.status}" th:text="${ticket.status}">open</span>
+                                            </div>
+                                        </div>
+                                        <div class="ticket-date" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:30</div>
+                                    </div>
+                                    <div class="ticket-content">
+                                        <p th:text="${ticket.comment}">Nội dung ticket</p>
+                                    </div>
+                                    <div class="ticket-footer">
+                                        <div class="ticket-actions">
+                                            <a th:href="@{/support/{id}(id=${ticket.ticketId})}" class="btn ghost small">Xem chi tiết</a>
+                                            <button type="button" class="btn primary small" 
+                                                    th:data-ticket-id="${ticket.ticketId}"
+                                                    th:data-category="${ticket.category}"
+                                                    th:data-comment="${ticket.comment}"
+                                                    onclick="editTicketFromData(this)"
+                                                    th:if="${ticket.status == 'open'}">
+                                                Sửa
+                                            </button>
+                                            <form th:action="@{/support/delete/{id}(id=${ticket.ticketId})}" method="post" style="display: inline;" th:if="${ticket.status == 'open'}">
+                                                <button type="submit" class="btn ghost small" 
+                                                        onclick="return confirm('Bạn có chắc chắn muốn xóa ticket này?');">
+                                                    Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div class="ticket-staff" th:if="${ticket.staffName != null}">
+                                            <span>Được xử lý bởi: <strong th:text="${ticket.staffName}">Staff</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
     </div>
 </main>
 
@@ -202,27 +210,79 @@
  * SUPPORT PAGE STYLES
  * ========================================
  */
-.support-content {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 0;
+.support-section {
+    padding: 3rem 0;
 }
 
-.ticket-form-section, 
+.support-content {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+
+.support-left {
+    position: sticky;
+    top: 96px;
+    height: fit-content;
+}
+
+.ticket-form-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
 .ticket-history-section {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
     backdrop-filter: blur(20px);
     border-radius: 20px;
     padding: 2rem;
-    margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 220px);
+}
+
+.ticket-history-header {
+    flex: 0 0 auto;
+    margin: 0 0 1rem 0;
+}
+
+.ticket-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar */
+.ticket-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ticket-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.ticket-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.ticket-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .ticket-form-section h2, 
 .ticket-history-section h2 {
     color: #f3f4f6;
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem 0;
     font-size: 1.5rem;
     font-weight: 600;
 }

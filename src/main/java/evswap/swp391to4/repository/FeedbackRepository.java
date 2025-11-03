@@ -32,6 +32,11 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Integer> {
     List<Feedback> findByDriverDriverId(Integer driverId);
     
     /**
+     * Tìm feedback theo driver ID và sắp xếp theo thời gian tạo (mới nhất trước)
+     */
+    List<Feedback> findByDriverDriverIdOrderByCreatedAtDesc(Integer driverId);
+    
+    /**
      * Tìm feedback theo station ID
      */
     List<Feedback> findByStationStationId(Integer stationId);

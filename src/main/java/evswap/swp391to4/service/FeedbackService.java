@@ -68,8 +68,10 @@ public class FeedbackService {
     public List<StationResponse> getEligibleStationsForFeedback(Integer driverId) {
         Instant to = Instant.now();
         Instant from = to.minus(15, ChronoUnit.DAYS);
-        List<Station> stations = swapTxRepo.findEligibleStations(driverId, from, to);
-        return stations.stream()
+        // Get all stations ordered by most recent swap first
+        List<Station> stations = swapTxRepo.findRecentStationsOrderedBySwapTime(driverId, from, to);
+        // Remove duplicates while maintaining order (using distinct in stream)
+        java.util.Map<Integer, StationResponse> uniqueStations = stations.stream()
                 .map(s -> StationResponse.builder()
                         .stationId(s.getStationId())
                         .name(s.getName())
@@ -78,7 +80,13 @@ public class FeedbackService {
                         .longitude(s.getLongitude())
                         .status(s.getStatus())
                         .build())
-                .toList();
+                .collect(java.util.stream.Collectors.toMap(
+                    StationResponse::getStationId,
+                    station -> station,
+                    (existing, replacement) -> existing, // Keep the first occurrence
+                    java.util.LinkedHashMap::new // Maintain insertion order
+                ));
+        return new java.util.ArrayList<>(uniqueStations.values());
     }
 
     /**
@@ -97,11 +105,11 @@ public class FeedbackService {
     }
 
     /**
-     * Lấy feedback của một driver cụ thể
+     * Lấy feedback của một driver cụ thể, sắp xếp theo thời gian tạo (mới nhất trước)
      */
     @Transactional(readOnly = true)
     public List<FeedbackResponse> getFeedbackByDriver(Integer driverId) {
-        List<Feedback> feedbackList = feedbackRepo.findByDriverDriverId(driverId);
+        List<Feedback> feedbackList = feedbackRepo.findByDriverDriverIdOrderByCreatedAtDesc(driverId);
         List<FeedbackResponse> responseList = new ArrayList<>();
         
         for (Feedback feedback : feedbackList) {
