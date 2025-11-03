@@ -54,6 +54,7 @@ public class ReservationController {
 
     @GetMapping("/schedule")
     public String showSchedulePage(@RequestParam(value = "q", required = false) String query,
+                                   @RequestParam(value = "tab", required = false) String tab,
                                    HttpSession session,
                                    Model model,
                                    RedirectAttributes redirect) {
@@ -79,6 +80,7 @@ public class ReservationController {
         
         model.addAttribute("scheduledReservations", scheduledReservations);
         model.addAttribute("swapHistory", swapHistory);
+        model.addAttribute("activeTab", tab != null ? tab : "scheduled"); // Default to "scheduled" tab
 
         if (!model.containsAttribute("currentStep")) {
             model.addAttribute("currentStep", "search");
@@ -290,6 +292,7 @@ public class ReservationController {
 
     @PostMapping("/{id}/delete")
     public String deleteReservation(@PathVariable Integer id,
+                                    @RequestParam(value = "redirectTo", required = false) String redirectTo,
                                     HttpSession session,
                                     RedirectAttributes redirect) {
         Driver driver = (Driver) session.getAttribute("loggedInDriver");
@@ -300,8 +303,28 @@ public class ReservationController {
         try {
             reservationService.deleteReservationFromHistory(id, driver.getDriverId());
             redirect.addFlashAttribute("success", "Đã xóa lịch sử thành công.");
-        } catch (Exception e) {
+        } catch (IllegalStateException e) {
+            // Business logic errors - hiển thị message gốc
             redirect.addFlashAttribute("error", e.getMessage());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Database constraint errors - hiển thị message thân thiện
+            redirect.addFlashAttribute("error", "Không thể xóa lịch sử này vì vẫn còn thông tin thanh toán liên quan. Vui lòng liên hệ quản trị viên nếu cần hỗ trợ.");
+        } catch (Exception e) {
+            // Các lỗi khác
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && (errorMsg.contains("FK") || errorMsg.contains("constraint") || errorMsg.contains("REFERENCE"))) {
+                redirect.addFlashAttribute("error", "Không thể xóa lịch sử này vì vẫn còn dữ liệu liên quan. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.");
+            } else {
+                redirect.addFlashAttribute("error", "Đã xảy ra lỗi khi xóa lịch sử: " + (errorMsg != null ? errorMsg : "Lỗi không xác định"));
+            }
+        }
+        
+        // Xác định redirect URL - ưu tiên redirectTo parameter, sau đó mặc định về history tab
+        if (redirectTo != null && !redirectTo.isEmpty()) {
+            // Kiểm tra redirectTo hợp lệ để tránh open redirect vulnerability
+            if (redirectTo.equals("schedule")) {
+                return "redirect:/reservations/schedule?tab=history";
+            }
         }
         return "redirect:/reservations/my-reservations?tab=history";
     }

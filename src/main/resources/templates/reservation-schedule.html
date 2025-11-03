@@ -119,13 +119,17 @@
         <!-- Filter Tabs -->
         <div class="reservation-filters" style="margin-bottom: 1.5rem;">
             <div class="filter-tabs">
-                <a href="#scheduled" class="filter-tab active" data-tab="scheduled">Lịch đặt</a>
-                <a href="#history" class="filter-tab" data-tab="history">Lịch sử đổi</a>
+                <a href="#scheduled" class="filter-tab" 
+                   th:classappend="${activeTab == 'scheduled' or activeTab == null} ? 'active' : ''"
+                   data-tab="scheduled">Lịch đặt</a>
+                <a href="#history" class="filter-tab" 
+                   th:classappend="${activeTab == 'history'} ? 'active' : ''"
+                   data-tab="history">Lịch sử đổi</a>
             </div>
         </div>
 
         <!-- Tab: Lịch đặt (Scheduled Reservations) -->
-        <div id="scheduled-section" class="reservation-tab-content active">
+        <div id="scheduled-section" class="reservation-tab-content" th:classappend="${activeTab == 'scheduled' or activeTab == null} ? 'active' : ''">
             <div class="reservation-empty" th:if="${scheduledReservations == null or scheduledReservations.isEmpty()}">
                 <div class="empty-state">
                     <div class="empty-icon">📅</div>
@@ -161,7 +165,9 @@
         </div>
 
         <!-- Tab: Lịch sử đổi (Swap History) -->
-        <div id="history-section" class="reservation-tab-content" style="display: none;">
+        <div id="history-section" class="reservation-tab-content" 
+             th:classappend="${activeTab == 'history'} ? 'active' : ''"
+             th:style="${activeTab == 'history'} ? '' : 'display: none;'">
             <div class="reservation-empty" th:if="${swapHistory == null or swapHistory.isEmpty()}">
                 <div class="empty-state">
                     <div class="empty-icon">📋</div>
@@ -186,6 +192,7 @@
                             <form th:action="@{/reservations/{id}/delete(id=${reservation.reservationId()})}" 
                                   method="post" 
                                   style="display: inline;">
+                                <input type="hidden" name="redirectTo" value="schedule">
                                 <button type="submit" 
                                         class="btn danger small"
                                         onclick="return confirm('Bạn có chắc muốn xóa lịch sử này? Hành động này không thể hoàn tác.')">Xóa</button>
@@ -272,6 +279,78 @@
 <script th:inline="javascript">
     const stations = /*[[${stations}]]*/ [];
     let selectedStationId = null;
+    let userLocation = null;
+    let userLat = null;
+    let userLng = null;
+
+    // Function to calculate distance between two coordinates using Haversine formula
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    // Function to sort and display stations
+    function sortAndDisplayStations() {
+        const vehicleType = document.querySelector('input[name="vehicleType"]:checked')?.value || 'motorcycle';
+        const stationList = document.querySelector('.station-list');
+        if (!stationList) return;
+        
+        // Get all station cards
+        const cards = Array.from(document.querySelectorAll('.station-card'));
+        
+        // Sort by distance (if available) and battery count
+        cards.sort((a, b) => {
+            const motorcycleA = parseInt(a.dataset.motorcycleBatteries) || 0;
+            const motorcycleB = parseInt(b.dataset.motorcycleBatteries) || 0;
+            const carA = parseInt(a.dataset.carBatteries) || 0;
+            const carB = parseInt(b.dataset.carBatteries) || 0;
+            
+            const countA = vehicleType === 'motorcycle' ? motorcycleA : carA;
+            const countB = vehicleType === 'motorcycle' ? motorcycleB : carB;
+            
+            // Get station IDs
+            const stationIdA = parseInt(a.dataset.stationId);
+            const stationIdB = parseInt(b.dataset.stationId);
+            
+            // Get station coordinates
+            const stationA = stations.find(s => s.stationId === stationIdA);
+            const stationB = stations.find(s => s.stationId === stationIdB);
+            
+            // Calculate distance if user location is available
+            let distanceA = Infinity;
+            let distanceB = Infinity;
+            
+            if (userLat && userLng && stationA && stationB) {
+                try {
+                    distanceA = calculateDistance(userLat, userLng, 
+                        parseFloat(stationA.latitude), parseFloat(stationA.longitude));
+                    distanceB = calculateDistance(userLat, userLng, 
+                        parseFloat(stationB.latitude), parseFloat(stationB.longitude));
+                } catch (e) {
+                    // If calculation fails, use Infinity (no user location)
+                    distanceA = Infinity;
+                    distanceB = Infinity;
+                }
+            }
+            
+            // Primary sort: by distance (lower is better)
+            if (distanceA !== distanceB) {
+                return distanceA - distanceB;
+            }
+            
+            // Secondary sort: by battery count (higher is better)
+            return countB - countA;
+        });
+        
+        // Clear and re-append cards in sorted order
+        cards.forEach(card => stationList.appendChild(card));
+    }
 
     // Vietnamese translation function for routing instructions
     function translateToVietnamese(text) {
@@ -565,6 +644,10 @@
 
                 navigator.geolocation.getCurrentPosition(position => {
                     const userLatLng = [position.coords.latitude, position.coords.longitude];
+                    userLat = position.coords.latitude;
+                    userLng = position.coords.longitude;
+                    userLocation = position;
+                    
                     if (userMarker) {
                         userMarker.remove();
                     }
@@ -575,6 +658,9 @@
                     locateBtn.disabled = false;
                     locateBtn.classList.remove('is-loading');
                     locateBtn.innerHTML = defaultLabel;
+                    
+                    // Sort stations after getting location
+                    sortAndDisplayStations();
                 }, () => {
                     alert('Không thể lấy vị trí của bạn. Vui lòng thử lại.');
                     locateBtn.disabled = false;
@@ -633,6 +719,9 @@
                     card.style.display = 'block';
                 }
             });
+            
+            // Sort after updating counts
+            sortAndDisplayStations();
         }
         
         vehicleTypeRadios.forEach(radio => {
@@ -641,6 +730,9 @@
         
         // Initialize counts on page load
         updateBatteryCounts();
+        
+        // Initial sort on page load
+        sortAndDisplayStations();
 
         // Handle "Đổi pin ngay" button click
         document.querySelectorAll('.instant-swap-btn').forEach(btn => {

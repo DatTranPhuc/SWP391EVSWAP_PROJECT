@@ -14,6 +14,7 @@ import evswap.swp391to4.entity.Station;
 import evswap.swp391to4.entity.SwapTransaction;
 import evswap.swp391to4.entity.Vehicle;
 import evswap.swp391to4.repository.DriverRepository;
+import evswap.swp391to4.repository.PaymentRepository;
 import evswap.swp391to4.repository.ReservationRepository;
 import evswap.swp391to4.repository.StationRepository;
 import evswap.swp391to4.repository.SwapTransactionRepository;
@@ -32,6 +33,7 @@ public class ReservationService {
     private final WalletService walletService;
     private final BatteryService batteryService;
     private final SwapTransactionRepository swapTransactionRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public Reservation createReservation(Integer driverId, Integer stationId, Instant reservedStart) {
@@ -417,6 +419,18 @@ public class ReservationService {
             throw new IllegalStateException("Chỉ có thể xóa lịch sử đã hoàn tất hoặc đã hủy");
         }
         
+        // Xóa các payment liên quan trước để tránh foreign key constraint violation
+        try {
+            java.util.List<evswap.swp391to4.entity.Payment> payments = paymentRepository.findByReservation(reservation);
+            if (payments != null && !payments.isEmpty()) {
+                paymentRepository.deleteAll(payments);
+            }
+        } catch (Exception e) {
+            // Log nhưng không throw - vẫn cố gắng xóa reservation
+            System.err.println("Warning: Could not delete related payments: " + e.getMessage());
+        }
+        
+        // Sau đó mới xóa reservation
         reservationRepo.delete(reservation);
     }
 
